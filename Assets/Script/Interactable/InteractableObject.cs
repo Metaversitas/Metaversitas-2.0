@@ -19,7 +19,7 @@ public class InteractableObject : NetworkBehaviour, IInteraction
     }
 
     // PUBLIC MEMBERS
-    [Networked(OnChanged = nameof(StateChanged), OnChangedTargets = OnChangedTargets.All), HideInInspector]
+    /*[Networked(OnChanged = nameof(StateChanged), OnChangedTargets = OnChangedTargets.All), HideInInspector]*/
     public EState State { get; set; }
 
     [Header("Interaction")]

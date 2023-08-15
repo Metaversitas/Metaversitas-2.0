@@ -10,10 +10,8 @@ using System;
 
 public class MovementHandler : NetworkBehaviour
 {
-    public GameState CurrentGameState;
 
     //Other Component
-    CharacterInputHandler characterInputHandler;
     NetworkCharacterControllerPrototypeCustom networkCharacterControllerPrototypeCustom;
     Camera localCamera;
 
@@ -23,7 +21,6 @@ public class MovementHandler : NetworkBehaviour
     private void Awake()
     {
         networkCharacterControllerPrototypeCustom = GetComponent<NetworkCharacterControllerPrototypeCustom>();
-        characterInputHandler = GetComponent<CharacterInputHandler>();
         localCamera = GetComponentInChildren<Camera>();
     }
     // Start is called before the first frame update
@@ -35,10 +32,6 @@ public class MovementHandler : NetworkBehaviour
     // Update is called once per frame
     public override void FixedUpdateNetwork()
     {
-        if (CurrentGameState == GameState.Pause)
-        {
-            return;
-        }
 
         if (GetInput(out NetworkInputData networkInputData))
         {

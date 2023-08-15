@@ -91,6 +91,10 @@ public class CharacterInputHandler : MonoBehaviour
 
     private void Update()
     {
+        if (gameStateManager.CurrentGameState == GameState.Pause)
+        {
+            return;
+        }
         viewInputVector = GetViewVectorNormalized();
         viewInputVector.y = viewInputVector.y * -1;
         localCameraHandler.SetViewInputVector(viewInputVector);
