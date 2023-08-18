@@ -296,7 +296,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Capture the Flag
+  m_Text: Fisika
 --- !u!222 &68864806
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1101,6 +1101,42 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 436069459}
   m_CullTransparentMesh: 1
+--- !u!1 &557527369
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 557527370}
+  m_Layer: 5
+  m_Name: Login
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &557527370
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 557527369}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1401184354}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &561221600
 GameObject:
   m_ObjectHideFlags: 0
@@ -1119,7 +1155,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &561221601
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2127,7 +2163,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Deathmatch
+  m_Text: Candi
 --- !u!222 &1032926881
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2759,7 +2795,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1319391852
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2820,7 +2856,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1337166902
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2976,6 +3012,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 722332115}
+  - {fileID: 557527370}
+  - {fileID: 1851483423}
   - {fileID: 1874438805}
   - {fileID: 1533054287}
   - {fileID: 1556139774}
@@ -3100,7 +3138,7 @@ RectTransform:
   m_Father: {fileID: 2117977147}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 0.554762}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
@@ -3260,7 +3298,7 @@ RectTransform:
   - {fileID: 674933194}
   - {fileID: 1643202059}
   m_Father: {fileID: 1401184354}
-  m_RootOrder: 2
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -3284,6 +3322,7 @@ MonoBehaviour:
   _sessionGrid: {fileID: 1926708502}
   _sessionListItemPrefab: {fileID: 7528060403997974757, guid: 9781032ccfa344b7687fb32dc225e8a1, type: 3}
   _error: {fileID: 1643202060}
+  _playMode: 0
 --- !u!114 &1533054289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3496,7 +3535,7 @@ RectTransform:
   - {fileID: 1026998270}
   - {fileID: 1703598027}
   m_Father: {fileID: 1401184354}
-  m_RootOrder: 3
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -4182,7 +4221,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1505971994}
   m_Direction: 2
   m_Value: 1
-  m_Size: 1
+  m_Size: 0.44523802
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4355,6 +4394,42 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1838170247}
   m_CullTransparentMesh: 1
+--- !u!1 &1851483422
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1851483423}
+  m_Layer: 5
+  m_Name: FrontPage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &1851483423
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1851483422}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1401184354}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1874438804
 GameObject:
   m_ObjectHideFlags: 0
@@ -4389,7 +4464,7 @@ RectTransform:
   - {fileID: 1657067168}
   - {fileID: 730762366}
   m_Father: {fileID: 1401184354}
-  m_RootOrder: 1
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -4468,22 +4543,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6274724183888813007, guid: 8ff5f212714e94999abb71d8e7248bd9, type: 3}
-      propertyPath: _museum.scenePath
-      value: Assets/_Projects/Scenes/Museum.unity
-      objectReference: {fileID: 0}
-    - target: {fileID: 6274724183888813007, guid: 8ff5f212714e94999abb71d8e7248bd9, type: 3}
-      propertyPath: _museum.sceneAsset
-      value: 
-      objectReference: {fileID: 102900000, guid: 1d89df3424c5d654f8ece730a10e9de9, type: 3}
-    - target: {fileID: 6274724183888813008, guid: 8ff5f212714e94999abb71d8e7248bd9, type: 3}
-      propertyPath: _introScene.scenePath
-      value: Assets/_Projects/Scenes/MainMenu.unity
-      objectReference: {fileID: 0}
-    - target: {fileID: 6274724183888813008, guid: 8ff5f212714e94999abb71d8e7248bd9, type: 3}
-      propertyPath: _introScene.sceneAsset
-      value: 
-      objectReference: {fileID: 102900000, guid: bded3f1f427226d4085b2bb28029f14e, type: 3}
     - target: {fileID: 6274724183888813009, guid: 8ff5f212714e94999abb71d8e7248bd9, type: 3}
       propertyPath: m_Name
       value: App
@@ -4614,7 +4673,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: King of the Hill
+  m_Text: Museum
 --- !u!222 &1949454688
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4847,7 +4906,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2034511815
 RectTransform:
   m_ObjectHideFlags: 0

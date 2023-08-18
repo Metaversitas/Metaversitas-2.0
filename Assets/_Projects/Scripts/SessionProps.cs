@@ -5,13 +5,13 @@ using System.Reflection;
 using Fusion;
 using UnityEngine;
 
-public enum PlayMode { CaptureTheFlag, DeathMatch, KingOfTheHill}
+public enum PlayMode { LabFisika, Candi, Museum}
 
 [Serializable]
 public class SessionProps
 {
 	public string RoomName = "AutoSession";
-	public int PlayerLimit = 2;
+	//public int PlayerLimit = 2;
 	public PlayMode PlayMode;
 	public MapIndex StartMap;
 	public bool AllowLateJoin;

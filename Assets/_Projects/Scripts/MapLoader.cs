@@ -7,8 +7,10 @@ using UnityEngine.SceneManagement;
 public enum MapIndex {
 	Lobby,
 	GameOver,
+	Metaland,
+	LabFisika,
+	Borobudur,
 	Museum,
-	Map1,
 };
 
 /// <summary>
@@ -23,8 +25,11 @@ public class MapLoader : NetworkSceneManagerBase
 
 	[Header("Scenes")]
 	[SerializeField] private SceneReference _lobby;
-	[SerializeField] private SceneReference _museum;
-	[SerializeField] private SceneReference _gameOver;
+    [SerializeField] private SceneReference _metaland;
+    [SerializeField] private SceneReference _museum;
+    [SerializeField] private SceneReference _labFisika;
+	[SerializeField] private SceneReference _borobudur;
+    [SerializeField] private SceneReference _gameOver;
 	[SerializeField] private SceneReference[] _maps;
 
 	private void Awake()
@@ -45,8 +50,11 @@ public class MapLoader : NetworkSceneManagerBase
 		{
 			case MapIndex.Lobby: path = _lobby; break;
 			case MapIndex.GameOver: path = _gameOver; break;
-			case MapIndex.Museum: path = _museum; break;
-			default: path = ""; break;
+			case MapIndex.Metaland: path = _metaland; break;
+			case MapIndex.LabFisika: path = _labFisika; break;
+            case MapIndex.Museum: path = _museum; break;
+            case MapIndex.Borobudur: path = _borobudur; break;
+            default: path = ""; break;
 		}	
 		yield return SceneManager.LoadSceneAsync(path, LoadSceneMode.Single);
 		var loadedScene = SceneManager.GetSceneByPath( path );

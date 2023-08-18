@@ -121,7 +121,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 	public void JoinSession(SessionInfo info)
 	{
 		SessionProps props = new SessionProps(info.Properties);
-		props.PlayerLimit = info.MaxPlayers;
+		//props.PlayerLimit = info.MaxPlayers;
 		props.RoomName = info.Name;
 		StartSession(_sharedMode ? GameMode.Shared : GameMode.Client, props);
 	}
@@ -137,7 +137,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 
 		SetConnectionStatus(ConnectionStatus.Starting);
 
-		Debug.Log($"Starting game with session {props.RoomName}, player limit {props.PlayerLimit}");
+		//Debug.Log($"Starting game with session {props.RoomName}, player limit {props.PlayerLimit}");
 		_runner.ProvideInput = mode != GameMode.Server;
 		StartGameResult result = await _runner.StartGame(new StartGameArgs
 		{
@@ -145,7 +145,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 			CustomLobbyName = _lobbyId,
 			SceneManager = _loader,
 			SessionName = props.RoomName,
-			PlayerCount = props.PlayerLimit,
+			//PlayerCount = props.PlayerLimit,
 			SessionProperties = props.Properties,
 			DisableClientSessionCreation = disableClientSessionCreation
 		});

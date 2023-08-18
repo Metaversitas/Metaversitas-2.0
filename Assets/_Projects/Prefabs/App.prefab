@@ -1062,13 +1062,28 @@ MonoBehaviour:
   _lobby:
     sceneAsset: {fileID: 102900000, guid: 6cd2c06f03e110444aa1fe8b23192bbe, type: 3}
     scenePath: Assets/_Projects/Scenes/Lobby.unity
+  _metaland:
+    sceneAsset: {fileID: 102900000, guid: 8910d92c2c2522b4e98a67643caa7f4d, type: 3}
+    scenePath: Assets/_Projects/Scenes/MetaLand.unity
   _museum:
-    sceneAsset: {fileID: 102900000, guid: 1d89df3424c5d654f8ece730a10e9de9, type: 3}
-    scenePath: Assets/_Projects/Scenes/Museum.unity
+    sceneAsset: {fileID: 102900000, guid: 8910d92c2c2522b4e98a67643caa7f4d, type: 3}
+    scenePath: Assets/_Projects/Scenes/MetaLand.unity
+  _labFisika:
+    sceneAsset: {fileID: 102900000, guid: 9d1c0cbf835ff74409d6f566efb6648f, type: 3}
+    scenePath: Assets/_Projects/Scenes/Lab Fisika.unity
+  _borobudur:
+    sceneAsset: {fileID: 102900000, guid: 37a17efcc9da2b64a9dc66825f061c85, type: 3}
+    scenePath: Assets/_Projects/Scenes/Borobudur.unity
   _gameOver:
     sceneAsset: {fileID: 102900000, guid: 29e9e09f1d7fb4f7294d02b3d5330b03, type: 3}
     scenePath: Assets/Scenes/5.GameOver.unity
   _maps:
+  - sceneAsset: {fileID: 102900000, guid: 8910d92c2c2522b4e98a67643caa7f4d, type: 3}
+    scenePath: Assets/_Projects/Scenes/MetaLand.unity
+  - sceneAsset: {fileID: 102900000, guid: 9d1c0cbf835ff74409d6f566efb6648f, type: 3}
+    scenePath: Assets/_Projects/Scenes/Lab Fisika.unity
+  - sceneAsset: {fileID: 102900000, guid: 37a17efcc9da2b64a9dc66825f061c85, type: 3}
+    scenePath: Assets/_Projects/Scenes/Borobudur.unity
   - sceneAsset: {fileID: 102900000, guid: 1d89df3424c5d654f8ece730a10e9de9, type: 3}
     scenePath: Assets/_Projects/Scenes/Museum.unity
 --- !u!114 &6274724183888813008
@@ -1095,7 +1110,6 @@ MonoBehaviour:
   _skipStaging: 0
   _autoSession:
     RoomName: Room1
-    PlayerLimit: 2
     PlayMode: 0
     StartMap: 3
     AllowLateJoin: 0

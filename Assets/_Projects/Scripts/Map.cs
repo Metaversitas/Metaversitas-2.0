@@ -57,9 +57,9 @@ public class Map : SimulationBehaviour, ISpawned
 		_app.Disconnect();
 	}
 
-	public void OnLoadMap1()
+	public void OnLoadMetaland()
 	{
-		_app.Session.LoadMap(MapIndex.Map1);
+		_app.Session.LoadMap(MapIndex.Metaland);
 	}
 
 	public void OnGameOver()

@@ -14,7 +14,7 @@ namespace GameUI.Intro
 		[SerializeField] private SessionListItem _sessionListItemPrefab;
 		[SerializeField] private Text _error;
 
-		private PlayMode _playMode;
+        [SerializeField]  private PlayMode _playMode;
 		private App _app;
 
 		public async void Show(PlayMode mode)
