@@ -292,9 +292,9 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 
 	private void Update() 
 	{
-		// Check events like KeyDown or KeyUp in Unity's update. They might be missed otherwise because they're only true for 1 frame
-		//_data.ButtonFlags |= Input.GetKeyDown( KeyCode.R ) ? ButtonFlag.RESPAWN : 0;
-	}
+		var isInteract = _playerInputAction.Player.Interact.IsPressed();
+		_data.ButtonFlags |= isInteract ? ButtonFlag.INTERACT : 0;
+    }
 	
 	public void ShowPlayerSetup()
 	{
@@ -309,7 +309,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 
 		Vector3 inputVector = _playerInputAction.Player.Move.ReadValue<Vector3>();
 		inputVector.Normalize();
-		Debug.Log(inputVector);
+
 		// Persistent button flags like GetKey should be read when needed so they always have the actual state for this tick
 		_data.ButtonFlags |= inputVector.y > 0 ? ButtonFlag.FORWARD : 0;
 		_data.ButtonFlags |= inputVector.x < 0 ? ButtonFlag.LEFT : 0;

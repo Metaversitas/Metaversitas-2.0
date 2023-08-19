@@ -10,10 +10,9 @@ using UnityEngine;
 [OrderBefore(typeof(Character))]
 public class Player : NetworkBehaviour
 {
-	[SerializeField] public Character _maleCharacterPrefab;
-    [SerializeField] public Character _femaleCharacterPrefab;
-
-    [Networked] public NetworkString<_32> Name { get; set; }
+	[SerializeField] public Character CharacterPrefab;
+	
+	[Networked] public NetworkString<_32> Name { get; set; }
 	[Networked] public Color Color { get; set; }
 	[Networked] public NetworkBool Ready { get; set; }
 	[Networked] public NetworkBool DoneLoading { get; set; }
@@ -36,11 +35,11 @@ public class Player : NetworkBehaviour
 		{
 			Debug.Log($"Spawning avatar for player {Name} with input auth {Object.InputAuthority}");
 			Transform t = _app.Session.Map.GetSpawnPoint(Object.InputAuthority);
-			_character = Runner.Spawn(_maleCharacterPrefab, t.position, t.rotation, Object.InputAuthority, (runner, o) =>
+			_character = Runner.Spawn(CharacterPrefab, t.position, t.rotation, Object.InputAuthority, (runner, o) =>
 			{
 				Character character = o.GetComponent<Character>();
 				Debug.Log($"Created Character for Player {Name}");
-				character.Player = this;
+				character.SetPlayer(this);
 			});
 		}
 	}

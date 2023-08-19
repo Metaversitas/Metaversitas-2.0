@@ -12,6 +12,7 @@ public class Character : NetworkBehaviour
 {
 	[SerializeField] private Text _name;
 	[SerializeField] private MeshRenderer _mesh;
+	[SerializeField] private CharacterInteraction _interaction;
 
 	[Networked] public Player Player { get; set; }
 
@@ -24,6 +25,12 @@ public class Character : NetworkBehaviour
 			App.FindInstance().ShowPlayerSetup();
 		}
 	}
+
+	public void SetPlayer(Player player)
+    {
+		Player = player;
+		_interaction.Player = player;
+    }
 
 	public void LateUpdate()
 	{

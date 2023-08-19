@@ -46,8 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interpolationDataSource: 0
-  _maleCharacterPrefab: {fileID: 4610285444781331942, guid: d93c6c52120d24ffe942b25f314dd8f4, type: 3}
-  _femaleCharacterPrefab: {fileID: 4610285444781331942, guid: d93c6c52120d24ffe942b25f314dd8f4, type: 3}
+  CharacterPrefab: {fileID: 4610285444781331942, guid: d93c6c52120d24ffe942b25f314dd8f4, type: 3}
   _Name:
     _length: 0
     _data:

@@ -7,7 +7,8 @@ public enum ButtonFlag
 	BACKWARD = 1 << 1,
 	LEFT = 1 << 2,
 	RIGHT = 1 << 3,
-	RESPAWN = 1 << 4,
+
+	INTERACT = 1 << 4,
 }
 
 public struct InputData : INetworkInput
