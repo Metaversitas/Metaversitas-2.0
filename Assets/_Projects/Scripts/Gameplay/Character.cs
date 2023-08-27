@@ -23,6 +23,9 @@ public class Character : NetworkBehaviour
 		if (HasInputAuthority && string.IsNullOrWhiteSpace(Player.Name.Value))
 		{
 			App.FindInstance().ShowPlayerSetup();
+
+			_camera = Camera.main.transform;
+			_camera.SetParent(transform);
 		}
 	}
 
@@ -36,12 +39,12 @@ public class Character : NetworkBehaviour
 	{
 		if (Object.HasInputAuthority)
 		{
-			if (_camera == null)
-				_camera = Camera.main.transform;
-			Transform t = _mesh.transform;
-			Vector3 p = t.position;
-			_camera.position = p - 10 * t.forward + 5*Vector3.up;
-			_camera.LookAt(p+2*Vector3.up);
+			//if (_camera == null)
+   //             _camera = Camera.main.transform;
+			//Transform t = _mesh.transform;
+			//Vector3 p = t.position;
+			//_camera.position = p - 10 * t.forward + 5*Vector3.up;
+			//_camera.LookAt(p+2*Vector3.up);
 		}
 		
 		// This is a little brute-force, but it gets the job done.
