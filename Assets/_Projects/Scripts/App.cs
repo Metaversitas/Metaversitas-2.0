@@ -68,6 +68,8 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 	private void Awake()
 	{
 		App[] apps = FindObjectsOfType<App>();
+
+		Application.targetFrameRate = 60;
 		
 		if (apps != null && apps.Length > 1)
 		{
