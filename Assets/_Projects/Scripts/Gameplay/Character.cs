@@ -13,31 +13,20 @@ public class Character : NetworkBehaviour
 	[SerializeField] private Text _name;
 	[SerializeField] private Animator _animator;
 	[SerializeField] private MeshRenderer _mesh;
-	[SerializeField] private CharacterCamera characterCamera;
 	[SerializeField] private CharacterInteraction _interaction;
 
 	public float moveVelocity = 5f;
-	public float maxYDegrees = 70f;
-	public float mouseSensitivity = 2f;
-	private float verticalRotation = 0;
 
 	[UnityHeader("Networked Anim Field")]
-	[Networked] public int yRotation { get; set; }
+	[Networked] public Angle yCamRotation { get; set; }
 	[Networked] public int xMovement { get; set; }
 	[Networked] public int yMovement { get; set; }
 
 	[Networked] public Player Player { get; set; }
 
-	private Transform _camTransform;
-	private CursorLock _cursorLock;
 	[Networked]
 	private bool _isReadInput { get; set; }
 
-    private void Awake()
-    {
-		_cursorLock = GetComponent<CursorLock>();
-		_cursorLock.ToggleCursorLock();
-    }
 
     public override void Spawned()
 	{
@@ -46,8 +35,6 @@ public class Character : NetworkBehaviour
 		if (HasInputAuthority)
 		{
 			App.FindInstance().ShowPlayerSetup();
-			characterCamera.SetCameraParent(transform);
-			_camTransform = Camera.main.transform;
 		}
 	}
 
@@ -55,26 +42,6 @@ public class Character : NetworkBehaviour
     {
 		Player = player;
 		_interaction.Player = player;
-    }
-
-    private void Update()
-	{
-		if (Object.HasInputAuthority == false) return;
-		if (_cursorLock.IsLocked == false) return;
-		ControlCameraUsingMouse();
-    }
-
-    private void ControlCameraUsingMouse()
-    {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-
-        verticalRotation -= mouseY;
-        verticalRotation = Mathf.Clamp(verticalRotation, -maxYDegrees, maxYDegrees);
-
-		// rotate transform locally
-        transform.Rotate(Vector3.up * mouseX);
-        _camTransform.localRotation = Quaternion.Euler(verticalRotation, 0, 0);
     }
 
     public void LateUpdate()
@@ -118,10 +85,11 @@ public class Character : NetworkBehaviour
 				xMovement = 0;
 				yMovement = 0;
 			}
+
+			yCamRotation += data.YCamRotation;
 		}
 
-		// set y rot networked if ourself
-		if (Object.HasInputAuthority) yRotation = Mathf.CeilToInt(transform.rotation.eulerAngles.y);
+        transform.rotation = Quaternion.Euler(0, (float)yCamRotation, 0);
 	}
 
     public override void Render()
@@ -136,9 +104,5 @@ public class Character : NetworkBehaviour
 			_animator.SetFloat("xMovement", 0);
             _animator.SetFloat("yMovement", 0);
         }
-
-		// render rotation if not ourself
-		if (Object.HasInputAuthority) return;
-		transform.Rotate(Vector3.up * yRotation);
     }
 }

@@ -14,6 +14,7 @@ public enum ButtonFlag
 public struct InputData : INetworkInput
 {
 	public ButtonFlag ButtonFlags;
+	public Angle YCamRotation;
 
 	public bool GetButton(ButtonFlag button)
 	{

@@ -49,6 +49,8 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 	private bool _allowInput;
 	private PlayerInputAction _playerInputAction;
 
+	public FPSCamera FpsCamera;
+
 	public static App FindInstance()
 	{
 		return FindObjectOfType<App>();
@@ -317,6 +319,9 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 		_data.ButtonFlags |= inputVector.x < 0 ? ButtonFlag.LEFT : 0;
 		_data.ButtonFlags |= inputVector.y < 0 ? ButtonFlag.BACKWARD : 0;
 		_data.ButtonFlags |= inputVector.x > 0 ? ButtonFlag.RIGHT : 0;
+
+		if (FpsCamera != null)
+			_data.YCamRotation = FpsCamera.ConsumeDelta();
 
 		input.Set( _data );
 
