@@ -6,7 +6,25 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/_Projects/Scenes/SampleScene.unity
-    guid: 9fc0d4010bbf28b4594072e72b8655ab
+    path: Assets/_Projects/Scenes/MainMenu.unity
+    guid: bded3f1f427226d4085b2bb28029f14e
+  - enabled: 1
+    path: Assets/_Projects/Scenes/Lobby.unity
+    guid: 6cd2c06f03e110444aa1fe8b23192bbe
+  - enabled: 1
+    path: Assets/_Projects/Scenes/MetaLand.unity
+    guid: 8910d92c2c2522b4e98a67643caa7f4d
+  - enabled: 1
+    path: Assets/_Projects/Scenes/Museum.unity
+    guid: 1d89df3424c5d654f8ece730a10e9de9
+  - enabled: 1
+    path: Assets/_Projects/Scenes/Borobudur.unity
+    guid: 37a17efcc9da2b64a9dc66825f061c85
+  - enabled: 1
+    path: Assets/_Projects/Scenes/Lab Fisika.unity
+    guid: 9d1c0cbf835ff74409d6f566efb6648f
+  - enabled: 1
+    path: Assets/Scenes/5.GameOver.unity
+    guid: 29e9e09f1d7fb4f7294d02b3d5330b03
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: da942947bfe4358449c3ec9beb47801a, type: 2}
