@@ -66,7 +66,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 		get => _allowInput && Session != null && Session.PostLoadCountDown.Expired(Session.Runner);
 		set => _allowInput = value;
 	} 
-
+	//testing
 	private void Awake()
 	{
 		App[] apps = FindObjectsOfType<App>();
