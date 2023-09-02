@@ -95,6 +95,51 @@ Transform:
   m_Father: {fileID: 4610285444781331941}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4545689731017242889
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 425385737240650322}
+  - component: {fileID: 6134123582937807853}
+  m_Layer: 0
+  m_Name: VoiceBehaviour
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &425385737240650322
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4545689731017242889}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2881542207721801705}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6134123582937807853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4545689731017242889}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6376dd7fc23b3764483a7349b58502e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interpolationDataSource: 0
 --- !u!1 &4610285444736294250
 GameObject:
   m_ObjectHideFlags: 0
@@ -263,6 +308,7 @@ MonoBehaviour:
   - {fileID: 4610285444781331942}
   - {fileID: 4610285444781331944}
   - {fileID: 2786839203826599893}
+  - {fileID: 6134123582937807853}
   - {fileID: 5918572417253627795}
   SimulationBehaviours: []
 --- !u!114 &4610285444781331944
@@ -337,8 +383,7 @@ MonoBehaviour:
   mouseSensitivity: 2
   maxYDegrees: 70
   Character: {fileID: 4610285444781331942}
-  CharacterCamera: {fileID: 0}
-  camPosition: {x: 0, y: 1.5, z: 0.35}
+  camPosition: {x: 0, y: 1.8, z: 0.35}
 --- !u!1 &4610285446266597330
 GameObject:
   m_ObjectHideFlags: 0
@@ -678,6 +723,11 @@ PrefabInstance:
 --- !u!95 &2842322758794563344 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 2479660806113695760, guid: c57b12a370320b64cb42f6eca14b5de6, type: 3}
+  m_PrefabInstance: {fileID: 367169954684393216}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2881542207721801705 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2514478081069371625, guid: c57b12a370320b64cb42f6eca14b5de6, type: 3}
   m_PrefabInstance: {fileID: 367169954684393216}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &8183561321598981482 stripped

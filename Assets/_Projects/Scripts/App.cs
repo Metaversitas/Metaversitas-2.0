@@ -41,7 +41,8 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 	[SerializeField] private SessionProps _autoSession = new SessionProps();
 
 	private NetworkRunner _runner;
-	private NetworkSceneManagerBase _loader;
+    [SerializeField] private NetworkRunner networkRunnerPrefab;
+    private NetworkSceneManagerBase _loader;
 	private Action<List<SessionInfo>> _onSessionListUpdated;
 	private InputData _data;
 	private Session _session;
@@ -105,10 +106,14 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 		if (_runner == null)
 		{
 			SetConnectionStatus(ConnectionStatus.Connecting);
-			GameObject go = new GameObject("Session");
+            _runner = Instantiate(networkRunnerPrefab);
+            _runner.transform.SetParent(transform);
+            _runner.name = "Session";
+
+            /*GameObject go = new GameObject("Session");
 			go.transform.SetParent(transform);
 
-			_runner = go.AddComponent<NetworkRunner>();
+			_runner = go.AddComponent<NetworkRunner>();*/
 			_runner.AddCallbacks(this);
 		}
 	}

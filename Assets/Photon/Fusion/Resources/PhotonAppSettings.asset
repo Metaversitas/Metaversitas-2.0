@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AppSettings:
     AppIdFusion: beedcab3-6660-4f9c-b709-5daf411f975f
-    AppIdChat: 
-    AppIdVoice: 
+    AppIdChat: da5693ea-59a5-42a3-96f9-32150f1a4ec7
+    AppIdVoice: f41ad7a9-c641-4a22-beab-fb216bccba4d
     AppVersion: 
     UseNameServer: 1
     FixedRegion: asia

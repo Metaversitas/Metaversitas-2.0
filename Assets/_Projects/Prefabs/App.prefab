@@ -1113,6 +1113,8 @@ MonoBehaviour:
     PlayMode: 0
     StartMap: 3
     AllowLateJoin: 0
+  networkRunnerPrefab: {fileID: 3866670711834171497, guid: cfe427f7bf498e04ca64e90e4265c112, type: 3}
+  FpsCamera: {fileID: 0}
 --- !u!1001 &2132096078
 PrefabInstance:
   m_ObjectHideFlags: 0
