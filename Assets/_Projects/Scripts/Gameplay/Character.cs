@@ -14,8 +14,9 @@ public class Character : NetworkBehaviour
 	[SerializeField] private Animator _animator;
 	[SerializeField] private MeshRenderer _mesh;
 	[SerializeField] private CharacterInteraction _interaction;
+    [SerializeField] private PlayerStateManager _playerStateManager;
 
-	public float moveVelocity = 5f;
+    public float moveVelocity = 5f;
 
 	[UnityHeader("Networked Anim Field")]
 	[Networked] public Angle yCamRotation { get; set; }
@@ -55,6 +56,7 @@ public class Character : NetworkBehaviour
 	public override void FixedUpdateNetwork()
 	{
 		if (Player == null) return;
+		if (_playerStateManager.CurrentGameState == GameState.Pause || _playerStateManager.CurrentGameState == GameState.Interact || _playerStateManager.CurrentGameState == GameState.Chatting) return;
 
 		if (Player.InputEnabled && GetInput(out InputData data))
 		{

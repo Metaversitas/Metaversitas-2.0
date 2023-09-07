@@ -8,7 +8,6 @@ using UnityEngine.UI;
 /// </summary>
 public class Map : SimulationBehaviour, ISpawned
 {
-	[SerializeField] private Text _countdownMessage;
 	[SerializeField] private Transform[] _spawnPoints;
 
 	private bool _sendMapLoadedMessage;
@@ -20,7 +19,6 @@ public class Map : SimulationBehaviour, ISpawned
 		_sendMapLoadedMessage = true;
 		_app = App.FindInstance();
 		
-		_countdownMessage.gameObject.SetActive(true);
 	}
 	
 	public override void FixedUpdateNetwork()
@@ -42,10 +40,6 @@ public class Map : SimulationBehaviour, ISpawned
 			else
 				Debug.Log($"RPC failed trying again later");
 		}
-		if (!session.PostLoadCountDown.Expired(Runner))
-			_countdownMessage.text = Mathf.CeilToInt(session.PostLoadCountDown.RemainingTime(Runner)??0 ).ToString();
-		else
-			_countdownMessage.gameObject.SetActive(false);
 	}
 
 	/// <summary>

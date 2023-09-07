@@ -5,6 +5,8 @@ public class PlayerStateManager : MonoBehaviour
 {
     public event EventHandler PlayState;
     public event EventHandler PauseState;
+    public event EventHandler ChattingState;
+    public event EventHandler InteractState;
     public event EventHandler EndState;
 
 
@@ -30,6 +32,18 @@ public class PlayerStateManager : MonoBehaviour
     {
         PauseState?.Invoke(this, EventArgs.Empty);
         SetGameState(GameState.Pause);
+    }
+
+    public void TriggerChattingState()
+    {
+        ChattingState?.Invoke(this, EventArgs.Empty);
+        SetGameState(GameState.Chatting);
+    }
+
+    public void TriggerInteractState()
+    {
+        InteractState?.Invoke(this, EventArgs.Empty);
+        SetGameState(GameState.Interact);
     }
 
     // Call this method to trigger the end state event
