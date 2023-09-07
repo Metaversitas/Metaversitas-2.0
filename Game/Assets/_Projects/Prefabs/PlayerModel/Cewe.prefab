@@ -1455,8 +1455,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7008829468271902702}
+<<<<<<< HEAD:Game/Assets/_Projects/Prefabs/PlayerModel/Cewe.prefab
   m_LocalRotation: {x: 0.06449286, y: 0.071466394, z: -0.022987643, w: 
 0.99509037}
+=======
+  m_LocalRotation: {x: 0.06449286, y: 0.071466394, z: -0.022987643, w: 0.99509037}
+>>>>>>> 028aace (Karakter Cewek):Assets/_Projects/Prefabs/PlayerModel/Cewe.prefab
   m_LocalPosition: {x: -0.016231252, y: 0.080072924, z: 0.043684516}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1474,8 +1478,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6376dd7fc23b3764483a7349b58502e2, type: 3}
+<<<<<<< HEAD:Game/Assets/_Projects/Prefabs/PlayerModel/Cewe.prefab
   m_Name:
   m_EditorClassIdentifier:
+=======
+  m_Name: 
+  m_EditorClassIdentifier: 
+>>>>>>> 028aace (Karakter Cewek):Assets/_Projects/Prefabs/PlayerModel/Cewe.prefab
   _interpolationDataSource: 0
 --- !u!1 &7012333294990468606
 GameObject:

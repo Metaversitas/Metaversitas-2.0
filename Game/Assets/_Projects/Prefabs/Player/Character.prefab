@@ -244,7 +244,14 @@ c57b12a370320b64cb42f6eca14b5de6, type: 3}
   cowok: 0
 =======
   _playerStateManager: {fileID: 2189212240736461234, guid: 68ba602a4a895c54b99a01d06a758386, type: 3}
+<<<<<<< HEAD:Game/Assets/_Projects/Prefabs/Player/Character.prefab
 >>>>>>> 9acf4e6 (Pause Menu and Chat Menu):Assets/_Projects/Prefabs/Player/Character.prefab
+=======
+  _anchorCharacter: {fileID: 3733457903125417722}
+  _characterCowo: {fileID: 9206054890182285520, guid: c57b12a370320b64cb42f6eca14b5de6, type: 3}
+  _characterCewe: {fileID: 5299533100225056374, guid: 5b6dcd9f9b3aeb94fb339a774bf233a0, type: 3}
+  cowok: 0
+>>>>>>> 028aace (Karakter Cewek):Assets/_Projects/Prefabs/Player/Character.prefab
   moveVelocity: 5
   _xMovement: 0
   _yMovement: 0
@@ -636,5 +643,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e3e6095a6d343fe81ca3bd045379ed4, type: 3}
+<<<<<<< HEAD:Game/Assets/_Projects/Prefabs/Player/Character.prefab
   m_Name:
   m_EditorClassIdentifier:
+=======
+  m_Name: 
+  m_EditorClassIdentifier: 
+>>>>>>> 028aace (Karakter Cewek):Assets/_Projects/Prefabs/Player/Character.prefab
