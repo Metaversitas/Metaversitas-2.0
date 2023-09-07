@@ -16,12 +16,15 @@ public class Character : NetworkBehaviour
 	[SerializeField] private CharacterInteraction _interaction;
     [SerializeField] private PlayerStateManager _playerStateManager;
 
+<<<<<<< HEAD:Game/Assets/_Projects/Scripts/Gameplay/Character.cs
 	[SerializeField] private GameObject _anchorCharacter;
 	[SerializeField] private GameObject _characterCowo;
     [SerializeField] private GameObject _characterCewe;
 
 	public bool cowok;
 
+=======
+>>>>>>> 9acf4e6 (Pause Menu and Chat Menu):Assets/_Projects/Scripts/Gameplay/Character.cs
     public float moveVelocity = 5f;
 
 	[UnityHeader("Networked Anim Field")]
