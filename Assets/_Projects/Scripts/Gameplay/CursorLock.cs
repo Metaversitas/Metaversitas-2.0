@@ -17,6 +17,8 @@ public class CursorLock : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
             ToggleCursorLock();
+        else if (_gameStateManager.CurrentGameState == GameState.Play)
+            LockCursor();
     }
 
     private void OnApplicationFocus(bool isFocus)

@@ -16,6 +16,12 @@ public class Character : NetworkBehaviour
 	[SerializeField] private CharacterInteraction _interaction;
     [SerializeField] private PlayerStateManager _playerStateManager;
 
+	[SerializeField] private GameObject _anchorCharacter;
+	[SerializeField] private GameObject _characterCowo;
+    [SerializeField] private GameObject _characterCewe;
+
+	public bool cowok;
+
     public float moveVelocity = 5f;
 
 	[UnityHeader("Networked Anim Field")]
@@ -35,8 +41,27 @@ public class Character : NetworkBehaviour
 
 		if (HasInputAuthority)
 		{
+			cowok = false;
 			App.FindInstance().ShowPlayerSetup();
-		}
+            // Jika boolean "cowok" adalah true
+            if (cowok)
+            {
+                // Membuat karakter laki-laki sebagai anak dari _anchorCharacter
+                GameObject character = Instantiate(_characterCowo, _anchorCharacter.transform);
+
+                // Mengambil animator dari karakter laki-laki dan mengatur ke _animator
+                _animator = character.GetComponent<Animator>();
+            }
+            else
+            {
+                // Jika boolean "cowok" adalah false, maka kita mengasumsikan karakter perempuan
+                // Membuat karakter perempuan sebagai anak dari _anchorCharacter
+                GameObject character = Instantiate(_characterCewe, _anchorCharacter.transform);
+
+                // Mengambil animator dari karakter perempuan dan mengatur ke _animator
+                _animator = character.GetComponent<Animator>();
+            }
+        }
 	}
 
 	public void SetPlayer(Player player)
