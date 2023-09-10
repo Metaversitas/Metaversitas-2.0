@@ -4,6 +4,7 @@ using UnityEngine;
 public class CursorLock : MonoBehaviour
 {
     private bool _isCursorLocked = true;
+    [SerializeField] private PlayerStateManager _gameStateManager;
 
     public bool IsLocked => _isCursorLocked;
 
@@ -16,6 +17,8 @@ public class CursorLock : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
             ToggleCursorLock();
+        else if (_gameStateManager.CurrentGameState == GameState.Play)
+            LockCursor();
     }
 
     private void OnApplicationFocus(bool isFocus)
@@ -37,6 +40,7 @@ public class CursorLock : MonoBehaviour
         _isCursorLocked = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        _gameStateManager.TriggerPlayState();
     }
 
     private void UnlockCursor()
@@ -44,5 +48,6 @@ public class CursorLock : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         _isCursorLocked = false;
+        _gameStateManager.TriggerPauseState();
     }
 }

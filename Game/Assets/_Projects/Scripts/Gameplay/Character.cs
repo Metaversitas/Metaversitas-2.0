@@ -14,8 +14,15 @@ public class Character : NetworkBehaviour
 	[SerializeField] private Animator _animator;
 	[SerializeField] private MeshRenderer _mesh;
 	[SerializeField] private CharacterInteraction _interaction;
+    [SerializeField] private PlayerStateManager _playerStateManager;
 
-	public float moveVelocity = 5f;
+	[SerializeField] private GameObject _anchorCharacter;
+	[SerializeField] private GameObject _characterCowo;
+    [SerializeField] private GameObject _characterCewe;
+
+	public bool cowok;
+
+    public float moveVelocity = 5f;
 
 	[UnityHeader("Networked Anim Field")]
 	[Networked] public Angle yCamRotation { get; set; }
@@ -34,8 +41,27 @@ public class Character : NetworkBehaviour
 
 		if (HasInputAuthority)
 		{
+			cowok = false;
 			App.FindInstance().ShowPlayerSetup();
-		}
+            // Jika boolean "cowok" adalah true
+            if (cowok)
+            {
+                // Membuat karakter laki-laki sebagai anak dari _anchorCharacter
+                GameObject character = Instantiate(_characterCowo, _anchorCharacter.transform);
+
+                // Mengambil animator dari karakter laki-laki dan mengatur ke _animator
+                _animator = character.GetComponent<Animator>();
+            }
+            else
+            {
+                // Jika boolean "cowok" adalah false, maka kita mengasumsikan karakter perempuan
+                // Membuat karakter perempuan sebagai anak dari _anchorCharacter
+                GameObject character = Instantiate(_characterCewe, _anchorCharacter.transform);
+
+                // Mengambil animator dari karakter perempuan dan mengatur ke _animator
+                _animator = character.GetComponent<Animator>();
+            }
+        }
 	}
 
 	public void SetPlayer(Player player)
@@ -55,6 +81,7 @@ public class Character : NetworkBehaviour
 	public override void FixedUpdateNetwork()
 	{
 		if (Player == null) return;
+		if (_playerStateManager.CurrentGameState == GameState.Pause || _playerStateManager.CurrentGameState == GameState.Interact || _playerStateManager.CurrentGameState == GameState.Chatting) return;
 
 		if (Player.InputEnabled && GetInput(out InputData data))
 		{
