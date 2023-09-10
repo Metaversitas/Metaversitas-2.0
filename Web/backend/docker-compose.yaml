@@ -1,0 +1,30 @@
+version: "3"
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    container_name: metaversitas-db-postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - metaversitas-volume:/var/lib/postgresql/data
+    env_file:
+      - ./.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d metaversitas -u admin"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+  redis:
+    image: redis/redis-stack-server:latest
+    restart: always
+    container_name: metaversitas-redis
+    volumes:
+      - metaversitas-redis-volume:/data/
+    ports:
+      - "6379:6379"
+volumes:
+  metaversitas-volume:
+    driver: local
+  metaversitas-redis-volume:
+    driver: local
