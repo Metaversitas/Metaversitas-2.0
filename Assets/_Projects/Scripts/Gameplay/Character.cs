@@ -21,6 +21,7 @@ public class Character : NetworkBehaviour
     [SerializeField] private GameObject _characterCewe;
 
 	public bool cowok;
+	public string Role;
 
     public float moveVelocity = 5f;
 
@@ -42,7 +43,7 @@ public class Character : NetworkBehaviour
 		if (HasInputAuthority)
 		{
 			cowok = false;
-			App.FindInstance().ShowPlayerSetup();
+			Role = "Dosen";
             // Jika boolean "cowok" adalah true
             if (cowok)
             {

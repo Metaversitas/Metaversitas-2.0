@@ -111,7 +111,6 @@
                 this.speakerPrefabSp.objectReferenceValue = EditorGUILayout.ObjectField(new GUIContent("Speaker Prefab",
                         "Prefab that contains Speaker component to be instantiated when receiving a new remote audio source info"), prefab,
                     typeof(GameObject), false) as GameObject;
-                EditorGUILayout.PropertyField(this.applyDontDestroyOnLoadSp, new GUIContent("Don't Destroy On Load", "Persists the GameObject across scenes using Unity's GameObject.DontDestroyOnLoad"));
                 EditorGUILayout.PropertyField(this.cppCompatibilityModeSp, new GUIContent("C++ API Compatibility Mode", "Use a protocol compatible with Photon Voice C++ API"));
             }
 

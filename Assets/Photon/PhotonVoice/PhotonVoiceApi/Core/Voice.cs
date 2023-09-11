@@ -9,6 +9,7 @@
 // ----------------------------------------------------------------------------
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -252,8 +253,10 @@ namespace Photon.Voice
             this.InterestGroup = opt.InterestGroup;
             this.TargetPlayers = opt.TargetPlayers;
             this.DebugEchoMode = opt.DebugEchoMode;
-            this.Encrypt = opt.Encrypt;
             this.Reliable = opt.Reliable;
+            this.Encrypt = opt.Encrypt;
+            this.Fragment = opt.Fragment;
+            this.FEC = opt.FEC;
 
             this.voiceClient = voiceClient;
             this.threadingEnabled = voiceClient.ThreadingEnabled;
@@ -354,18 +357,6 @@ namespace Photon.Voice
             if (targetExits(targetMe, targetPlayers))
             {
                 string targetStr = getTargetStr(targetMe, targetPlayers);
-                if (targetPlayers != null)
-                {
-                    targetStr = string.Join(", ", targetPlayers);
-                }
-                else
-                {
-                    targetStr = "others";
-                }
-                if (targetMe)
-                {
-                    targetStr += (targetStr.Length > 0 ? " and " : "") + "me";
-                }
 
                 this.voiceClient.logger.LogInfo(LogPrefix + " Sending voice info to " + targetStr + ": " + info.ToString() + " ev=" + evNumber);
                 voiceClient.transport.SendVoiceInfo(this, channelId, targetMe, targetPlayers);
@@ -400,7 +391,7 @@ namespace Photon.Voice
                 Buffer.BlockCopy(compressed.Array, compressed.Offset, a, 0, compressed.Count);
                 configFrame = new ArraySegment<byte>(a, 0, compressed.Count);
 
-                this.voiceClient.logger.LogInfo(LogPrefix + " Got config frame " + configFrame.Count + " bytes");
+                this.voiceClient.logger.LogInfo(LogPrefix + " Got config frame from encoder, " + configFrame.Count + " bytes");
             }
             if (this.voiceClient.transport.IsChannelJoined(this.channelId) && this.TransmitEnabled)
             {
@@ -419,7 +410,7 @@ namespace Photon.Voice
 return;
             }
 
-            bool fragment = Fragment;
+            bool fragment = Fragment && (flags & FrameFlags.Config) == 0; // fragmentation of config frames is not supported (see RemoteVoice.configFrameQueue)
 
             // sending reliably breaks timing
             // consider sending multiple EndOfStream packets for reliability
@@ -754,6 +745,29 @@ return;
 
         internal void receiveBytes(ref FrameBuffer receivedBytes, byte evNumber)
         {
+            if (receivedBytes.IsConfig)
+            {
+                if ((receivedBytes.Flags & FrameFlags.MaskFrag) != 0)
+                {
+                    this.voiceClient.logger.LogError(LogPrefix + " ev#" + evNumber + " fr#" + receivedBytes.FrameNum + " wr#" + frameWritePos + ", flags: " + receivedBytes.Flags + ": config frame can't be fragmented");
+                }
+                else
+                {
+                    // Prevents the very unlikely infinite growth.
+                    // IsEmpty seems to be faster than Count and the queue is mostly empty.
+                    while (!configFrameQueue.IsEmpty && configFrameQueue.Count > 10)
+                    {
+                        if (configFrameQueue.TryDequeue(out FrameBuffer confFrame))
+                        {
+                            confFrame.Release();
+                        }
+                    }
+                    configFrameQueue.Enqueue(receivedBytes);
+                    receivedBytes.Retain();
+                }
+
+                return;
+            }
             // to avoid multiple empty frames injeciton to the decoder at startup when the current frame number is unknown.
             if (!started && !receivedBytes.IsFEC)
             {
@@ -861,6 +875,11 @@ return;
         AutoResetEvent frameQueueReady;
         int flushingFrameNum = -1; // if >= 0, we are flushing since the frame with this number: process the queue w/o delays until this frame encountered
         FrameBuffer nullFrame = new FrameBuffer();
+        // The queue of frames guaranteed to be processed.
+        // These are currently only video config frames sent reliably w/o fragmentation.
+        // Event queue processor can drop a config frame if it's delivered later than its neighbours.
+        // Config frames are rare (usually 1 in decoder lifetime), we can use a dynamic queue for them.
+        ConcurrentQueue<FrameBuffer> configFrameQueue = new ConcurrentQueue<FrameBuffer>();
         bool started = false;
 
         // buffers for fragmented frames assembly
@@ -902,6 +921,12 @@ return;
             int nullFramesCnt = 0; // to avoid infinite loop when read frame position does not advance for some reason
             while (!disposed && nullFramesCnt++ < 10 && (byte)(frameWritePos - frameReadPos) > df)
             {
+                while (configFrameQueue.TryDequeue(out FrameBuffer confFrame))
+                {
+                    options.Decoder.Input(ref confFrame);
+                    confFrame.Release();
+                }
+
                 if (flushingFrameNum == frameReadPos)
                 {
                     // the frame is flushing, the next frame will be processed with delay

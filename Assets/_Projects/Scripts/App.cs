@@ -32,7 +32,6 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 	[SerializeField] private Player _playerPrefab;
 	[SerializeField] private Session _sessionPrefab;
 	[SerializeField] private ErrorBox _errorBox;
-	[SerializeField] private PlayerSetupPanel _playerSetup;
 	[SerializeField] private bool _sharedMode;
 
 	[Space(10)]
@@ -305,11 +304,6 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 		_data.ButtonFlags |= isInteract ? ButtonFlag.INTERACT : 0;
     }
 	
-	public void ShowPlayerSetup()
-	{
-		if(_playerSetup)
-			_playerSetup.Show(true);
-	}
 
 	public void OnInput(NetworkRunner runner, NetworkInput input)
 	{

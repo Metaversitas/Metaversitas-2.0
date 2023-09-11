@@ -6,6 +6,7 @@ using UnityEngine;
 public class CharacterInteraction : NetworkBehaviour
 {
     public float delayInteract = 1f;
+    public GameObject _notif;
 
     [Networked]
     public InformativeObject CurrentObject { get; set; }
@@ -16,6 +17,10 @@ public class CharacterInteraction : NetworkBehaviour
     [Networked] 
 	public Player Player { get; set; }
 
+    private void Start()
+    {
+        _notif.SetActive(false);
+    }
     public override void Spawned()
     {
         delay = TickTimer.CreateFromSeconds(Runner, delayInteract);
@@ -31,6 +36,8 @@ public class CharacterInteraction : NetworkBehaviour
 
             if (Object.HasInputAuthority)
                 CurrentObject.SetLocalPlayer(gameObject);
+            // Tambahkan notif tekan "E"
+            _notif.SetActive(true);
         }
     }
 
@@ -42,6 +49,8 @@ public class CharacterInteraction : NetworkBehaviour
 
             CurrentObject.ModifyCollidedCount(-1);
             CurrentObject = null;
+            // Tambahkan notif tekan "E"
+            _notif.SetActive(false);
         }
     }
 

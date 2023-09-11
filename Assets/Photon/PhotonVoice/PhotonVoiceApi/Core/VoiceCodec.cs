@@ -124,7 +124,9 @@ namespace Photon.Voice
 #if PHOTON_VOICE_VIDEO_ENABLE
         VideoVP8 = 21,
         VideoVP9 = 22,
+//        VideoAV1 = 23,
         VideoH264 = 31,
+//        VideoH265 = 32,
 #endif
     }
 

@@ -129,9 +129,6 @@ namespace Photon.Voice.Unity
         private void Init()
         {
             this.client = new LoadBalancingTransport2(this.Logger, ConnectionProtocol.Udp, cppCompatibilityMode);
-
-            this.client.VoiceClient.ThreadingEnabled = Application.platform != RuntimePlatform.WebGLPlayer;
-
             this.client.ClientType = ClientAppType.Voice;
             this.client.VoiceClient.OnRemoteVoiceInfoAction += this.OnRemoteVoiceInfo;
             this.client.StateChanged += this.OnVoiceStateChanged;
