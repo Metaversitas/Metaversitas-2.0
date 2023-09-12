@@ -82,7 +82,7 @@ public class Character : NetworkBehaviour
 	public override void FixedUpdateNetwork()
 	{
 		if (Player == null) return;
-		if (_playerStateManager.CurrentGameState == GameState.Pause || _playerStateManager.CurrentGameState == GameState.Interact || _playerStateManager.CurrentGameState == GameState.Chatting) return;
+		if (_playerStateManager.CurrentGameState != GameState.Play) return;
 
 		if (Player.InputEnabled && GetInput(out InputData data))
 		{

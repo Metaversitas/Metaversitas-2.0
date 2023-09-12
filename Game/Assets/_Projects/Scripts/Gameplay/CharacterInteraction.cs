@@ -6,7 +6,8 @@ using UnityEngine;
 public class CharacterInteraction : NetworkBehaviour
 {
     public float delayInteract = 1f;
-    public GameObject _notif;
+    public GameObject _notifInformative;
+    public GameObject _notifPraktikumMenu;
 
     [Networked]
     public InformativeObject CurrentObject { get; set; }
@@ -19,7 +20,7 @@ public class CharacterInteraction : NetworkBehaviour
 
     private void Start()
     {
-        _notif.SetActive(false);
+        _notifInformative.SetActive(false);
     }
     public override void Spawned()
     {
@@ -37,7 +38,11 @@ public class CharacterInteraction : NetworkBehaviour
             if (Object.HasInputAuthority)
                 CurrentObject.SetLocalPlayer(gameObject);
             // Tambahkan notif tekan "E"
-            _notif.SetActive(true);
+            _notifInformative.SetActive(true);
+        } else if (other.CompareTag("PraktikumMenu"))
+        {
+            // Tambahkan notif tekan "B"
+            _notifPraktikumMenu.SetActive(true);
         }
     }
 
@@ -50,8 +55,14 @@ public class CharacterInteraction : NetworkBehaviour
             CurrentObject.ModifyCollidedCount(-1);
             CurrentObject = null;
             // Tambahkan notif tekan "E"
-            _notif.SetActive(false);
+            _notifInformative.SetActive(false);
         }
+        else if (other.CompareTag("PraktikumMenu"))
+        {
+            // Tambahkan notif tekan "B"
+            _notifPraktikumMenu.SetActive(false);
+        }
+
     }
 
     private void TryInteract()
