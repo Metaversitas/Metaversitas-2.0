@@ -1792,14 +1792,14 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -2657361595131139235, guid: 2c37b9a253cd92a4884e45c5b1f7aabf, type: 3}
-  - {fileID: 2413751341462511734, guid: 2c37b9a253cd92a4884e45c5b1f7aabf, type: 3}
-  - {fileID: 1129505859253339258, guid: 2c37b9a253cd92a4884e45c5b1f7aabf, type: 3}
-  - {fileID: 5897240591097940384, guid: 2c37b9a253cd92a4884e45c5b1f7aabf, type: 3}
-  - {fileID: 1877244072416195789, guid: 2c37b9a253cd92a4884e45c5b1f7aabf, type: 3}
-  - {fileID: -2315404422835026341, guid: 2c37b9a253cd92a4884e45c5b1f7aabf, type: 3}
-  - {fileID: -8449021711679869814, guid: 2c37b9a253cd92a4884e45c5b1f7aabf, type: 3}
-  - {fileID: 2839812842092981165, guid: 2c37b9a253cd92a4884e45c5b1f7aabf, type: 3}
+  - {fileID: -2657361595131139235, guid: 6eb75067200fc5841867957c8613299d, type: 3}
+  - {fileID: 2413751341462511734, guid: 6eb75067200fc5841867957c8613299d, type: 3}
+  - {fileID: 1129505859253339258, guid: 6eb75067200fc5841867957c8613299d, type: 3}
+  - {fileID: 5897240591097940384, guid: 6eb75067200fc5841867957c8613299d, type: 3}
+  - {fileID: 1877244072416195789, guid: 6eb75067200fc5841867957c8613299d, type: 3}
+  - {fileID: -2315404422835026341, guid: 6eb75067200fc5841867957c8613299d, type: 3}
+  - {fileID: -8449021711679869814, guid: 6eb75067200fc5841867957c8613299d, type: 3}
+  - {fileID: 2839812842092981165, guid: 6eb75067200fc5841867957c8613299d, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1824,7 +1824,7 @@ SkinnedMeshRenderer:
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
   m_SkinnedMotionVectors: 1
-  m_Mesh: {fileID: -5945913099042318205, guid: 2c37b9a253cd92a4884e45c5b1f7aabf, type: 3}
+  m_Mesh: {fileID: -5945913099042318205, guid: 6eb75067200fc5841867957c8613299d, type: 3}
   m_Bones:
   - {fileID: 8509544436901967342}
   - {fileID: 2985717518495512979}
@@ -2312,8 +2312,8 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9206054890182285520}
   m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: 2c37b9a253cd92a4884e45c5b1f7aabf, type: 3}
-  m_Controller: {fileID: 9100000, guid: e9b40292aea3d2345a8770dbce642e8c, type: 2}
+  m_Avatar: {fileID: 9000000, guid: 6eb75067200fc5841867957c8613299d, type: 3}
+  m_Controller: {fileID: 9100000, guid: 2a04b698dac7d9148aae5aa3e847a142, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 1
