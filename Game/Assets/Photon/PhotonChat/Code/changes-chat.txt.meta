@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+<<<<<<< HEAD
+<<<<<<< HEAD:Game/Assets/Photon/PhotonChat/Code/changes-chat.txt.meta
+guid: e5c3dda6f11fe7845989297c8a603dc2
+TextScriptImporter:
+=======
+guid: 26c609b9a38646d48b28784958dbe738
+PrefabImporter:
+>>>>>>> RWeebz-feature-backend:Game/Assets/_Projects/Prefabs/Chat/ChatManager.prefab.meta
+=======
+guid: e5c3dda6f11fe7845989297c8a603dc2
+TextScriptImporter:
+>>>>>>> RWeebz-feature-backend
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
