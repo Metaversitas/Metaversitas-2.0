@@ -193,6 +193,7 @@ GameObject:
   - component: {fileID: 7048927567492314046}
   - component: {fileID: -4747355549910533344}
   - component: {fileID: 2786839203826599893}
+  - component: {fileID: 4788498069628935632}
   m_Layer: 0
   m_Name: Character
   m_TagString: Player
@@ -312,7 +313,7 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -328,7 +329,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4413e39804dafb499d043844b251283, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gameStateManager: {fileID: 2189212240736461234, guid: 68ba602a4a895c54b99a01d06a758386, type: 3}
+  _gameStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
 --- !u!114 &2786839203826599893
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -346,6 +347,20 @@ MonoBehaviour:
   maxYDegrees: 70
   Character: {fileID: 4610285444781331942}
   camPosition: {x: 0, y: 1.8, z: 0.35}
+--- !u!136 &4788498069628935632
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4610285444781331945}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &4610285446266597330
 GameObject:
   m_ObjectHideFlags: 0
