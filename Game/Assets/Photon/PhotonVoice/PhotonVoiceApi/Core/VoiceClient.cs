@@ -67,7 +67,11 @@ namespace Photon.Voice
         internal IVoiceTransport transport;
         internal ILogger logger;
 
+#if UNITY_WEBGL && !UNITY_EDITOR // always disabled, ignore setter
+        public bool ThreadingEnabled { get => false; set { } }
+#else
         public bool ThreadingEnabled { get; set; } = true;
+#endif
         /// <summary>Lost events counter (the number of empty frames sent to the deocder).</summary>
         public int EventsLost { get; internal set; }
 
@@ -501,7 +505,7 @@ namespace Photon.Voice
             this.logger.LogInfo(voice.LogPrefix + " removed");
         }
 
-        #region nonpublic
+#region nonpublic
 
         private Dictionary<byte, LocalVoice> localVoices = new Dictionary<byte, LocalVoice>();
         private Dictionary<int, List<LocalVoice>> localVoicesPerChannel = new Dictionary<int, List<LocalVoice>>();
@@ -603,7 +607,7 @@ namespace Photon.Voice
                 }
             }
         }
-        
+
         // Joins all channels
         public void onPlayerJoin(int playerId)
         {
@@ -780,7 +784,7 @@ namespace Photon.Voice
         //    return string.Format("Photon.Voice.Client, local: {0}, remote: {1}",  localVoices.Count, remoteVoices.Count);
         //}
 
-        #endregion
+#endregion
 
         public void Dispose()
         {

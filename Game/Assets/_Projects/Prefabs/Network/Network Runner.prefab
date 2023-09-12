@@ -63,7 +63,7 @@ MonoBehaviour:
   ApplyDontDestroyOnLoad: 1
   runInBackground: 1
   statsResetInterval: 1000
-  speakerPrefab: {fileID: 959197489044961260, guid: f6e201e75b0086644a72999e28f91ea8, type: 3}
+  speakerPrefab: {fileID: 959197489044961260, guid: 6cebe4efd97a3d0478e2d46eb81681e3, type: 3}
   primaryRecorder: {fileID: 6593829968824799926}
   usePrimaryRecorder: 0
   cppCompatibilityMode: 0
@@ -84,6 +84,7 @@ MonoBehaviour:
     EnableLobbyStatistics: 0
     NetworkLogging: 1
   ShowSettings: 1
+  AutoConnectAndJoin: 1
   UseFusionAppSettings: 1
   UseFusionAuthValues: 1
 --- !u!1 &5663688404313974395

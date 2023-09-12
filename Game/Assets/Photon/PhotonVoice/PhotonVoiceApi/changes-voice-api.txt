@@ -1,5 +1,28 @@
 Photon Voice API Change Log
 
+v2.53 (September 06, 2023)
+Core:
+   FIXED: LoadBalancingTransport: config frame delivery mode is Reliable, the same as for VoiceInfo event, otherwise config frame can be delivered earlier than VoiceInfo
+   FIXED: RemoteVoice: config frames are processed in a separate queue to guarantee that they are decoded: when put in the common queue, they could be dropped if their neighbors have been delivered faster and already processed
+   CHANGED: VoiceClient.ThreadingEnabled is always false for UNITY_WEBGL, setter is ignored
+   ADDED: IDeviceEnumerator.OnReady callback (asynchronous API, required by WebGL): both sync and async implementations call it when the device list is ready
+   CHANGED: all DeviceEnumeratorBase inheritors call OnReady when the list is updated
+WebGL:
+   ADDED: WebGL video streaming support: video capture, screen capture, rendering to texture, WebCodecs API based encoding and decoding: WebCodecsCameraRecorderUnityTexture, WebCodecsScreenRecorderUnityTexture and WebCodecsVideoPlayerUnityTexture based on WebCodecsCamera, WebCodecsScreenShare, WebCodecsVideoEncoder, WebCodecsVideoDecoderUnityTexture
+   NOTE: browsers supported by WebGL video: Chrome, Opera, Edge
+   ADDED: VideoSourceSizeMode struct with VideoSourceSizeMode.Mode enum controlling the resize of the video source before passing it to the encoder if supported by the source: Fixed (given sizes), Constrained (set to <= given sizes, aspect ratio is preserved) and Source; boolean VideoSourceSizeMode.Update controlling whether the sizes are updated if the source sizes change after initialization (ignored for Fixed)
+   NOTE: VideoSourceSizeMode is currently used only by WebCodecsCameraRecorderUnityTexture / WebCodecsScreenShare
+   ADDED: Platform WebGL video recorder, player and preview factories, 'UnityTexture' methods are 'native' for WebGL
+   ADDED: video input device enumeration: WebVideoInEnumerator
+   FIXED: WebGL Audio AudioWorkletProcessor canceled processing if the first process() call buffer had no data that might happen during initialization, the remote voice did not play in this case
+   ADDED: audio input device enumeration: WebAudioInEnumerator, returns the result asynchronously
+   ADDED: audio input device selection: WebAudioMicIn() accepts 'deviceId' parameter
+Android:
+   CHANGED: Android native video: KEY_PREPEND_HEADER_TO_SYNC_FRAMES format flag set for h264 (and h265) codec: now every keyframe has vital codec info, unique config frame processing is no longer required
+   CHANGED: AndroidVideoEncoder decoupled from the camera wrapper (ADDED: AndroidCameraVideoEncoder extending AndroidVideoEncoder) and can be used standalone
+   ADDED: AndroidVideoEncoder.Surface property returning the surface to which the input component should write
+   BREAKING: AndroidVideoEncoderSurfaceView -> AndroidCameraVideoEncoderSurfaceView, AndroidVideoEncoderTexture -> AndroidCameraVideoEncoderTexture
+
 v2.52 (May 23, 2023)
 Core:
    CHANGED: incoming stream events queue reworked to a ring buffer allowing events order restoring (useful for Unsequenced transmission modes), fragmented frames assembly and event cross-referencing for FEC.
@@ -59,7 +82,7 @@ UWP Video Decoder:
    CHANGED: sampleQueue max size is 5 to avoid playback delays
    FIXED: incorrect call order of buffer Retain() prevented buffers from being reused
 iOS:
-   FIXED: audio capture on iPhone14: InputCallback is added and used for capture, RenderCallback still exists in the pipeline but does not do anything
+   FIXED: audio capture on iPhone 14: InputCallback is added and used for capture, RenderCallback still exists in the pipeline but does not do anything
    FIXED: Video: VTCompressionSession ignored bitrate and possibly other properties in recent iOS versions because null timestamp were passed to VTCompressionSessionEncodeFrame(), now the timestamp retrieved from the captured CMSampleBuffer instance is used
 Mac:
    CHANGED: Video: current time is used as the timestamp in VTCompressionSessionEncodeFrame() call which looks more reasonable than the previously used frame counter divided by fps (a CMSampleBuffer instance is not available because a byte buffer from an external capture module is passed to the encoder)

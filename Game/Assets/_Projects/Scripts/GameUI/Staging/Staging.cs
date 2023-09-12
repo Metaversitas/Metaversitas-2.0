@@ -28,23 +28,6 @@ namespace GameUI.Staging
 			int count = 0;
 			int ready = 0;
 			_playerGrid.BeginUpdate();
-
-			_app.ForEachPlayer(ply =>
-			{
-				_playerGrid.AddRow(_playerListItemPrefab, item => item.Setup(ply));
-				count++;
-				if (ply.Ready)
-					ready++;
-			});
-
-			string wait = null;
-			if (ready < count)
-				wait = $"Waiting for {count - ready} of {count} players";
-			else if (!_app.IsSessionOwner)
-				wait = "Waiting for session owner to start";
-
-			_startButton.enabled = wait==null;
-			_startLabel.text = wait ?? "Start";
 	  
 			_playerGrid.EndUpdate();
 

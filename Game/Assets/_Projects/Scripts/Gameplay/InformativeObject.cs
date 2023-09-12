@@ -10,6 +10,7 @@ public class InformativeObject : NetworkBehaviour
     public AnimationSequence hideSeq;
 
     private GameObject localPlayerObject;
+    public AudioSource audioSource;
 
     [Networked]
     public int CollidedPlayerCount { get; set; }
@@ -21,8 +22,16 @@ public class InformativeObject : NetworkBehaviour
     {
         var b = changed.Behaviour;
 
-        if (b.IsShowing) b.showSeq.Play();
-        else b.hideSeq.Play();
+        if (b.IsShowing)
+        {
+            b.showSeq.Play();
+            b.audioSource.Play();
+        }
+        else
+        {
+            b.audioSource.Stop();
+            b.hideSeq.Play();
+        }
     }
 
     public void ToggleShow()
