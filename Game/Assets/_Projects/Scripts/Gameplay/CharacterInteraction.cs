@@ -41,7 +41,8 @@ public class CharacterInteraction : NetworkBehaviour
                 CurrentObject.SetLocalPlayer(gameObject);
             // Tambahkan notif tekan "E"
             _notifInformative.SetActive(true);
-        } else if (other.CompareTag("OfflineMenu"))
+        } 
+        if (other.CompareTag("OfflineMenu"))
         {
             // Tambahkan notif tekan "B"
             _notifPraktikumMenu.SetActive(true);
@@ -61,12 +62,11 @@ public class CharacterInteraction : NetworkBehaviour
             // Tambahkan notif tekan "E"
             _notifInformative.SetActive(false);
         }
-        else if (other.CompareTag("OfflineMenu"))
+        if (other.CompareTag("OfflineMenu"))
         {
             // Tambahkan notif tekan "B"
             _notifPraktikumMenu.SetActive(false);
             if (_offlineMenu == null) return;
-
             _offlineMenu = null;
         }
 
@@ -83,6 +83,7 @@ public class CharacterInteraction : NetworkBehaviour
     {
         if (_offlineMenu == null) return;
         _offlineMenu.Open();
+        _notifPraktikumMenu.SetActive(false );
     }
 
     private void Update()
