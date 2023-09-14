@@ -374,7 +374,7 @@ MonoBehaviour:
   _mesh: {fileID: 4610285446578239583}
   _interaction: {fileID: 5918572417253627795}
   _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
-  _anchorCharacter: {fileID: 3733457903125417722}
+  _anchorCharacter: {fileID: 4568515329382100830}
   _characterCowo: {fileID: 9206054890182285520, guid: 04055bfd6f06d964392464261fd4abb4, type: 3}
   _characterCewe: {fileID: 5299533100225056374, guid: 5b6dcd9f9b3aeb94fb339a774bf233a0, type: 3}
   cowok: 0

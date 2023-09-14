@@ -256,7 +256,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1874438805}
-  m_RootOrder: 3
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1007,7 +1007,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4796189158502165324, guid: d591fc5d5ca35ec43b6bf98b0e4a0d02, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -14
+      value: -13.999985
       objectReference: {fileID: 0}
     - target: {fileID: 4796189158502165324, guid: d591fc5d5ca35ec43b6bf98b0e4a0d02, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1024,6 +1024,10 @@ PrefabInstance:
     - target: {fileID: 4796189158502165325, guid: d591fc5d5ca35ec43b6bf98b0e4a0d02, type: 3}
       propertyPath: m_Name
       value: Panel_login
+      objectReference: {fileID: 0}
+    - target: {fileID: 4796189158502165325, guid: d591fc5d5ca35ec43b6bf98b0e4a0d02, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4796189158964823828, guid: d591fc5d5ca35ec43b6bf98b0e4a0d02, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
@@ -1989,7 +1993,7 @@ RectTransform:
   m_Children:
   - {fileID: 1949454686}
   m_Father: {fileID: 1874438805}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -2912,7 +2916,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1234743953
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3840,7 +3844,7 @@ RectTransform:
   m_Children:
   - {fileID: 68864804}
   m_Father: {fileID: 1874438805}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -4375,7 +4379,7 @@ RectTransform:
   m_Children:
   - {fileID: 1032926879}
   m_Father: {fileID: 1874438805}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -4952,7 +4956,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1874438805
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4965,10 +4969,10 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 47729506}
   - {fileID: 1537757882}
   - {fileID: 1657067168}
   - {fileID: 730762366}
-  - {fileID: 47729506}
   m_Father: {fileID: 1401184354}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5657,14 +5661,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 840c3234004bf824cb813fe86465858d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  welcomePanel: {fileID: 2077536033}
-  user: {fileID: 1383984102}
-  username: {fileID: 2003882110}
-  password: {fileID: 926185285}
-  errorMessages: {fileID: 507421299}
-  progressCircle: {fileID: 1542583236}
-  loginButton: {fileID: 499938150}
-  url: http://localhost/unity/api/
 --- !u!4 &1504115374938841913
 Transform:
   m_ObjectHideFlags: 0
