@@ -25,7 +25,7 @@ public class PauseMenu : MonoBehaviour
             _pauseMenu.SetActive(true);
             _isOpen = true;
         }
-        else if (Input.GetKeyDown("escape"))
+        else if (Input.GetKeyDown("escape") && _playerStateManager.CurrentGameState != GameState.Interact)
         {
             _MenuManager.OpenMenu("Pause");
             if (_isOpen) 
