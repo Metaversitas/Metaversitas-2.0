@@ -18,9 +18,11 @@ public class CharacterInteraction : NetworkBehaviour
     [Networked] 
 	public Player Player { get; set; }
 
+    public OfflineMenu _offlineMenu;
     private void Start()
     {
         _notifInformative.SetActive(false);
+        _notifPraktikumMenu.SetActive(false);
     }
     public override void Spawned()
     {
@@ -39,10 +41,13 @@ public class CharacterInteraction : NetworkBehaviour
                 CurrentObject.SetLocalPlayer(gameObject);
             // Tambahkan notif tekan "E"
             _notifInformative.SetActive(true);
-        } else if (other.CompareTag("PraktikumMenu"))
+        } 
+        if (other.CompareTag("OfflineMenu"))
         {
             // Tambahkan notif tekan "B"
             _notifPraktikumMenu.SetActive(true);
+            var offlineMenu = other.GetComponent<OfflineMenu>();
+            _offlineMenu = offlineMenu;
         }
     }
 
@@ -57,10 +62,12 @@ public class CharacterInteraction : NetworkBehaviour
             // Tambahkan notif tekan "E"
             _notifInformative.SetActive(false);
         }
-        else if (other.CompareTag("PraktikumMenu"))
+        if (other.CompareTag("OfflineMenu"))
         {
             // Tambahkan notif tekan "B"
             _notifPraktikumMenu.SetActive(false);
+            if (_offlineMenu == null) return;
+            _offlineMenu = null;
         }
 
     }
@@ -72,7 +79,19 @@ public class CharacterInteraction : NetworkBehaviour
         CurrentObject.ToggleShow();
     }
 
-	public override void FixedUpdateNetwork()
+    private void TryInteractOffline()
+    {
+        if (_offlineMenu == null) return;
+        _offlineMenu.Open();
+        _notifPraktikumMenu.SetActive(false );
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown("b")) { TryInteractOffline(); }
+    }
+
+    public override void FixedUpdateNetwork()
 	{
 		if (Player == null) return;
         if (Player.InputEnabled == false) return;
