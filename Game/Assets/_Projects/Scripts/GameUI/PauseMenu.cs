@@ -8,6 +8,8 @@ public class PauseMenu : MonoBehaviour
 
     [SerializeField] private GameObject _pauseMenu;
     [SerializeField] private MenuManager _MenuManager;
+    [SerializeField] private Menu _pauseNameMenu;
+    bool _isOpen;
 
     // Start is called before the first frame update
     void Start()
@@ -21,18 +23,27 @@ public class PauseMenu : MonoBehaviour
         if (_playerStateManager.CurrentGameState == GameState.Pause)
         {
             _pauseMenu.SetActive(true);
+            _isOpen = true;
+        }
+        else if (Input.GetKeyDown("escape"))
+        {
             _MenuManager.OpenMenu("Pause");
+            if (_isOpen) 
+            {
+                _pauseNameMenu.Close();
+                _isOpen = false;
+            }
+            //
         }
         else
         {
             _pauseMenu.SetActive(false);
-
+            _isOpen= false;
         }
     }
 
     public void ResumeButton()
     {
         _playerStateManager.TriggerPlayState();
-        _MenuManager.OpenMenu("Pause");
     }
 }

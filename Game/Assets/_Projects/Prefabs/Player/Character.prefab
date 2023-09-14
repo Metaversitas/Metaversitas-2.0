@@ -183,9 +183,10 @@ MonoBehaviour:
   _interpolationDataSource: 0
   delayInteract: 0.7
   _notifInformative: {fileID: 6506788467949620410}
-  _notifPraktikumMenu: {fileID: 0}
+  _notifPraktikumMenu: {fileID: 1966083919748782892}
   _CurrentObject: {fileID: 0}
   _Player: {fileID: 0}
+  _offlineMenu: {fileID: 0}
 --- !u!65 &448332936391554449
 BoxCollider:
   m_ObjectHideFlags: 0

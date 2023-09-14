@@ -77,6 +77,7 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
             chatClient.PublishMessage("RegionChannel", currentChat);
             chatField.text = "";
             currentChat = "";
+            _playerStateManager.TriggerPlayState();
         }
     }
     public void TypeChatOnValueChange(string valueIn)
@@ -103,6 +104,7 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
             chatClient.SendPrivateMessage(privateReceiver, currentChat);
             chatField.text = "";
             currentChat = "";
+            _playerStateManager.TriggerPlayState();
         }
     }
 
@@ -263,6 +265,7 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
                 privMessage = true;
                 chatField.DeactivateInputField();
                 privField.ActivateInputField();
+                _playerStateManager.TriggerChattingState();
             }
         }
 
