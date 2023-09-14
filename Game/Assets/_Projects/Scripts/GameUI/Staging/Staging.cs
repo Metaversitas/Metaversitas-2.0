@@ -25,8 +25,6 @@ namespace GameUI.Staging
 
 		void Update()
 		{
-			int count = 0;
-			int ready = 0;
 			_playerGrid.BeginUpdate();
 	  
 			_playerGrid.EndUpdate();
