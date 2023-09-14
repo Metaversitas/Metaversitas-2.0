@@ -19,6 +19,8 @@ public class CursorLock : MonoBehaviour
             ToggleCursorLock();
         else if (_gameStateManager.CurrentGameState == GameState.Play)
             LockCursor();
+        else if (_gameStateManager.CurrentGameState == GameState.Interact || _gameStateManager.CurrentGameState == GameState.Chatting)
+            UnlockCursor();
     }
 
     private void OnApplicationFocus(bool isFocus)
@@ -48,6 +50,7 @@ public class CursorLock : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         _isCursorLocked = false;
+        if (_gameStateManager.CurrentGameState == GameState.Play)
         _gameStateManager.TriggerPauseState();
     }
 }
