@@ -16,7 +16,7 @@ public class Character : NetworkBehaviour
 	[SerializeField] private CharacterInteraction _interaction;
     [SerializeField] private PlayerStateManager _playerStateManager;
 
-	[SerializeField] private GameObject _anchorCharacter;
+	[SerializeField] private Transform _anchorCharacter;
 	[SerializeField] private GameObject _characterCowo;
     [SerializeField] private GameObject _characterCewe;
 
@@ -48,16 +48,19 @@ public class Character : NetworkBehaviour
             if (cowok)
             {
                 // Membuat karakter laki-laki sebagai anak dari _anchorCharacter
-                GameObject character = Instantiate(_characterCowo, _anchorCharacter.transform);
+                NetworkObject character = Runner.Spawn(_characterCowo, _anchorCharacter.position,_anchorCharacter.rotation);
+				character.transform.SetParent(_anchorCharacter);
 
                 // Mengambil animator dari karakter laki-laki dan mengatur ke _animator
                 _animator = character.GetComponent<Animator>();
+
             }
             else
             {
                 // Jika boolean "cowok" adalah false, maka kita mengasumsikan karakter perempuan
                 // Membuat karakter perempuan sebagai anak dari _anchorCharacter
-                GameObject character = Instantiate(_characterCewe, _anchorCharacter.transform);
+                NetworkObject character = Runner.Spawn(_characterCewe, _anchorCharacter.position, _anchorCharacter.rotation);
+                character.transform.SetParent(_anchorCharacter);
 
                 // Mengambil animator dari karakter perempuan dan mengatur ke _animator
                 _animator = character.GetComponent<Animator>();
