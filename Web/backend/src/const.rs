@@ -9,3 +9,5 @@ pub const ENV_REDIS_IS_TLS: &str = "REDIS_IS_TLS";
 pub const ENV_REDIS_HOSTNAME: &str = "REDIS_HOSTNAME";
 pub const ENV_REDIS_PASSWORD: &str = "REDIS_PASSWORD";
 pub const ENV_REDIS_PORT: &str = "REDIS_PORT";
+pub const ENV_WEB_APP_PORT: &str = "WEB_APP_PORT";
+pub const ENV_WEB_APP_HOST: &str = "WEB_APP_HOST";

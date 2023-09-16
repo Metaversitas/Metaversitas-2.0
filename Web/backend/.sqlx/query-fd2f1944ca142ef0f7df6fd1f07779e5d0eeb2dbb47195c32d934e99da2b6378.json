@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            users.user_id::uuid as user_id,\n            users.nickname as in_game_nickname,\n            identity.full_name as full_name,\n            university.name as university_name,\n            university_faculty.faculty_name as faculty_name,\n            university_faculty.faculty_id as faculty_id,\n            university_identity.users_university_id as user_univ_id\n        from users\n        inner join users_identity as identity on users.user_id = identity.users_id\n        inner join users_university_identity as university_identity on identity.users_identity_id = university_identity.users_identity_id\n        inner join university on university_identity.university_id = university.university_id\n        inner join university_faculty on university.university_id = university_faculty.university_id\n        where users.user_id::text = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "in_game_nickname",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "full_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "university_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "faculty_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "faculty_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "user_univ_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fd2f1944ca142ef0f7df6fd1f07779e5d0eeb2dbb47195c32d934e99da2b6378"
+}

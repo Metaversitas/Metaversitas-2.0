@@ -13,9 +13,8 @@ use redis::{AsyncCommands, Value};
 use serde::Serialize;
 use std::sync::Arc;
 
-const COOKIE_SESSION_TOKEN_NAME: &str = "session_token";
-const COOKIE_AUTH_NAME: &str = "Authorization";
-
+pub const COOKIE_SESSION_TOKEN_NAME: &str = "session_token";
+pub const COOKIE_AUTH_NAME: &str = "Authorization";
 pub struct SessionId(String);
 
 impl SessionId {
@@ -73,7 +72,7 @@ pub async fn must_authorized<B>(
         })
         .ok_or(AuthError::Unauthorized)?
         .ok_or(AuthError::UnknownTokenFormat)?;
-    let cookie_jar = check_session(
+    let (is_changed, cookie_jar) = check_session(
         cookie_jar,
         Arc::clone(&state),
         session_token.to_owned(),
@@ -81,13 +80,16 @@ pub async fn must_authorized<B>(
     )
     .await?;
 
-    let (mut parts, body) = req.into_parts();
-    for cookie in cookie_jar.iter() {
-        parts
-            .headers
-            .append(SET_COOKIE, HeaderValue::try_from(cookie.value()).unwrap());
+    if is_changed {
+        let (mut parts, body) = req.into_parts();
+        for cookie in cookie_jar.iter() {
+            parts
+                .headers
+                .append(SET_COOKIE, HeaderValue::try_from(cookie.value()).unwrap());
+        }
+        let req = Request::from_parts(parts, body);
+        return Ok(next.run(req).await);
     }
-    let req = Request::from_parts(parts, body);
     Ok(next.run(req).await)
 }
 
@@ -103,7 +105,7 @@ pub async fn new_session(
 
     let session_id = SessionId::generate_new().into_cookie_value();
     let session_timestamp_expire =
-        (chrono::Utc::now() + chrono::Duration::days(30)).timestamp() as usize;
+        (chrono::Utc::now() + chrono::Duration::hours(1)).timestamp() as usize;
 
     let jwt_claims = SessionTokenClaims {
         user_id: user_id.to_owned(),
@@ -112,7 +114,7 @@ pub async fn new_session(
         session_id: session_id.to_owned(),
     };
     let jwt_auth_token =
-        AuthToken::new(jwt_claims, state.config.jwt_secret.to_owned())?.into_cookie_value();
+        AuthToken::new(jwt_claims, state.config.jwt_secret.to_string())?.into_cookie_value();
     let cookie_jar = cookie_jar
         .add(
             Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", jwt_auth_token))
@@ -144,12 +146,12 @@ pub async fn new_session(
     Ok(cookie_jar)
 }
 
-async fn check_session(
+pub async fn check_session(
     cookie_jar: CookieJar,
     state: Arc<AppState>,
     session_token: String,
     jwt_session: String,
-) -> Result<CookieJar, AuthError> {
+) -> Result<(bool, CookieJar), AuthError> {
     let token_data = jsonwebtoken::decode::<SessionTokenClaims>(
         jwt_session.as_str(),
         &jsonwebtoken::DecodingKey::from_secret(state.config.jwt_secret.as_bytes()),
@@ -192,7 +194,7 @@ async fn check_session(
     }
 
     let current_time = chrono::Utc::now().timestamp() as usize;
-    if token_data.claims.exp > current_time {
+    if token_data.claims.exp < current_time {
         let jwt_expire = (chrono::Utc::now() + chrono::Duration::minutes(10)).timestamp();
 
         let new_jwt_claims = SessionTokenClaims {
@@ -202,7 +204,8 @@ async fn check_session(
             session_id: session_token.to_owned(),
         };
         let new_jwt_auth_token =
-            AuthToken::new(new_jwt_claims, state.config.jwt_secret.to_owned())?.into_cookie_value();
+            AuthToken::new(new_jwt_claims, state.config.jwt_secret.to_string())?
+                .into_cookie_value();
         let cookie_jar = cookie_jar.add(
             Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", new_jwt_auth_token))
                 .path("/")
@@ -212,10 +215,10 @@ async fn check_session(
                 .http_only(true)
                 .finish(),
         );
-        return Ok(cookie_jar);
+        return Ok((true, cookie_jar));
     }
 
-    Ok(cookie_jar)
+    Ok((false, cookie_jar))
 }
 
 pub async fn delete_session(

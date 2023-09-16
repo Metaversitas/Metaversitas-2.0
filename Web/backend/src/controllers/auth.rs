@@ -1,7 +1,8 @@
 use crate::backend::AppState;
-use crate::helpers::authentication::{delete_session, must_authorized, new_session};
+use crate::helpers::authentication::{AuthToken, COOKIE_AUTH_NAME, COOKIE_SESSION_TOKEN_NAME, delete_session, must_authorized, new_session};
 use crate::helpers::errors::{ApiError, AuthError};
-use crate::model::user::{LoginUserSchema, RegisterUserSchema, RegisteredUser, UserJsonBody};
+use crate::helpers::extractor::ValidatedJson;
+use crate::model::user::{LoginUserSchema, RegisterUserSchema, RegisteredUser, UserJsonBody, SessionTokenClaims};
 use crate::model::user::{User, UserRole};
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash};
@@ -11,12 +12,12 @@ use axum::middleware;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use axum_extra::extract::cookie::CookieJar;
+use axum_extra::extract::cookie::{Cookie, CookieJar, SameSite};
 use axum_extra::extract::WithRejection;
 use serde_json::json;
 use std::result::Result;
 use std::sync::Arc;
-use crate::helpers::extractor::ValidatedJson;
+use redis::AsyncCommands;
 
 pub const AUTH_PATH_CONTROLLER: &str = "/auth";
 pub const REGISTER_AUTH_PATH: &str = "/register";
@@ -30,10 +31,7 @@ pub async fn auth_router(app_state: Arc<AppState>) -> Router {
         .route(LOGIN_AUTH_PATH, post(login))
         .route(
             REFRESH_TOKEN_AUTH_PATH,
-            get(refresh_token).route_layer(middleware::from_fn_with_state(
-                Arc::clone(&app_state),
-                must_authorized,
-            )),
+            get(refresh_token),
         )
         .route(
             LOGOUT_AUTH_PATH,
@@ -45,16 +43,69 @@ pub async fn auth_router(app_state: Arc<AppState>) -> Router {
         .with_state(Arc::clone(&app_state))
 }
 
-pub async fn refresh_token() -> Result<impl IntoResponse, AuthError> {
+pub async fn refresh_token(
+    State(app_state): State<Arc<AppState>>,
+    cookie_jar: CookieJar,
+) -> Result<impl IntoResponse, AuthError> {
+    let session_token = cookie_jar
+        .get(COOKIE_SESSION_TOKEN_NAME)
+        .map(|cookie| cookie.value().to_owned())
+        .ok_or(AuthError::Unauthorized)?;
+
+    let mut redis_conn = app_state.redis.get_async_connection().await.map_err(|_| {
+        tracing::error!("Can't get connection into redis");
+        AuthError::DatabaseError
+    })?;
+
+    let result = redis_conn
+        .get::<String, redis::Value>(session_token.to_owned())
+        .await
+        .map_err(|_| {
+            tracing::error!("Can't get connection into redis");
+            AuthError::DatabaseError
+        })?;
+
+    let user_id = match result {
+        redis::Value::Nil => {
+            return Err(AuthError::Unauthorized);
+        }
+        redis::Value::Data(bytes) => String::from_utf8(bytes).map_err(|_| AuthError::Unknown)?,
+        _ => {
+            return Err(AuthError::Unknown);
+        }
+    };
+
+    let timestamp_now = chrono::Utc::now();
+    let jwt_iat = chrono::Utc::now().timestamp();
+    let jwt_expire = (timestamp_now + chrono::Duration::minutes(10)).timestamp();
+    let jwt_claims = SessionTokenClaims {
+        user_id: user_id.to_owned(),
+        iat: jwt_iat as usize,
+        exp: jwt_expire as usize,
+        session_id: session_token.to_owned(),
+    };
+    let jwt_auth_token = AuthToken::new(jwt_claims, app_state.config.jwt_secret.to_string())?.into_cookie_value();
+    let cookie_jar = cookie_jar.add(
+        Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", jwt_auth_token))
+            .path("/")
+            .secure(true)
+            .same_site(SameSite::Lax)
+            .max_age(time::Duration::minutes(5))
+            .http_only(true)
+            .finish()
+    );
+
     let response = json!({"success": true, "message": "New token generated"});
-    Ok((StatusCode::OK, Json(response)))
+    Ok((StatusCode::OK, cookie_jar, Json(response)))
 }
 
 pub async fn register(
     State(data): State<Arc<AppState>>,
-    WithRejection(ValidatedJson(body), _): WithRejection<ValidatedJson<UserJsonBody<RegisterUserSchema>>, ApiError>,
+    WithRejection(ValidatedJson(body), _): WithRejection<
+        ValidatedJson<UserJsonBody<RegisterUserSchema>>,
+        ApiError,
+    >,
 ) -> Result<impl IntoResponse, AuthError> {
-    const QUERY: &str = "";
     let email = body.user.email.to_owned();
     let nickname = body.user.nickname.to_owned();
 
@@ -103,7 +154,10 @@ pub async fn register(
 
 pub async fn login(
     State(state): State<Arc<AppState>>,
-    WithRejection(ValidatedJson(body), _): WithRejection<ValidatedJson<UserJsonBody<LoginUserSchema>>, ApiError>,
+    WithRejection(ValidatedJson(body), _): WithRejection<
+        ValidatedJson<UserJsonBody<LoginUserSchema>>,
+        ApiError,
+    >,
 ) -> Result<impl IntoResponse, AuthError> {
     let user = sqlx::query!(
         "select user_id, email, password_hash from users where email = $1;",
@@ -115,14 +169,14 @@ pub async fn login(
         tracing::error!("error on the database: {}", err);
         AuthError::DatabaseError
     })?
-    .ok_or(AuthError::UserRegistered)?;
+    .ok_or(AuthError::InvalidUsernameOrPassword)?;
 
     verify_password(
         body.user.password.to_string(),
         user.password_hash.to_owned(),
     )
     .await
-    .map_err(|_| AuthError::Unauthorized)?;
+    .map_err(|_| AuthError::InvalidUsernameOrPassword)?;
 
     let user = User {
         id: Some(user.user_id.to_string()),
@@ -163,7 +217,7 @@ pub async fn forgot_password() {
 async fn hash_password(password: String) -> Result<String, ()> {
     tokio::task::spawn_blocking(move || -> Result<String, ()> {
         let salt = SaltString::generate(rand::thread_rng());
-        PasswordHash::generate(argon2::Argon2::default(), password.as_str(), &salt)
+        PasswordHash::generate(Argon2::default(), password.as_str(), &salt)
             .map_err(|e| {
                 tracing::error!("failed to generate password hash");
                 anyhow::anyhow!("failed to generate password hash: {}", e)
