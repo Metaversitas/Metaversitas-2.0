@@ -184,6 +184,7 @@ MonoBehaviour:
   delayInteract: 0.7
   _notifInformative: {fileID: 6506788467949620410}
   _notifPraktikumMenu: {fileID: 1966083919748782892}
+  _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
   _CurrentObject: {fileID: 0}
   _Player: {fileID: 0}
   _offlineMenu: {fileID: 0}
