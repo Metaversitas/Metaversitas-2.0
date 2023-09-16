@@ -2,6 +2,7 @@ use crate::backend::AppState;
 use crate::controllers::auth::{auth_router, AUTH_PATH_CONTROLLER};
 use crate::controllers::health::{health_checker, HEALTH_PATH_CONTROLLER};
 use crate::controllers::homepage::{homepage, HOMEPAGE_PATH_CONTROLLER};
+use crate::controllers::user::{user_router, USER_PATH_CONTROLLER};
 use crate::r#const::{ENV_ENVIRONMENT, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 use axum::error_handling::HandleErrorLayer;
 use axum::http::StatusCode;
@@ -49,9 +50,11 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
         .concurrency_limit(1000);
 
     let auth_router = auth_router(Arc::clone(&app_state)).await;
+    let user_router = user_router(Arc::clone(&app_state)).await;
 
     Router::new()
         .nest(AUTH_PATH_CONTROLLER, auth_router)
+        .nest(USER_PATH_CONTROLLER, user_router)
         .route(HEALTH_PATH_CONTROLLER, get(health_checker))
         .route(HOMEPAGE_PATH_CONTROLLER, get(homepage))
         .layer(service_builder)

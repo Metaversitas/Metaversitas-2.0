@@ -1,7 +1,9 @@
 use chrono::prelude::*;
+use once_cell::sync::Lazy;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
-use validator::{Validate};
 use sqlx::Type;
+use validator::{Validate, ValidationError};
 
 #[derive(Debug, Serialize, Deserialize, Type)]
 #[sqlx(type_name = "user_role")]
@@ -34,17 +36,47 @@ pub struct User {
 
 #[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct UserJsonBody<T>
-where T: Serialize + Validate
+where
+    T: Serialize + Validate,
 {
     #[validate]
     pub user: T,
 }
 
+const SPECIAL_ASCII_CHAR: &str = "!@#$%^&*()";
+fn validate_password(password: &str) -> Result<(), ValidationError> {
+    let has_uppercase = password.chars().any(|c| c.is_ascii_uppercase());
+    let has_lowercase = password.chars().any(|c| c.is_ascii_lowercase());
+    let has_digit = password.chars().any(|c| c.is_ascii_digit());
+    let has_special_char = password.chars().any(|c| SPECIAL_ASCII_CHAR.contains(c));
+    let length_is_valid = {
+        let length = password.len();
+
+        length > 12 && length < 128
+    };
+
+    if !(has_uppercase && has_lowercase && has_digit && has_special_char && length_is_valid) {
+        return Err(ValidationError::new("failed to validate password"));
+    }
+    Ok(())
+}
+
+static REGEX_NICKNAME: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z]\w{3,12}$").unwrap());
+
+fn validate_nickname(nickname: &str) -> Result<(), ValidationError> {
+    if !REGEX_NICKNAME.is_match(nickname) {
+        return Err(ValidationError::new("failed to validate nickname"));
+    };
+    Ok(())
+}
+
 #[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct RegisterUserSchema {
+    #[validate(custom = "validate_nickname")]
     pub nickname: String,
     #[validate(email)]
     pub email: String,
+    #[validate(custom = "validate_password")]
     pub password: String,
 }
 
@@ -52,6 +84,7 @@ pub struct RegisterUserSchema {
 pub struct LoginUserSchema {
     #[validate(email)]
     pub email: String,
+    #[validate(custom = "validate_password")]
     pub password: String,
 }
 
