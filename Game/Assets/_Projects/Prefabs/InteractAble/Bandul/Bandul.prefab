@@ -598,6 +598,7 @@ GameObject:
   - component: {fileID: 9211476250683609563}
   - component: {fileID: 6925777095520792202}
   - component: {fileID: 5711927687820196015}
+  - component: {fileID: 5004737625504439913}
   m_Layer: 0
   m_Name: Bandul
   m_TagString: Untagged
@@ -669,6 +670,29 @@ MonoBehaviour:
   Ctime: 0
   Watch: 0
   Busing: 0
+--- !u!114 &5004737625504439913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9020823559308359338}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectInterest: 1
+  DefaultInterestGroups: []
+  DestroyWhenStateAuthorityLeaves: 0
+  AllowStateAuthorityOverride: 1
+  AoiPositionSource: {fileID: 0}
+  Flags: 2305
+  NetworkGuid:
+    RawGuidValue: 3dfb5d3722695354ba34a4d1a06c0845
+  NestedObjects: []
+  NetworkedBehaviours: []
+  SimulationBehaviours: []
 --- !u!1 &9213900439272340618
 GameObject:
   m_ObjectHideFlags: 0

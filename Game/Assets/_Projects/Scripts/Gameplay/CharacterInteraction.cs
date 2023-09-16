@@ -8,6 +8,7 @@ public class CharacterInteraction : NetworkBehaviour
     public float delayInteract = 1f;
     public GameObject _notifInformative;
     public GameObject _notifPraktikumMenu;
+    [SerializeField] private PlayerStateManager _playerStateManager;
 
     [Networked]
     public InformativeObject CurrentObject { get; set; }
@@ -44,8 +45,25 @@ public class CharacterInteraction : NetworkBehaviour
         } 
         if (other.CompareTag("OfflineMenu"))
         {
-            // Tambahkan notif tekan "B"
-            _notifPraktikumMenu.SetActive(true);
+            if (_playerStateManager.CurrentGameState == GameState.Play)
+            {
+                // Tambahkan notif tekan "B"
+                _notifPraktikumMenu.SetActive(true);
+            }
+            var offlineMenu = other.GetComponent<OfflineMenu>();
+            _offlineMenu = offlineMenu;
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("OfflineMenu"))
+        {
+            if (_playerStateManager.CurrentGameState == GameState.Play)
+            {
+                // Tambahkan notif tekan "B"
+                _notifPraktikumMenu.SetActive(true);
+            }
             var offlineMenu = other.GetComponent<OfflineMenu>();
             _offlineMenu = offlineMenu;
         }
@@ -83,7 +101,8 @@ public class CharacterInteraction : NetworkBehaviour
     {
         if (_offlineMenu == null) return;
         _offlineMenu.Open();
-        _notifPraktikumMenu.SetActive(false );
+        _notifPraktikumMenu.SetActive(false);
+        _playerStateManager.TriggerInteractState();
     }
 
     private void Update()
