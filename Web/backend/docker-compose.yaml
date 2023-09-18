@@ -1,11 +1,23 @@
 version: "3"
 services:
+  webapp:
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - ./.env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    links:
+      - redis
+      - db
   db:
-    image: postgres:latest
+    image: postgres:15
     restart: always
     container_name: metaversitas-db-postgres
-    ports:
-      - "5432:5432"
     volumes:
       - metaversitas-volume:/var/lib/postgresql/data
     env_file:
@@ -21,8 +33,6 @@ services:
     container_name: metaversitas-redis
     volumes:
       - metaversitas-redis-volume:/data/
-    ports:
-      - "6379:6379"
 volumes:
   metaversitas-volume:
     driver: local
