@@ -14,13 +14,14 @@ COPY --from=planner /backend/recipe.json recipe.json
 RUN cargo chef cook --release --target x86_64-unknown-linux-musl --recipe-path recipe.json
 COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl
-RUN ls
 
 
 ## Create a new minimal image
 FROM ubuntu:latest as backend-app
 COPY --from=builder /backend/target/x86_64-unknown-linux-musl/release/server /app/backend/server
+COPY --from=builder /backend/certs/ /app/backend/certs
 WORKDIR /app/backend/
-RUN chmod +x /app/backend/server
-ENTRYPOINT ["/app/backend/server"]
-EXPOSE 8888
+CMD ["chmod", "+x", "/app/backend/server"]
+CMD ["/app/backend/server"]
+EXPOSE 443
+EXPOSE 80

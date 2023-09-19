@@ -4,7 +4,7 @@
 		"name": "Auth Collections",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "12717348",
-		"_collection_link": "https://warped-zodiac-784315.postman.co/workspace/Metaversitas-API~a6ff04da-d877-4f16-aed9-7ed91b3887fc/collection/12717348-f07e4dc4-b449-4710-8550-3013063e92dd?action=share&source=collection_link&creator=12717348"
+		"_collection_link": "https://web.postman.co/workspace/Metaversitas-API~a6ff04da-d877-4f16-aed9-7ed91b3887fc/collection/12717348-f07e4dc4-b449-4710-8550-3013063e92dd?action=share&source=collection_link&creator=12717348"
 	},
 	"item": [
 		{
@@ -14,7 +14,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"user\": {\r\n        \"nickname\": \"aasdsadasdas\",\r\n        \"email\": \"test20@test.com\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
+					"raw": "{\r\n    \"user\": {\r\n        \"nickname\": \"IniMahasiswa2\",\r\n        \"email\": \"mahasiswa2@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -22,11 +22,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{host}}:{{port}}/auth/register",
+					"raw": "https://{{host}}/auth/register",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
-					"port": "{{port}}",
 					"path": [
 						"auth",
 						"register"
@@ -69,11 +69,11 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{host}}:{{port}}/auth/refresh",
+					"raw": "https://{{host}}/auth/refresh",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
-					"port": "{{port}}",
 					"path": [
 						"auth",
 						"refresh"
@@ -88,11 +88,11 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{host}}:{{port}}/health",
+					"raw": "https://{{host}}/health",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
-					"port": "{{port}}",
 					"path": [
 						"health"
 					]
@@ -113,11 +113,11 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "{{host}}:{{port}}/user/profile",
+					"raw": "https://{{host}}/user/profile",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
-					"port": "{{port}}",
 					"path": [
 						"user",
 						"profile"
@@ -150,12 +150,12 @@
 	"variable": [
 		{
 			"key": "host",
-			"value": "localhost",
+			"value": "18.140.63.167",
 			"type": "string"
 		},
 		{
 			"key": "port",
-			"value": "8888",
+			"value": "443",
 			"type": "string"
 		}
 	]

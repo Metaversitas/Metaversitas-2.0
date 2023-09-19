@@ -1,8 +1,13 @@
 use crate::backend::AppState;
-use crate::helpers::authentication::{AuthToken, COOKIE_AUTH_NAME, COOKIE_SESSION_TOKEN_NAME, delete_session, must_authorized, new_session};
+use crate::helpers::authentication::{
+    delete_session, must_authorized, new_session, AuthToken, COOKIE_AUTH_NAME,
+    COOKIE_SESSION_TOKEN_NAME,
+};
 use crate::helpers::errors::{ApiError, AuthError};
 use crate::helpers::extractor::ValidatedJson;
-use crate::model::user::{LoginUserSchema, RegisterUserSchema, RegisteredUser, UserJsonBody, SessionTokenClaims};
+use crate::model::user::{
+    LoginUserSchema, RegisterUserSchema, RegisteredUser, SessionTokenClaims, UserJsonBody,
+};
 use crate::model::user::{User, UserRole};
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash};
@@ -14,10 +19,10 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use axum_extra::extract::cookie::{Cookie, CookieJar, SameSite};
 use axum_extra::extract::WithRejection;
+use redis::AsyncCommands;
 use serde_json::json;
 use std::result::Result;
 use std::sync::Arc;
-use redis::AsyncCommands;
 
 pub const AUTH_PATH_CONTROLLER: &str = "/auth";
 pub const REGISTER_AUTH_PATH: &str = "/register";
@@ -29,10 +34,7 @@ pub async fn auth_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route(REGISTER_AUTH_PATH, post(register))
         .route(LOGIN_AUTH_PATH, post(login))
-        .route(
-            REFRESH_TOKEN_AUTH_PATH,
-            get(refresh_token),
-        )
+        .route(REFRESH_TOKEN_AUTH_PATH, get(refresh_token))
         .route(
             LOGOUT_AUTH_PATH,
             post(logout).route_layer(middleware::from_fn_with_state(
@@ -79,12 +81,13 @@ pub async fn refresh_token(
     let jwt_iat = chrono::Utc::now().timestamp();
     let jwt_expire = (timestamp_now + chrono::Duration::minutes(10)).timestamp();
     let jwt_claims = SessionTokenClaims {
-        user_id: user_id.to_owned(),
+        user_id,
         iat: jwt_iat as usize,
         exp: jwt_expire as usize,
         session_id: session_token.to_owned(),
     };
-    let jwt_auth_token = AuthToken::new(jwt_claims, app_state.config.jwt_secret.to_string())?.into_cookie_value();
+    let jwt_auth_token =
+        AuthToken::new(jwt_claims, app_state.config.jwt_secret.to_string())?.into_cookie_value();
     let cookie_jar = cookie_jar.add(
         Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", jwt_auth_token))
             .path("/")
@@ -92,7 +95,7 @@ pub async fn refresh_token(
             .same_site(SameSite::Lax)
             .max_age(time::Duration::minutes(5))
             .http_only(true)
-            .finish()
+            .finish(),
     );
 
     let response = json!({"success": true, "message": "New token generated"});
