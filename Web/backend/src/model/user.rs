@@ -1,17 +1,18 @@
 use chrono::prelude::*;
 use once_cell::sync::Lazy;
+use redis_macros::{FromRedisValue, ToRedisArgs};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use sqlx::Type;
+use sqlx::{FromRow, Type};
 use validator::{Validate, ValidationError};
 
-#[derive(Debug, Serialize, Deserialize, Type)]
+#[derive(Debug, Serialize, Deserialize, Type, FromRedisValue, ToRedisArgs)]
 #[sqlx(type_name = "user_role")]
 #[sqlx(rename_all = "lowercase")]
 pub enum UserRole {
     Administrator,
-    Dosen,
-    Mahasiswa,
+    Staff,
+    User
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -110,3 +111,36 @@ pub struct SessionTokenClaims {
     #[serde(rename = "sid")]
     pub session_id: String,
 }
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProfileResponse<T>
+    where
+        T: Serialize,
+{
+    pub status: bool,
+    pub data: T,
+}
+
+#[derive(Debug, Serialize, Deserialize, Type, FromRedisValue, ToRedisArgs)]
+#[sqlx(type_name = "user_university_role")]
+#[sqlx(rename_all = "lowercase")]
+pub enum UserUniversityRole {
+    Dosen,
+    Mahasiswa,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRedisValue, ToRedisArgs, FromRow)]
+pub struct ProfileUserData {
+    pub user_id: String,
+    pub in_game_nickname: String,
+    pub full_name: String,
+    pub university_name: String,
+    pub faculty_name: String,
+    #[sqlx(try_from = "i32")]
+    pub faculty_id: u64,
+    #[sqlx(try_from = "i32")]
+    pub user_university_id: u64,
+    pub user_univ_role: UserUniversityRole
+}
+
