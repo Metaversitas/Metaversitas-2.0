@@ -1,4 +1,4 @@
-CREATE DOMAIN public.user_role AS text CHECK (VALUE IN ('administrator', 'dosen', 'mahasiswa'));
+CREATE DOMAIN public.user_role AS text CHECK (VALUE IN ('administrator', 'staff', 'user'));
 alter domain public.user_role owner to admin;
 create domain public.email_address as text constraint valid_email_format check (value ~* '^(?:[^<>()\[\]\\.,;:\s@"]+(?:\.[^<>()\[\]\\.,;:\s@"]+)*|".+")@((?:\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(?:[a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,})$');
 alter domain public.email_address owner to admin;
@@ -88,12 +88,16 @@ create table public.users_identity
 alter table public.users_identity
     owner to admin;
 
+CREATE DOMAIN public.user_university_role AS text CHECK (VALUE IN ('dosen', 'mahasiswa'));
+alter domain public.user_university_role owner to admin;
+
 create table public.users_university_identity (
     users_university_id integer
       primary key
         not null, -- known as NIM, NPM, NIP, etc.
     users_id uuid not null,
     users_identity_id integer not null,
+    users_university_role public.user_university_role not null,
     university_id integer not null,
     university_faculty_id integer not null,
     foreign key (university_faculty_id) references public.university_faculty (faculty_id),

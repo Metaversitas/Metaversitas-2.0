@@ -8,10 +8,9 @@ use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::{middleware, Json, Router};
 use redis::{AsyncCommands, JsonAsyncCommands};
-use redis_macros::{FromRedisValue, ToRedisArgs};
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
+use crate::model::user::{ProfileUserData, ProfileResponse, UserUniversityRole};
 
 pub const USER_PATH_CONTROLLER: &str = "/user";
 const DEFAULT_TIME_CACHE_EXIST: time::Duration = time::Duration::minutes(30);
@@ -53,30 +52,32 @@ pub async fn get_profile(
     } else if is_exists == 0 {
         let query = sqlx::query!(r#"
         select
-            users.user_id::uuid as user_id,
+            users.user_id as user_id,
             users.nickname as in_game_nickname,
             identity.full_name as full_name,
             university.name as university_name,
             university_faculty.faculty_name as faculty_name,
             university_faculty.faculty_id as faculty_id,
-            university_identity.users_university_id as user_univ_id
+            university_identity.users_university_id as user_university_id,
+            university_identity.users_university_role as "user_univ_role!: UserUniversityRole"
         from users
         inner join users_identity as identity on users.user_id = identity.users_id
         inner join users_university_identity as university_identity on identity.users_identity_id = university_identity.users_identity_id
         inner join university on university_identity.university_id = university.university_id
         inner join university_faculty on university.university_id = university_faculty.university_id
-        where users.user_id::text = $1;"#, &auth_user.user_id)
+        where users.user_id::text = $1"#, &auth_user.user_id)
             .fetch_one(&state.database)
             .await
-            .unwrap();
+            .map_err(|_| AuthError::DatabaseError)?;
         let data = ProfileUserData {
             user_id: query.user_id.to_string(),
             in_game_nickname: query.in_game_nickname.to_owned(),
             full_name: query.full_name.to_owned(),
             university_name: query.university_name.to_owned(),
             faculty_name: query.faculty_name.to_owned(),
-            faculty_id: query.faculty_id as usize,
-            user_university_id: query.user_univ_id as usize,
+            faculty_id: query.faculty_id as u64,
+            user_university_id: query.user_university_id as u64,
+            user_univ_role: query.user_univ_role,
         };
 
         let profile_user_id = format!("profile:{}", auth_user.user_id.to_owned());
@@ -100,24 +101,4 @@ pub async fn get_profile(
     } else {
         return Err(AuthError::Unknown);
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ProfileResponse<T>
-where
-    T: Serialize,
-{
-    pub status: bool,
-    pub data: T,
-}
-
-#[derive(Debug, Serialize, Deserialize, FromRedisValue, ToRedisArgs)]
-struct ProfileUserData {
-    pub user_id: String,
-    pub in_game_nickname: String,
-    pub full_name: String,
-    pub university_name: String,
-    pub faculty_name: String,
-    pub faculty_id: usize,
-    pub user_university_id: usize,
 }

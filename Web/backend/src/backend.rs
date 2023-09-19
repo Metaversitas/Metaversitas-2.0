@@ -1,3 +1,4 @@
+use std::future::Future;
 use crate::config::Config;
 use crate::route::create_router;
 use axum::extract::Host;
@@ -10,6 +11,8 @@ use sqlx::{Pool, Postgres};
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
+use std::time::Duration;
+use tokio::signal;
 
 pub struct AppState {
     pub redis: redis::Client,
@@ -42,15 +45,19 @@ impl Backend {
             .unwrap();
         let web_host = self.app_state.config.web_app_host.clone();
 
-        tokio::spawn(redirect_http_to_https(web_host, http_port, https_port));
+        let shutdown_handle = axum_server::Handle::new();
+        let shutdown_future = shutdown_signal(shutdown_handle.clone());
+
+        tokio::spawn(redirect_http_to_https(web_host, shutdown_future, http_port, https_port));
         axum_server::bind_rustls(self.socket_address, self.rust_ls_config)
+            .handle(shutdown_handle)
             .serve(app.into_make_service())
             .await
             .unwrap()
     }
 }
 
-async fn redirect_http_to_https(web_host: Arc<str>, http_port: usize, https_port: usize) {
+async fn redirect_http_to_https(web_host: Arc<str>, shutdown_signal: impl Future<Output = ()>, http_port: usize, https_port: usize) {
     fn make_https(
         host: String,
         uri: Uri,
@@ -92,6 +99,35 @@ async fn redirect_http_to_https(web_host: Arc<str>, http_port: usize, https_port
     );
     axum::Server::bind(&addr)
         .serve(redirect.into_make_service())
+        .with_graceful_shutdown(shutdown_signal)
         .await
         .unwrap();
+}
+
+async fn shutdown_signal(handle: axum_server::Handle) {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+        let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+        let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    tracing::info!("Received termination signal shutting down");
+    handle.graceful_shutdown(Some(Duration::from_secs(10))); // 10 secs is how long docker will wait
+    // to force shutdown
 }

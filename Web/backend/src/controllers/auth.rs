@@ -133,7 +133,7 @@ pub async fn register(
             AuthError::Unknown
         })?;
 
-    let user_roles = UserRole::Mahasiswa;
+    let user_roles = UserRole::User;
     let row = sqlx::query!(r#"insert into users (email, password_hash, nickname, role, is_verified) values ($1::text, $2, $3, $4, $5) returning user_id, email, is_verified;"#, email.to_owned(), password_hash, nickname.to_owned(), user_roles as UserRole, false)
         .fetch_one(&data.database)
         .await
