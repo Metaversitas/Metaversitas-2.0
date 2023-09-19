@@ -10,4 +10,6 @@ pub const ENV_REDIS_HOSTNAME: &str = "REDIS_HOSTNAME";
 pub const ENV_REDIS_PASSWORD: &str = "REDIS_PASSWORD";
 pub const ENV_REDIS_PORT: &str = "REDIS_PORT";
 pub const ENV_WEB_APP_PORT: &str = "WEB_APP_PORT";
+pub const ENV_WEB_APP_PORT_SSL: &str = "WEB_APP_PORT_SSL";
 pub const ENV_WEB_APP_HOST: &str = "WEB_APP_HOST";
+pub const ENV_WEB_APP_MODE_TLS: &str = "WEB_APP_TLS_MODE";

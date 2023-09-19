@@ -1,6 +1,7 @@
 use crate::r#const::{
     ENV_DATABASE_URL, ENV_JWT_EXPIRED_IN, ENV_JWT_MAX_AGE, ENV_JWT_SECRET, ENV_REDIS_HOSTNAME,
-    ENV_REDIS_IS_TLS, ENV_REDIS_PORT, ENV_WEB_APP_HOST, ENV_WEB_APP_PORT,
+    ENV_REDIS_IS_TLS, ENV_REDIS_PORT, ENV_WEB_APP_HOST, ENV_WEB_APP_MODE_TLS, ENV_WEB_APP_PORT,
+    ENV_WEB_APP_PORT_SSL,
 };
 use std::sync::Arc;
 
@@ -14,7 +15,9 @@ pub struct Config {
     pub redis_port: Arc<usize>,
     pub redis_is_tls: Arc<bool>,
     pub web_app_port: Arc<str>,
+    pub web_app_port_ssl: Arc<str>,
     pub web_app_host: Arc<str>,
+    pub web_app_mode_tls: Arc<bool>,
 }
 
 impl Config {
@@ -52,11 +55,22 @@ impl Config {
             .unwrap()
             .as_str()
             .into();
+        let web_app_port_ssl = std::env::var(ENV_WEB_APP_PORT_SSL)
+            .expect("WEB_APP_PORT_SSL must be set")
+            .parse::<String>()
+            .unwrap()
+            .as_str()
+            .into();
         let web_app_host = std::env::var(ENV_WEB_APP_HOST)
             .expect("WEB_APP_HOST must be set")
             .parse::<String>()
             .unwrap()
             .as_str()
+            .into();
+        let web_app_mode_tls = std::env::var(ENV_WEB_APP_MODE_TLS)
+            .expect("ENV WEB_APP_MODE must be set")
+            .parse::<bool>()
+            .unwrap()
             .into();
 
         Config {
@@ -68,7 +82,9 @@ impl Config {
             redis_port,
             redis_is_tls,
             web_app_port,
+            web_app_port_ssl,
             web_app_host,
+            web_app_mode_tls,
         }
     }
 }

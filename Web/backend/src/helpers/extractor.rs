@@ -58,15 +58,15 @@ where
         .map_err(|_| AuthError::UnknownTokenFormat)?;
 
         let jwt_session_token = token_data.claims.session_id.to_owned();
-        let jwt_user_id = token_data.claims.user_id.to_owned();
+        let jwt_user_id = token_data.claims.user_id;
 
         if session_token != jwt_session_token {
             return Err(AuthError::Unauthorized);
         }
 
         let auth_user = AuthenticatedUser {
-            user_id: jwt_user_id.to_owned(),
-            session_id: session_token.to_owned(),
+            user_id: jwt_user_id,
+            session_id: session_token,
         };
 
         Ok(auth_user)
