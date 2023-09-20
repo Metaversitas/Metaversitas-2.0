@@ -12,6 +12,8 @@ public class CharacterInteraction : NetworkBehaviour
 
     [Networked]
     public InformativeObject CurrentObject { get; set; }
+    [Networked]
+    public ChangeCamera _alatPraktikum { get; set; }
 
     [Networked] 
     private TickTimer delay { get; set; }
@@ -53,19 +55,15 @@ public class CharacterInteraction : NetworkBehaviour
             var offlineMenu = other.GetComponent<OfflineMenu>();
             _offlineMenu = offlineMenu;
         }
-    }
-
-    private void OnTriggerStay(Collider other)
-    {
-        if (other.CompareTag("OfflineMenu"))
+        if (other.CompareTag("Alat_Praktikum"))
         {
             if (_playerStateManager.CurrentGameState == GameState.Play)
             {
-                // Tambahkan notif tekan "B"
-                _notifPraktikumMenu.SetActive(true);
+                // Tambahkan notif tekan "E"
+                _notifInformative.SetActive(true);
             }
-            var offlineMenu = other.GetComponent<OfflineMenu>();
-            _offlineMenu = offlineMenu;
+            var AlatPraktikum = other.GetComponent<ChangeCamera>();
+            _alatPraktikum = AlatPraktikum;
         }
     }
 
@@ -87,15 +85,55 @@ public class CharacterInteraction : NetworkBehaviour
             if (_offlineMenu == null) return;
             _offlineMenu = null;
         }
+        if (other.CompareTag("Alat_Praktikum"))
+        {
+            if (_alatPraktikum == null) return;
+            _alatPraktikum = null;
+            // Tambahkan notif tekan "E"
+            _notifInformative.SetActive(false);
+        }
+    }
 
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("InformativeObject"))
+        {
+            if (_playerStateManager.CurrentGameState == GameState.Play)
+            {
+                // Tambahkan notif tekan "B"
+                _notifInformative.SetActive(true);
+            }
+        }
+        if (other.CompareTag("OfflineMenu"))
+        {
+            if (_playerStateManager.CurrentGameState == GameState.Play)
+            {
+                // Tambahkan notif tekan "B"
+                _notifPraktikumMenu.SetActive(true);
+            }
+        }
+        if (other.CompareTag("Alat_Praktikum"))
+        {
+            if (_playerStateManager.CurrentGameState == GameState.Play)
+            {
+                // Tambahkan notif tekan "B"
+                _notifInformative.SetActive(true);
+            }
+        }
     }
 
     private void TryInteract()
     {
-        if (CurrentObject == null) return;
-
-        CurrentObject.ToggleShow();
+        if (CurrentObject != null)
+        {
+            CurrentObject.ToggleShow();
+        }
+        else if (_alatPraktikum != null) 
+        {
+            _alatPraktikum.Toggle();
+        } else return;
     }
+
 
     private void TryInteractOffline()
     {
@@ -103,6 +141,13 @@ public class CharacterInteraction : NetworkBehaviour
         _offlineMenu.Open();
         _notifPraktikumMenu.SetActive(false);
         _playerStateManager.TriggerInteractState();
+    }
+
+    private void TryUninteract()
+    {
+        if (_alatPraktikum == null) return;
+        _alatPraktikum.Toggle();
+        Debug.Log("TryUninteract");
     }
 
     private void Update()
@@ -122,7 +167,14 @@ public class CharacterInteraction : NetworkBehaviour
             if (data.GetButton(ButtonFlag.INTERACT))
             {
                 delay = TickTimer.CreateFromSeconds(Runner, delayInteract);
+                if (_playerStateManager.CurrentGameState == GameState.Play)
                 TryInteract();
+            }
+            if (data.GetButton(ButtonFlag.ESCAPE))
+            {
+                delay = TickTimer.CreateFromSeconds(Runner, delayInteract);
+                if (_playerStateManager.CurrentGameState == GameState.Interact)
+                TryUninteract();
             }
         }
 	}

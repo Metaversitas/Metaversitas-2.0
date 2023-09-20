@@ -6,6 +6,7 @@ TagManager:
   tags:
   - InformativeObject
   - OfflineMenu
+  - Alat_Praktikum
   layers:
   - Default
   - TransparentFX

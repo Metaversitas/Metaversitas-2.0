@@ -302,6 +302,8 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 	{
 		var isInteract = _playerInputAction.Player.Interact.IsPressed();
 		_data.ButtonFlags |= isInteract ? ButtonFlag.INTERACT : 0;
+        var isEscape = _playerInputAction.Player.Escape.IsPressed();
+        _data.ButtonFlags |= isEscape ? ButtonFlag.ESCAPE : 0;
     }
 	
 
