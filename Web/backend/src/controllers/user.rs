@@ -2,6 +2,7 @@ use crate::backend::AppState;
 use crate::helpers::authentication::must_authorized;
 use crate::helpers::errors::AuthError;
 use crate::helpers::extractor::AuthenticatedUser;
+use crate::model::user::{ProfileResponse, ProfileUserData, UserUniversityRole};
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -10,7 +11,6 @@ use axum::{middleware, Json, Router};
 use redis::{AsyncCommands, JsonAsyncCommands};
 use serde_json::json;
 use std::sync::Arc;
-use crate::model::user::{ProfileUserData, ProfileResponse, UserUniversityRole};
 
 pub const USER_PATH_CONTROLLER: &str = "/user";
 const DEFAULT_TIME_CACHE_EXIST: time::Duration = time::Duration::minutes(30);

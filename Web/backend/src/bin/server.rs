@@ -14,12 +14,14 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let config = Config::init();
-    let socket =  if *config.web_app_mode_tls {
-        SocketAddr::from_str(format!("{}:{}", &config.web_app_host, &config.web_app_port_ssl).as_str())
+    let socket = if *config.web_app_mode_tls {
+        SocketAddr::from_str(
+            format!("{}:{}", &config.web_app_host, &config.web_app_port_ssl).as_str(),
+        )
         .unwrap()
     } else {
         SocketAddr::from_str(format!("{}:{}", &config.web_app_host, &config.web_app_port).as_str())
-        .unwrap()
+            .unwrap()
     };
 
     let db_pool = PgPoolOptions::new()
@@ -41,10 +43,12 @@ async fn main() -> Result<()> {
     let redis_client = redis::Client::open(redis_conn_url).unwrap();
 
     let ssl_config = RustlsConfig::from_pem_file(
-        std::env::current_dir().unwrap()
+        std::env::current_dir()
+            .unwrap()
             .join("certs")
             .join("certificate.pem"),
-        std::env::current_dir().unwrap()
+        std::env::current_dir()
+            .unwrap()
             .join("certs")
             .join("private.pem"),
     )

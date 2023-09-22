@@ -1,13 +1,13 @@
-use std::future::Future;
 use crate::config::Config;
 use crate::route::create_router;
 use axum::extract::Host;
-use axum::handler::{HandlerWithoutStateExt};
+use axum::handler::HandlerWithoutStateExt;
 use axum::http::{StatusCode, Uri};
 use axum::response::Redirect;
-use axum::{BoxError};
+use axum::BoxError;
 use axum_server::tls_rustls::RustlsConfig;
 use sqlx::{Pool, Postgres};
+use std::future::Future;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -48,7 +48,12 @@ impl Backend {
         let shutdown_handle = axum_server::Handle::new();
         let shutdown_future = shutdown_signal(shutdown_handle.clone());
 
-        tokio::spawn(redirect_http_to_https(web_host, shutdown_future, http_port, https_port));
+        tokio::spawn(redirect_http_to_https(
+            web_host,
+            shutdown_future,
+            http_port,
+            https_port,
+        ));
         axum_server::bind_rustls(self.socket_address, self.rust_ls_config)
             .handle(shutdown_handle)
             .serve(app.into_make_service())
@@ -57,7 +62,12 @@ impl Backend {
     }
 }
 
-async fn redirect_http_to_https(web_host: Arc<str>, shutdown_signal: impl Future<Output = ()>, http_port: usize, https_port: usize) {
+async fn redirect_http_to_https(
+    web_host: Arc<str>,
+    shutdown_signal: impl Future<Output = ()>,
+    http_port: usize,
+    https_port: usize,
+) {
     fn make_https(
         host: String,
         uri: Uri,
@@ -112,7 +122,7 @@ async fn shutdown_signal(handle: axum_server::Handle) {
     };
 
     #[cfg(unix)]
-        let terminate = async {
+    let terminate = async {
         signal::unix::signal(signal::unix::SignalKind::terminate())
             .expect("failed to install signal handler")
             .recv()
@@ -120,7 +130,7 @@ async fn shutdown_signal(handle: axum_server::Handle) {
     };
 
     #[cfg(not(unix))]
-        let terminate = std::future::pending::<()>();
+    let terminate = std::future::pending::<()>();
 
     tokio::select! {
         _ = ctrl_c => {},
@@ -129,5 +139,5 @@ async fn shutdown_signal(handle: axum_server::Handle) {
 
     tracing::info!("Received termination signal shutting down");
     handle.graceful_shutdown(Some(Duration::from_secs(10))); // 10 secs is how long docker will wait
-    // to force shutdown
+                                                             // to force shutdown
 }
