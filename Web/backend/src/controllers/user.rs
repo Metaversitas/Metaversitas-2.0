@@ -2,6 +2,7 @@ use crate::backend::AppState;
 use crate::helpers::authentication::must_authorized;
 use crate::helpers::errors::AuthError;
 use crate::helpers::extractor::AuthenticatedUser;
+use crate::model::user::{ProfileResponse, ProfileUserData, UserUniversityRole};
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
