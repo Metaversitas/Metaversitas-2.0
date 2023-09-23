@@ -40,32 +40,39 @@ public class Character : NetworkBehaviour
 	{
 		_isReadInput = false;
 
+		cowok = false;
 		if (HasInputAuthority)
 		{
-			cowok = false;
 			Role = "Dosen";
             // Jika boolean "cowok" adalah true
-            if (cowok)
-            {
-                // Membuat karakter laki-laki sebagai anak dari _anchorCharacter
-                NetworkObject character = Runner.Spawn(_characterCowo, _anchorCharacter.position,_anchorCharacter.rotation);
-				character.transform.SetParent(_anchorCharacter);
-
-                // Mengambil animator dari karakter laki-laki dan mengatur ke _animator
-                _animator = character.GetComponent<Animator>();
-
-            }
-            else
-            {
-                // Jika boolean "cowok" adalah false, maka kita mengasumsikan karakter perempuan
-                // Membuat karakter perempuan sebagai anak dari _anchorCharacter
-                NetworkObject character = Runner.Spawn(_characterCewe, _anchorCharacter.position, _anchorCharacter.rotation);
-                character.transform.SetParent(_anchorCharacter);
-
-                // Mengambil animator dari karakter perempuan dan mengatur ke _animator
-                _animator = character.GetComponent<Animator>();
-            }
+            
         }
+
+		SpawnCharacterModel();
+    }
+
+	private void SpawnCharacterModel()
+    {
+		if (cowok)
+		{
+			// Membuat karakter laki-laki sebagai anak dari _anchorCharacter
+			var model = Instantiate(_characterCowo, _anchorCharacter.position, _anchorCharacter.rotation);
+			model.transform.SetParent(_anchorCharacter);
+
+			// Mengambil animator dari karakter laki-laki dan mengatur ke _animator
+			_animator = model.GetComponent<Animator>();
+
+		}
+		else
+		{
+			// Jika boolean "cowok" adalah false, maka kita mengasumsikan karakter perempuan
+			// Membuat karakter perempuan sebagai anak dari _anchorCharacter
+			var model = Instantiate(_characterCewe, _anchorCharacter.position, _anchorCharacter.rotation);
+			model.transform.SetParent(_anchorCharacter);
+
+			// Mengambil animator dari karakter perempuan dan mengatur ke _animator
+			_animator = model.GetComponent<Animator>();
+		}
 	}
 
 	public void SetPlayer(Player player)
@@ -90,6 +97,7 @@ public class Character : NetworkBehaviour
 		if (Player.InputEnabled && GetInput(out InputData data))
 		{
 			_isReadInput = true;
+
 			if (data.GetButton(ButtonFlag.LEFT))
             {
 				transform.position -= Runner.DeltaTime * moveVelocity * transform.right;

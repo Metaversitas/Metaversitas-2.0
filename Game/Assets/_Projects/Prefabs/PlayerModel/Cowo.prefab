@@ -2279,7 +2279,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8397430485640299114}
   - component: {fileID: 2479660806113695760}
-  - component: {fileID: 3911522405802456493}
   m_Layer: 0
   m_Name: Cowo
   m_TagString: Untagged
@@ -2306,7 +2305,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &2479660806113695760
 Animator:
-  serializedVersion: 5
+  serializedVersion: 4
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2323,29 +2322,4 @@ Animator:
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
---- !u!114 &3911522405802456493
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9206054890182285520}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ObjectInterest: 1
-  DefaultInterestGroups: []
-  DestroyWhenStateAuthorityLeaves: 1
-  AllowStateAuthorityOverride: 1
-  AoiPositionSource: {fileID: 0}
-  Flags: 2305
-  NetworkGuid:
-    RawGuidValue: 04055bfd6f06d964392464261fd4abb4
-  NestedObjects: []
-  NetworkedBehaviours:
-  - {fileID: 5665120972174961512}
-  SimulationBehaviours: []
+  m_KeepAnimatorControllerStateOnDisable: 0
