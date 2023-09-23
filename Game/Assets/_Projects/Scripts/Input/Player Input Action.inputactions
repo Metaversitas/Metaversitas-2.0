@@ -49,6 +49,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "Escape",
+                    "type": "Button",
+                    "id": "0c3d5f5b-6ea5-48a1-9cb8-0bd05ac28ac9",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Mouse",
+                    "type": "Button",
+                    "id": "0f9c85d6-7c37-4436-98d1-ef98fd0b5ba9",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -247,6 +265,28 @@
                     "processors": "",
                     "groups": "Keyboard & Mouse;Virtual Mouse",
                     "action": "Look",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f8193778-cddf-4ca6-9eb1-2c9e8106af12",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard & Mouse",
+                    "action": "Escape",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "05d8ff96-68f3-4f20-8c5b-a4935cb844db",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard & Mouse;Virtual Mouse",
+                    "action": "Mouse",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -2577,6 +2577,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: ChatManager
       objectReference: {fileID: 0}
+    - target: {fileID: 7006564673908658486, guid: 26c609b9a38646d48b28784958dbe738, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -56
+      objectReference: {fileID: 0}
+    - target: {fileID: 7006564673908658486, guid: 26c609b9a38646d48b28784958dbe738, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -64
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 26c609b9a38646d48b28784958dbe738, type: 3}
 --- !u!1 &9134602032944443932 stripped

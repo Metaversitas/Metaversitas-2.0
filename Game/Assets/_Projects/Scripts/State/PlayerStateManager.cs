@@ -24,7 +24,6 @@ public class PlayerStateManager : MonoBehaviour
     {
         PlayState?.Invoke(this, EventArgs.Empty);
         SetGameState(GameState.Play);
-        Debug.Log("TriggerPlayState");
     }
 
     // Call this method to trigger the pause state event
@@ -32,21 +31,18 @@ public class PlayerStateManager : MonoBehaviour
     {
         PauseState?.Invoke(this, EventArgs.Empty);
         SetGameState(GameState.Pause);
-        Debug.Log("TriggerPauseState");
     }
 
     public void TriggerChattingState()
     {
         ChattingState?.Invoke(this, EventArgs.Empty);
         SetGameState(GameState.Chatting);
-        Debug.Log("TriggerChattingState");
     }
 
     public void TriggerInteractState()
     {
         InteractState?.Invoke(this, EventArgs.Empty);
         SetGameState(GameState.Interact);
-        Debug.Log("TriggerInteractState");
     }
 
     // Call this method to trigger the end state event
@@ -54,6 +50,5 @@ public class PlayerStateManager : MonoBehaviour
     {
         EndState?.Invoke(this, EventArgs.Empty);
         SetGameState(GameState.End);
-        Debug.Log("TriggerEndState");
     }
 }

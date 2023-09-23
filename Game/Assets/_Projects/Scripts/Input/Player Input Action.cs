@@ -71,6 +71,24 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Escape"",
+                    ""type"": ""Button"",
+                    ""id"": ""0c3d5f5b-6ea5-48a1-9cb8-0bd05ac28ac9"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Mouse"",
+                    ""type"": ""Button"",
+                    ""id"": ""0f9c85d6-7c37-4436-98d1-ef98fd0b5ba9"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -271,6 +289,28 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
                     ""action"": ""Look"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f8193778-cddf-4ca6-9eb1-2c9e8106af12"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard & Mouse"",
+                    ""action"": ""Escape"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""05d8ff96-68f3-4f20-8c5b-a4935cb844db"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard & Mouse;Virtual Mouse"",
+                    ""action"": ""Mouse"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -312,6 +352,8 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         m_Player_Interact = m_Player.FindAction("Interact", throwIfNotFound: true);
         m_Player_Pause = m_Player.FindAction("Pause", throwIfNotFound: true);
         m_Player_Look = m_Player.FindAction("Look", throwIfNotFound: true);
+        m_Player_Escape = m_Player.FindAction("Escape", throwIfNotFound: true);
+        m_Player_Mouse = m_Player.FindAction("Mouse", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -378,6 +420,8 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Interact;
     private readonly InputAction m_Player_Pause;
     private readonly InputAction m_Player_Look;
+    private readonly InputAction m_Player_Escape;
+    private readonly InputAction m_Player_Mouse;
     public struct PlayerActions
     {
         private @PlayerInputAction m_Wrapper;
@@ -387,6 +431,8 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         public InputAction @Interact => m_Wrapper.m_Player_Interact;
         public InputAction @Pause => m_Wrapper.m_Player_Pause;
         public InputAction @Look => m_Wrapper.m_Player_Look;
+        public InputAction @Escape => m_Wrapper.m_Player_Escape;
+        public InputAction @Mouse => m_Wrapper.m_Player_Mouse;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -411,6 +457,12 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
             @Look.started += instance.OnLook;
             @Look.performed += instance.OnLook;
             @Look.canceled += instance.OnLook;
+            @Escape.started += instance.OnEscape;
+            @Escape.performed += instance.OnEscape;
+            @Escape.canceled += instance.OnEscape;
+            @Mouse.started += instance.OnMouse;
+            @Mouse.performed += instance.OnMouse;
+            @Mouse.canceled += instance.OnMouse;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -430,6 +482,12 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
             @Look.started -= instance.OnLook;
             @Look.performed -= instance.OnLook;
             @Look.canceled -= instance.OnLook;
+            @Escape.started -= instance.OnEscape;
+            @Escape.performed -= instance.OnEscape;
+            @Escape.canceled -= instance.OnEscape;
+            @Mouse.started -= instance.OnMouse;
+            @Mouse.performed -= instance.OnMouse;
+            @Mouse.canceled -= instance.OnMouse;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -472,5 +530,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         void OnInteract(InputAction.CallbackContext context);
         void OnPause(InputAction.CallbackContext context);
         void OnLook(InputAction.CallbackContext context);
+        void OnEscape(InputAction.CallbackContext context);
+        void OnMouse(InputAction.CallbackContext context);
     }
 }

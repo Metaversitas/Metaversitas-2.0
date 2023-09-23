@@ -186,6 +186,7 @@ MonoBehaviour:
   _notifPraktikumMenu: {fileID: 1966083919748782892}
   _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
   _CurrentObject: {fileID: 0}
+  __alatPraktikum: {fileID: 0}
   _Player: {fileID: 0}
   _offlineMenu: {fileID: 0}
 --- !u!65 &448332936391554449
@@ -484,7 +485,8 @@ MonoBehaviour:
   mouseSensitivity: 2
   maxYDegrees: 70
   Character: {fileID: 4610285444781331942}
-  camPosition: {x: 0, y: 1.8, z: 0.35}
+  camPosition: {x: 0, y: 1.6, z: 0.35}
+  _stateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
 --- !u!136 &4788498069628935632
 CapsuleCollider:
   m_ObjectHideFlags: 0

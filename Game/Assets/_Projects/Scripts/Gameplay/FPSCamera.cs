@@ -1,6 +1,7 @@
 ﻿using Fusion;
 using System.Collections;
 using UnityEngine;
+using Cinemachine;
 
 public class FPSCamera : NetworkBehaviour, IBeforeUpdate
 {
@@ -16,6 +17,7 @@ public class FPSCamera : NetworkBehaviour, IBeforeUpdate
     private float verticalRotation = 0;
     private Transform _camTransform;
 
+    [SerializeField] PlayerStateManager _stateManager;
     public override void Spawned()
     {
         _cursorLock = GetComponent<CursorLock>();
@@ -29,6 +31,7 @@ public class FPSCamera : NetworkBehaviour, IBeforeUpdate
         }
     }
 
+
     public void SetCameraParent(Transform parent)
     {
         _camTransform.position = Vector3.zero;
@@ -38,6 +41,11 @@ public class FPSCamera : NetworkBehaviour, IBeforeUpdate
 
         _camTransform.localPosition = camPosition;
         _camTransform.localRotation = Quaternion.Euler(Vector3.zero);
+    }
+
+    public void SetCamera()
+    {
+        _camTransform.localPosition = camPosition;
     }
 
     public override void Render()

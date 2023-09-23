@@ -9,6 +9,7 @@ public enum ButtonFlag
 	RIGHT = 1 << 3,
 
 	INTERACT = 1 << 4,
+	ESCAPE = 1 << 5,
 }
 
 public struct InputData : INetworkInput
