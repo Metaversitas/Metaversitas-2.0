@@ -1,17 +1,13 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{COOKIE_AUTH_NAME, COOKIE_SESSION_TOKEN_NAME};
-use crate::helpers::errors::ApiError;
 use crate::helpers::errors::AuthError;
 use crate::model::user::SessionTokenClaims;
+use axum::async_trait;
 use axum::extract::{FromRef, FromRequestParts};
 use axum::http::request::Parts;
-use axum::http::Request;
-use axum::{async_trait, body::HttpBody, extract::FromRequest, BoxError, Json};
 use axum_extra::extract::CookieJar;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthenticatedUser {
@@ -70,29 +66,5 @@ where
         };
 
         Ok(auth_user)
-    }
-}
-
-#[derive(Debug)]
-pub struct ValidatedJson<T>(pub T);
-
-#[async_trait]
-impl<T, S, B> FromRequest<S, B> for ValidatedJson<T>
-where
-    T: DeserializeOwned + Validate,
-    B: HttpBody + Send + 'static,
-    B::Data: Send,
-    B::Error: Into<BoxError>,
-    S: Send + Sync,
-{
-    type Rejection = ApiError;
-
-    async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
-        let Json(value) = Json::<T>::from_request(req, state).await?;
-        let _ = value.validate().map_err(|err| {
-            tracing::error!("error occur when validating: {}", err.to_string());
-            ApiError::ValidationError
-        })?;
-        Ok(ValidatedJson(value))
     }
 }

@@ -1,10 +1,10 @@
 use chrono::prelude::*;
+use garde::Validate;
 use once_cell::sync::Lazy;
 use redis_macros::{FromRedisValue, ToRedisArgs};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
-use validator::{Validate, ValidationError};
 
 #[derive(Debug, Serialize, Deserialize, Type, FromRedisValue, ToRedisArgs)]
 #[sqlx(type_name = "user_role")]
@@ -12,7 +12,7 @@ use validator::{Validate, ValidationError};
 pub enum UserRole {
     Administrator,
     Staff,
-    User
+    User,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -40,12 +40,12 @@ pub struct UserJsonBody<T>
 where
     T: Serialize + Validate,
 {
-    #[validate]
+    #[garde(skip)]
     pub user: T,
 }
 
 const SPECIAL_ASCII_CHAR: &str = "!@#$%^&*()";
-fn validate_password(password: &str) -> Result<(), ValidationError> {
+fn validate_password(password: &str, _ctx: &()) -> Result<(), garde::Error> {
     let has_uppercase = password.chars().any(|c| c.is_ascii_uppercase());
     let has_lowercase = password.chars().any(|c| c.is_ascii_lowercase());
     let has_digit = password.chars().any(|c| c.is_ascii_digit());
@@ -57,36 +57,52 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
     };
 
     if !(has_uppercase && has_lowercase && has_digit && has_special_char && length_is_valid) {
-        return Err(ValidationError::new("failed to validate password"));
+        return Err(garde::Error::new("failed to validate password"));
     }
     Ok(())
 }
 
 static REGEX_NICKNAME: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z]\w{3,12}$").unwrap());
 
-fn validate_nickname(nickname: &str) -> Result<(), ValidationError> {
+fn validate_nickname(nickname: &str, _ctx: &()) -> Result<(), garde::Error> {
     if !REGEX_NICKNAME.is_match(nickname) {
-        return Err(ValidationError::new("failed to validate nickname"));
+        return Err(garde::Error::new("failed to validate nickname"));
     };
     Ok(())
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct RegisterUserSchema {
-    #[validate(custom = "validate_nickname")]
+    #[garde(custom(validate_nickname))]
     pub nickname: String,
-    #[validate(email)]
+    #[garde(email)]
     pub email: String,
-    #[validate(custom = "validate_password")]
+    #[garde(custom(validate_password))]
     pub password: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate)]
+#[serde(untagged)]
+#[garde(allow_unvalidated)]
+pub enum LoginSchema {
+    Default(LoginUserSchema),
+    Metamask(MetamaskLoginUserSchema),
+}
+
+#[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct LoginUserSchema {
-    #[validate(email)]
+    #[garde(email)]
     pub email: String,
-    #[validate(custom = "validate_password")]
+    #[garde(custom(validate_password))]
     pub password: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Validate)]
+pub struct MetamaskLoginUserSchema {
+    #[garde(length(min = 1))]
+    pub wallet_address: String,
+    #[garde(length(min = 1))]
+    pub signed_message: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -112,11 +128,10 @@ pub struct SessionTokenClaims {
     pub session_id: String,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProfileResponse<T>
-    where
-        T: Serialize,
+where
+    T: Serialize,
 {
     pub status: bool,
     pub data: T,
@@ -141,6 +156,5 @@ pub struct ProfileUserData {
     pub faculty_id: u64,
     #[sqlx(try_from = "i32")]
     pub user_university_id: u64,
-    pub user_univ_role: UserUniversityRole
+    pub user_univ_role: UserUniversityRole,
 }
-
