@@ -6,14 +6,13 @@ using UnityEngine;
 public class CharacterInteraction : NetworkBehaviour
 {
     public float delayInteract = 1f;
-    public GameObject _notifInformative;
-    public GameObject _notifPraktikumMenu;
     [SerializeField] private PlayerStateManager _playerStateManager;
 
     [Networked]
     public InformativeObject CurrentObject { get; set; }
     [Networked]
-    public ChangeCamera _alatPraktikum { get; set; }
+    public CheckInteractionNetwork _alatPraktikumNetwork { get; set; }
+    public ChangeCamera _alatPraktikumLocal;
 
     [Networked] 
     private TickTimer delay { get; set; }
@@ -22,11 +21,6 @@ public class CharacterInteraction : NetworkBehaviour
 	public Player Player { get; set; }
 
     public OfflineMenu _offlineMenu;
-    private void Start()
-    {
-        _notifInformative.SetActive(false);
-        _notifPraktikumMenu.SetActive(false);
-    }
     public override void Spawned()
     {
         delay = TickTimer.CreateFromSeconds(Runner, delayInteract);
@@ -41,29 +35,21 @@ public class CharacterInteraction : NetworkBehaviour
             CurrentObject.ModifyCollidedCount(1);
 
             if (Object.HasInputAuthority)
+            {
                 CurrentObject.SetLocalPlayer(gameObject);
-            // Tambahkan notif tekan "E"
-            _notifInformative.SetActive(true);
+            }
         } 
         if (other.CompareTag("OfflineMenu"))
         {
-            if (_playerStateManager.CurrentGameState == GameState.Play)
-            {
-                // Tambahkan notif tekan "B"
-                _notifPraktikumMenu.SetActive(true);
-            }
             var offlineMenu = other.GetComponent<OfflineMenu>();
             _offlineMenu = offlineMenu;
         }
         if (other.CompareTag("Alat_Praktikum"))
         {
-            if (_playerStateManager.CurrentGameState == GameState.Play)
-            {
-                // Tambahkan notif tekan "E"
-                _notifInformative.SetActive(true);
-            }
-            var AlatPraktikum = other.GetComponent<ChangeCamera>();
-            _alatPraktikum = AlatPraktikum;
+            var AlatPraktikumLocal = other.GetComponent<ChangeCamera>();
+            var AlatPraktikumNetwork = other.GetComponent<CheckInteractionNetwork>();
+            _alatPraktikumLocal = AlatPraktikumLocal;
+            _alatPraktikumNetwork = AlatPraktikumNetwork;
         }
     }
 
@@ -75,50 +61,18 @@ public class CharacterInteraction : NetworkBehaviour
 
             CurrentObject.ModifyCollidedCount(-1);
             CurrentObject = null;
-            // Tambahkan notif tekan "E"
-            _notifInformative.SetActive(false);
         }
         if (other.CompareTag("OfflineMenu"))
         {
-            // Tambahkan notif tekan "B"
-            _notifPraktikumMenu.SetActive(false);
             if (_offlineMenu == null) return;
             _offlineMenu = null;
         }
         if (other.CompareTag("Alat_Praktikum"))
         {
-            if (_alatPraktikum == null) return;
-            _alatPraktikum = null;
-            // Tambahkan notif tekan "E"
-            _notifInformative.SetActive(false);
-        }
-    }
-
-    private void OnTriggerStay(Collider other)
-    {
-        if (other.CompareTag("InformativeObject"))
-        {
-            if (_playerStateManager.CurrentGameState == GameState.Play)
-            {
-                // Tambahkan notif tekan "B"
-                _notifInformative.SetActive(true);
-            }
-        }
-        if (other.CompareTag("OfflineMenu"))
-        {
-            if (_playerStateManager.CurrentGameState == GameState.Play)
-            {
-                // Tambahkan notif tekan "B"
-                _notifPraktikumMenu.SetActive(true);
-            }
-        }
-        if (other.CompareTag("Alat_Praktikum"))
-        {
-            if (_playerStateManager.CurrentGameState == GameState.Play)
-            {
-                // Tambahkan notif tekan "B"
-                _notifInformative.SetActive(true);
-            }
+            if (_alatPraktikumLocal == null) return;
+            _alatPraktikumLocal = null;
+            if (_alatPraktikumNetwork == null) return;
+            _alatPraktikumNetwork = null;
         }
     }
 
@@ -128,9 +82,18 @@ public class CharacterInteraction : NetworkBehaviour
         {
             CurrentObject.ToggleShow();
         }
-        else if (_alatPraktikum != null) 
+        else if (_alatPraktikumLocal != null) 
         {
-            _alatPraktikum.Toggle();
+            Debug.Log("mencoba akses ke _alatpraktikum" + Object.HasInputAuthority);
+            if(_alatPraktikumNetwork.IsUsing == false && Object.HasInputAuthority)
+            {
+                Debug.Log("Mengakses _alatpraktikum");
+                _alatPraktikumLocal.Used();
+                _playerStateManager.TriggerInteractState();
+            } else if(_alatPraktikumNetwork.IsUsing == true && Object.HasInputAuthority)
+            {
+                Debug.Log("Lagi Dipake");
+            }
         } else return;
     }
 
@@ -139,15 +102,19 @@ public class CharacterInteraction : NetworkBehaviour
     {
         if (_offlineMenu == null) return;
         _offlineMenu.Open();
-        _notifPraktikumMenu.SetActive(false);
         _playerStateManager.TriggerInteractState();
     }
 
     private void TryUninteract()
     {
-        if (_alatPraktikum == null) return;
-        _alatPraktikum.Toggle();
-        Debug.Log("TryUninteract");
+        if (_alatPraktikumLocal != null)
+        {
+            if (_alatPraktikumNetwork.IsUsing == true && Object.HasInputAuthority)
+            {
+                _alatPraktikumLocal.Unused();
+                _playerStateManager.TriggerPlayState();
+            }
+        }
     }
 
     private void Update()
@@ -173,7 +140,6 @@ public class CharacterInteraction : NetworkBehaviour
             if (data.GetButton(ButtonFlag.ESCAPE))
             {
                 delay = TickTimer.CreateFromSeconds(Runner, delayInteract);
-                if (_playerStateManager.CurrentGameState == GameState.Interact)
                 TryUninteract();
             }
         }

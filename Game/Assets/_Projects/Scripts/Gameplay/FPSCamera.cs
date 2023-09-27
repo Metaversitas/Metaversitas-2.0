@@ -7,7 +7,7 @@ public class FPSCamera : NetworkBehaviour, IBeforeUpdate
 {
     public float mouseSensitivity = 2f;
     public float maxYDegrees = 70f;
-    public Character Character;
+    public CharacterMovement _characterMovement;
     public Angle yCamRotDelta;
 
     [SerializeField]
@@ -17,7 +17,7 @@ public class FPSCamera : NetworkBehaviour, IBeforeUpdate
     private float verticalRotation = 0;
     private Transform _camTransform;
 
-    [SerializeField] PlayerStateManager _stateManager;
+    [SerializeField] PlayerStateManager _playerStateManager;
     public override void Spawned()
     {
         _cursorLock = GetComponent<CursorLock>();
@@ -26,7 +26,7 @@ public class FPSCamera : NetworkBehaviour, IBeforeUpdate
 
         if (Object.HasInputAuthority)
         {
-            SetCameraParent(Character.transform);
+            SetCameraParent(_characterMovement.transform);
             App.FindInstance().FpsCamera = this;
         }
     }
@@ -46,13 +46,15 @@ public class FPSCamera : NetworkBehaviour, IBeforeUpdate
     public void SetCamera()
     {
         _camTransform.localPosition = camPosition;
+        _camTransform.localRotation = Quaternion.Euler(Vector3.zero);
     }
 
     public override void Render()
     {
-        if (Character == null) return;
+        if (_characterMovement == null) return;
+        if (_playerStateManager.CurrentGameState != GameState.Play) return;
 
-        Character.transform.rotation = Quaternion.Euler(0, (float)Character.yCamRotation, 0);
+        _characterMovement.transform.rotation = Quaternion.Euler(0, (float)_characterMovement.yCamRotation, 0);
     }
 
     private void Update()

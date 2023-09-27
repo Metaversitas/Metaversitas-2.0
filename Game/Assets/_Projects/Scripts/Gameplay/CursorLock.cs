@@ -3,8 +3,9 @@ using UnityEngine;
 
 public class CursorLock : MonoBehaviour
 {
-    private bool _isCursorLocked = true;
-    [SerializeField] private PlayerStateManager _gameStateManager;
+    [SerializeField] private bool _isCursorLocked = true;
+    [SerializeField] private PlayerStateManager _playerStateManager;
+    [SerializeField] private CharacterMovement _characterMovement;
 
     public bool IsLocked => _isCursorLocked;
 
@@ -17,9 +18,9 @@ public class CursorLock : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
             ToggleCursorLock();
-        else if (_gameStateManager.CurrentGameState == GameState.Play)
+        else if (_playerStateManager.CurrentGameState == GameState.Play)
             LockCursor();
-        else if (_gameStateManager.CurrentGameState == GameState.Interact || _gameStateManager.CurrentGameState == GameState.Chatting)
+        else if (_playerStateManager.CurrentGameState == GameState.Interact || _playerStateManager.CurrentGameState == GameState.Chatting)
             UnlockCursor();
     }
 
@@ -42,7 +43,7 @@ public class CursorLock : MonoBehaviour
         _isCursorLocked = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        _gameStateManager.TriggerPlayState();
+        _playerStateManager.TriggerPlayState();
     }
 
     private void UnlockCursor()
@@ -50,7 +51,7 @@ public class CursorLock : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         _isCursorLocked = false;
-        if (_gameStateManager.CurrentGameState == GameState.Play)
-        _gameStateManager.TriggerPauseState();
+        if (_playerStateManager.CurrentGameState == GameState.Play)
+        _playerStateManager.TriggerPauseState();
     }
 }

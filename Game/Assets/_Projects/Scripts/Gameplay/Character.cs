@@ -12,9 +12,9 @@ public class Character : NetworkBehaviour
 {
 	[SerializeField] private Text _name;
 	[SerializeField] private Animator _animator;
-	[SerializeField] private MeshRenderer _mesh;
 	[SerializeField] private CharacterInteraction _interaction;
     [SerializeField] private PlayerStateManager _playerStateManager;
+	private CharacterMovement _characterMovement;
 
 	[SerializeField] private Transform _anchorCharacter;
 	[SerializeField] private GameObject _characterCowo;
@@ -33,14 +33,14 @@ public class Character : NetworkBehaviour
 	[Networked] public Player Player { get; set; }
 
 	[Networked]
-	private bool _isReadInput { get; set; }
+	public bool _isReadInput { get; set; }
 
 
     public override void Spawned()
 	{
 		_isReadInput = false;
-
-		cowok = false;
+        _characterMovement = GetComponent<CharacterMovement>();
+        cowok = false;
 		if (HasInputAuthority)
 		{
 			Role = "Dosen";
@@ -59,10 +59,12 @@ public class Character : NetworkBehaviour
 			var model = Instantiate(_characterCowo, _anchorCharacter.position, _anchorCharacter.rotation);
 			model.transform.SetParent(_anchorCharacter);
 
-			// Mengambil animator dari karakter laki-laki dan mengatur ke _animator
-			_animator = model.GetComponent<Animator>();
+            // Mengambil animator dari karakter laki-laki dan mengatur ke _animator
+            //_animator = model.GetComponent<Animator>();
+            _characterMovement.GetAnimator(model);
 
-		}
+
+        }
 		else
 		{
 			// Jika boolean "cowok" adalah false, maka kita mengasumsikan karakter perempuan
@@ -70,9 +72,9 @@ public class Character : NetworkBehaviour
 			var model = Instantiate(_characterCewe, _anchorCharacter.position, _anchorCharacter.rotation);
 			model.transform.SetParent(_anchorCharacter);
 
-			// Mengambil animator dari karakter perempuan dan mengatur ke _animator
-			_animator = model.GetComponent<Animator>();
-		}
+            // Mengambil animator dari karakter perempuan dan mengatur ke _animator
+            _characterMovement.GetAnimator(model);
+        }
 	}
 
 	public void SetPlayer(Player player)
@@ -86,17 +88,15 @@ public class Character : NetworkBehaviour
 		// This is a little brute-force, but it gets the job done.
 		// Could use an OnChanged listener on the properties instead.
 		_name.text = Player.Name.Value;
-		_mesh.material.color = Player.Color;
 	}
 
-	public override void FixedUpdateNetwork()
+	/*public override void FixedUpdateNetwork()
 	{
 		if (Player == null) return;
-		if (_playerStateManager.CurrentGameState != GameState.Play) return;
 
 		if (Player.InputEnabled && GetInput(out InputData data))
 		{
-			_isReadInput = true;
+            _isReadInput = true;
 
 			if (data.GetButton(ButtonFlag.LEFT))
             {
@@ -143,5 +143,5 @@ public class Character : NetworkBehaviour
 			_animator.SetFloat("xMovement", 0);
             _animator.SetFloat("yMovement", 0);
         }
-    }
+    }*/
 }
