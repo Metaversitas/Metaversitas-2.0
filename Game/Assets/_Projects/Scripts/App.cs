@@ -33,8 +33,9 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 	[SerializeField] private Session _sessionPrefab;
 	[SerializeField] private ErrorBox _errorBox;
 	[SerializeField] private bool _sharedMode;
+	[SerializeField] private PlayerStateManager _playerStateManager;
 
-	[Space(10)]
+    [Space(10)]
 	[SerializeField] private bool _autoConnect;
 	[SerializeField] private bool _skipStaging;
 	[SerializeField] private SessionProps _autoSession = new SessionProps();
@@ -63,8 +64,8 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 
 	public bool AllowInput
 	{
-		get => _allowInput && Session != null && Session.PostLoadCountDown.Expired(Session.Runner);
-		set => _allowInput = value;
+		get =>_allowInput && Session != null && Session.PostLoadCountDown.Expired(Session.Runner);
+        set => _allowInput = value;
 	} 
 	//testing
 	private void Awake()
@@ -304,6 +305,8 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 		_data.ButtonFlags |= isInteract ? ButtonFlag.INTERACT : 0;
         var isEscape = _playerInputAction.Player.Escape.IsPressed();
         _data.ButtonFlags |= isEscape ? ButtonFlag.ESCAPE : 0;
+		var isClick = _playerInputAction.Player.Mouse.IsPressed();
+		_data.ButtonFlags |= isClick ? ButtonFlag.LEFTCLICK : 0;
     }
 	
 
@@ -311,8 +314,9 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 	{
 		if (!AllowInput)
 			return;
+		if (_playerStateManager.CurrentGameState != GameState.Play) return;
 
-		Vector3 inputVector = _playerInputAction.Player.Move.ReadValue<Vector3>();
+            Vector3 inputVector = _playerInputAction.Player.Move.ReadValue<Vector3>();
 		inputVector.Normalize();
 
 		// Persistent button flags like GetKey should be read when needed so they always have the actual state for this tick

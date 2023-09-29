@@ -10,6 +10,7 @@ public enum ButtonFlag
 
 	INTERACT = 1 << 4,
 	ESCAPE = 1 << 5,
+	LEFTCLICK = 1 << 6,
 }
 
 public struct InputData : INetworkInput

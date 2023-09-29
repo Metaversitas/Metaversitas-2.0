@@ -3,30 +3,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Fusion;
+using Photon.Realtime;
 
 public class ChangeCamera : NetworkBehaviour
 {
-    [SerializeField] PlayerStateManager _stateManager;
+    [SerializeField] PlayerStateManager _playerStateManager;
     [SerializeField] CinemachineVirtualCamera _virtualCamera;
     [SerializeField] GameObject _player;
     [SerializeField] FPSCamera _fPSCameraPlayer;
     [SerializeField] private Transform _position;
     private Camera _playerCamera;
-
-    [Networked(OnChanged = nameof(OnChangedOnUsing))]
-    public NetworkBool IsUsing { get; set; }
-
-    public static void OnChangedOnUsing(Changed<ChangeCamera> changed)
+    [SerializeField] private UIPraktikum _playerUIPraktikum;
+    CheckInteractionNetwork _checkInteractionNetwork;
+    private void Spawned()
     {
-        var b = changed.Behaviour;
-        if (b.IsUsing)
-        {
-            b.Used();
-        }
-        else
-        {
-            b.Unused();
-        }
+        _playerCamera = Camera.main;
+        _playerUIPraktikum = GetComponentInChildren<UIPraktikum>();
+        _checkInteractionNetwork = GetComponent<CheckInteractionNetwork>();
+    }
+
+    private void Start()
+    {
+        _playerUIPraktikum = GetComponentInChildren<UIPraktikum>();
+        _checkInteractionNetwork = GetComponent<CheckInteractionNetwork>();
     }
 
     void OnTriggerEnter(Collider other)
@@ -38,11 +37,6 @@ public class ChangeCamera : NetworkBehaviour
         }
     }
 
-    public void Toggle()
-    {
-        IsUsing = !IsUsing;
-    }
-
     private void OnTriggerExit(Collider other)
     {
         if (other.tag == "Player")
@@ -52,37 +46,31 @@ public class ChangeCamera : NetworkBehaviour
         }
     }
 
-    private void Start()
+
+    public void Used()
     {
-        _playerCamera = Camera.main;
+        _playerStateManager.TriggerInteractState();
+        _virtualCamera.gameObject.SetActive(true);
+        _playerUIPraktikum.Actived();
+        Rpc_Toogle();
     }
 
-    private void Spawned()
+    [Rpc]
+    void Rpc_Toogle()
     {
-        IsUsing = false;
+        _checkInteractionNetwork.Toggle();
     }
 
-    void Used()
-    {
-        _stateManager.TriggerInteractState();
-    }
 
-    private void LateUpdate()
+    public void Unused()
     {
-        if (_stateManager.CurrentGameState == GameState.Interact)
+        Rpc_Toogle();
+        _playerStateManager.TriggerPlayState();
+       _virtualCamera.gameObject.SetActive(false);
+        if(_fPSCameraPlayer != null)
         {
-            _virtualCamera.gameObject.SetActive(true);
-        } else if (_stateManager.CurrentGameState == GameState.Play)
-        {
-            _virtualCamera.gameObject.SetActive(false);
-            if(_fPSCameraPlayer != null)
             _fPSCameraPlayer.SetCamera();
         }
+       _playerUIPraktikum.Deactived();
     }
-
-    void Unused()
-    {
-        _stateManager.TriggerPlayState();
-    }
-
 }
