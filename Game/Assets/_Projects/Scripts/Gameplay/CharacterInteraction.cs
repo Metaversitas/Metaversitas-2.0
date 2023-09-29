@@ -10,9 +10,10 @@ public class CharacterInteraction : NetworkBehaviour
 
     [Networked]
     public InformativeObject CurrentObject { get; set; }
-    [Networked]
-    public CheckInteractionNetwork _alatPraktikumNetwork { get; set; }
+
+    public CheckInteractionNetwork _alatPraktikumNetwork;
     public ChangeCamera _alatPraktikumLocal;
+    public Interactor _alatPraktikumInteraction;
 
     [Networked] 
     private TickTimer delay { get; set; }
@@ -48,8 +49,10 @@ public class CharacterInteraction : NetworkBehaviour
         {
             var AlatPraktikumLocal = other.GetComponent<ChangeCamera>();
             var AlatPraktikumNetwork = other.GetComponent<CheckInteractionNetwork>();
+            var AlatPraktikumInteraction = other.GetComponentInChildren<Interactor>();
             _alatPraktikumLocal = AlatPraktikumLocal;
             _alatPraktikumNetwork = AlatPraktikumNetwork;
+            _alatPraktikumInteraction = AlatPraktikumInteraction;
         }
     }
 
@@ -73,6 +76,8 @@ public class CharacterInteraction : NetworkBehaviour
             _alatPraktikumLocal = null;
             if (_alatPraktikumNetwork == null) return;
             _alatPraktikumNetwork = null;
+            if (_alatPraktikumInteraction == null) return;
+            _alatPraktikumInteraction = null;
         }
     }
 
@@ -117,6 +122,28 @@ public class CharacterInteraction : NetworkBehaviour
         }
     }
 
+    private void AlatInteractor()
+    {
+        if (_alatPraktikumLocal != null)
+        {
+            if (_alatPraktikumNetwork.IsUsing == true)
+            {
+                _alatPraktikumInteraction.OnMouseDown();
+            }
+        }
+    }
+
+    private void AlatUninteractor()
+    {
+        if (_alatPraktikumLocal != null)
+        {
+            if (_alatPraktikumNetwork.IsUsing == true)
+            {
+                _alatPraktikumInteraction.OnMouseUp();
+            }
+        }
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown("b")) { TryInteractOffline(); }
@@ -141,6 +168,15 @@ public class CharacterInteraction : NetworkBehaviour
             {
                 delay = TickTimer.CreateFromSeconds(Runner, delayInteract);
                 TryUninteract();
+            }
+            if (data.GetButton(ButtonFlag.LEFTCLICK))
+            {
+                Debug.Log("Left Click Down");
+                AlatInteractor();
+            } else
+            {
+                Debug.Log("Left Click Up");
+                AlatUninteractor();
             }
         }
 	}

@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 108685756}
   - component: {fileID: 108685759}
   - component: {fileID: 108685758}
-  - component: {fileID: 108685757}
   m_Layer: 7
   m_Name: BandulVisual
   m_TagString: Untagged
@@ -84,19 +83,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &108685757
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 108685755}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &515478283012871342
 GameObject:
   m_ObjectHideFlags: 0
@@ -111,7 +97,8 @@ GameObject:
   - component: {fileID: 4311194802251350718}
   - component: {fileID: 4144945170336612062}
   - component: {fileID: 4807953223981097595}
-  - component: {fileID: 1848560318}
+  - component: {fileID: 5889199822338148582}
+  - component: {fileID: 6549198179490210846}
   m_Layer: 7
   m_Name: BandulControl
   m_TagString: bandul
@@ -224,6 +211,8 @@ MonoBehaviour:
   maxAngle: 0
   minAngle: 0
   newangle: 0
+  delayInteract: 1
+  isDragging: 0
 --- !u!135 &4807953223981097595
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -235,9 +224,9 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
+  m_Radius: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1848560318
+--- !u!114 &5889199822338148582
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -246,13 +235,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 515478283012871342}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Script: {fileID: 1710889294, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _interpolationDataSource: 3
   InterpolationSpace: 0
   InterpolationTarget: {fileID: 108685756}
-  InterpolateErrorCorrection: 0
+  InterpolateErrorCorrection: 1
   InterpolatedErrorCorrectionSettings:
     MinRate: 3.3
     MaxRate: 10
@@ -265,6 +254,19 @@ MonoBehaviour:
     RotTeleportRadians: 1.5
   UseLegacySharedModeInterpolation: 0
   TargetInterpolationDelay: 0.03
+--- !u!114 &6549198179490210846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 515478283012871342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d83c1eea848b2b4a8541cc258d45300, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _bandul: {fileID: 4144945170336612062}
 --- !u!1 &3202151525077676471
 GameObject:
   m_ObjectHideFlags: 0
@@ -553,7 +555,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3042898068771654492
 RectTransform:
   m_ObjectHideFlags: 0
@@ -733,7 +735,7 @@ MonoBehaviour:
   - {fileID: 9211476250683609563}
   - {fileID: 5711927687820196015}
   - {fileID: 4144945170336612062}
-  - {fileID: 1848560318}
+  - {fileID: 5889199822338148582}
   SimulationBehaviours: []
 --- !u!1 &9213900439272340618
 GameObject:
@@ -911,8 +913,8 @@ LineRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Positions:
-  - {x: -3.147, y: 1.3525, z: 0.020999968}
-  - {x: -3.147, y: 1.3525, z: 0.020999968}
+  - {x: -0.041000005, y: 1.7005, z: -0.65999985}
+  - {x: -0.041000005, y: 1.7005, z: -0.65999985}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 1

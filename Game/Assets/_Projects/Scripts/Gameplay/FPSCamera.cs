@@ -28,6 +28,7 @@ public class FPSCamera : NetworkBehaviour, IBeforeUpdate
         _cursorLock.ToggleCursorLock();
         _camTransform = Camera.main.transform;
         _camera = Camera.main;
+        _camera.orthographic = isOrthographic;
 
         if (Object.HasInputAuthority)
         {

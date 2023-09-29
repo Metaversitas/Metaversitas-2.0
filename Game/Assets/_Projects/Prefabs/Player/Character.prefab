@@ -452,6 +452,7 @@ MonoBehaviour:
   mouseSensitivity: 2
   maxYDegrees: 70
   _characterMovement: {fileID: 701375930010103786}
+  isOrthographic: 0
   camPosition: {x: 0, y: 1.6, z: 0.35}
   _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
 --- !u!114 &4610285444781331943
