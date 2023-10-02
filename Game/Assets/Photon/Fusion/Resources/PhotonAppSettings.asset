@@ -16,7 +16,7 @@ MonoBehaviour:
     AppIdFusion: beedcab3-6660-4f9c-b709-5daf411f975f
     AppIdChat: da5693ea-59a5-42a3-96f9-32150f1a4ec7
     AppIdVoice: f41ad7a9-c641-4a22-beab-fb216bccba4d
-    AppVersion: 
+    AppVersion: 0.1
     UseNameServer: 1
     FixedRegion: asia
     Server: 
@@ -24,6 +24,6 @@ MonoBehaviour:
     ProxyServer: 
     Protocol: 0
     EnableProtocolFallback: 1
-    AuthMode: 0
+    AuthMode: 2
     EnableLobbyStatistics: 0
-    NetworkLogging: 1
+    NetworkLogging: 5

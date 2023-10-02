@@ -713,7 +713,8 @@ PlayerSettings:
     Standalone: FUSION_WEAVER;DOTWEEN_ENABLED
   additionalCompilerArguments: {}
   platformArchitecture: {}
-  scriptingBackend: {}
+  scriptingBackend:
+    Standalone: 1
   il2cppCompilerConfiguration: {}
   managedStrippingLevel:
     Bratwurst: 1

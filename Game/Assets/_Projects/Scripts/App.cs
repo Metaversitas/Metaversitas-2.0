@@ -4,20 +4,25 @@ using System.Threading.Tasks;
 using Fusion;
 using Fusion.Sockets;
 using GameUI;
-using GameUI.Intro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Fusion.Photon.Realtime;
+using Metaversitas.User;
+using Metaversitas.Constants;
+using UnityEngine.Serialization;
+using UserData = Metaversitas.User.UserData;
+using UserDataConstants = Metaversitas.Constants.UserData;
 
 public enum ConnectionStatus
 {
-	Disconnected,
-	Connecting,
-	Connected,
-	Failed,
-	EnteringLobby,
-	InLobby,
-	Starting,
-	Started
+    Disconnected,
+    Connecting,
+    Connected,
+    Failed,
+    EnteringLobby,
+    InLobby,
+    Starting,
+    Started
 }
 
 /// <summary>
@@ -28,319 +33,384 @@ public enum ConnectionStatus
 [RequireComponent(typeof(NetworkSceneManagerBase))]
 public class App : MonoBehaviour, INetworkRunnerCallbacks
 {
-	[SerializeField] private SceneReference _introScene;
-	[SerializeField] private Player _playerPrefab;
-	[SerializeField] private Session _sessionPrefab;
-	[SerializeField] private ErrorBox _errorBox;
-	[SerializeField] private bool _sharedMode;
+    [SerializeField] private SceneReference _introScene;
+    [SerializeField] private Player _playerPrefab;
+    [SerializeField] private Session _sessionPrefab;
+    [SerializeField] private ErrorBox _errorBox;
+    [SerializeField] private bool _sharedMode;
 
-	[Space(10)]
-	[SerializeField] private bool _autoConnect;
-	[SerializeField] private bool _skipStaging;
-	[SerializeField] private SessionProps _autoSession = new SessionProps();
+    [Space(10)]
+    [SerializeField] private bool _autoConnect;
+    [SerializeField] private bool _skipStaging;
+    [SerializeField] private SessionProps _autoSession = new SessionProps();
 
-	private NetworkRunner _runner;
+    private NetworkRunner _runner;
     [SerializeField] private NetworkRunner networkRunnerPrefab;
     private NetworkSceneManagerBase _loader;
-	private Action<List<SessionInfo>> _onSessionListUpdated;
-	private InputData _data;
-	private Session _session;
-	private string _lobbyId;
-	private bool _allowInput;
-	private PlayerInputAction _playerInputAction;
+    private Action<List<SessionInfo>> _onSessionListUpdated;
+    private InputData _data;
+    private Session _session;
+    private string _lobbyId;
 
-	public FPSCamera FpsCamera;
+    private bool _allowInput;
 
-	public static App FindInstance()
-	{
-		return FindObjectOfType<App>();
-	}
+    private PlayerInputAction _playerInputAction;
 
-	public ConnectionStatus ConnectionStatus { get; private set; }
-	public bool IsSessionOwner => _runner != null && (_runner.IsServer || _runner.IsSharedModeMasterClient);
-	public SessionProps AutoSession => _autoSession;
-	public bool SkipStaging => _skipStaging;
+    private AuthenticationValues _authenticationValues;
 
-	public bool AllowInput
-	{
-		get => _allowInput && Session != null && Session.PostLoadCountDown.Expired(Session.Runner);
-		set => _allowInput = value;
-	} 
-	//testing
-	private void Awake()
-	{
-		App[] apps = FindObjectsOfType<App>();
+    public FPSCamera FpsCamera;
+    
+    [FormerlySerializedAs("_userManager")]
+    [Space(10)]
+    [SerializeField] private UserManager userManager;
 
-		Application.targetFrameRate = 60;
-		
-		if (apps != null && apps.Length > 1)
-		{
-			// There should never be more than a single App container in the context of this sample.
-			Destroy(gameObject);
-			return;
-		}
+    public static App FindInstance()
+    {
+        return FindObjectOfType<App>();
+    }
 
-		_playerInputAction = new PlayerInputAction();
-		_playerInputAction.Enable();
+    public ConnectionStatus ConnectionStatus { get; private set; }
+    public bool IsSessionOwner => _runner != null && (_runner.IsServer || _runner.IsSharedModeMasterClient);
+    public SessionProps AutoSession => _autoSession;
+    public bool SkipStaging => _skipStaging;
 
-		if (_loader==null)
-		{
-			_loader = GetComponent<NetworkSceneManagerBase>();
-		
-			DontDestroyOnLoad(gameObject);
+    public bool AllowInput
+    {
+        get => _allowInput && Session != null && Session.PostLoadCountDown.Expired(Session.Runner);
+        set => _allowInput = value;
+    } 
+    //testing
+    private void Awake()
+    {
+        App[] apps = FindObjectsOfType<App>();
 
-			if (_autoConnect)
-			{
-				StartSession( _sharedMode ? GameMode.Shared : GameMode.AutoHostOrClient, _autoSession, false);
-			}
-			else
-			{
-				SceneManager.LoadSceneAsync( _introScene );
-			}
-		}
-	}
+        Application.targetFrameRate = 60;
 
-	private void Connect()
-	{
-		if (_runner == null)
-		{
-			SetConnectionStatus(ConnectionStatus.Connecting);
+        if (apps != null && apps.Length > 1)
+        {
+            // There should never be more than a single App container in the context of this sample.
+            Destroy(gameObject);
+            return;
+        }
+
+        _playerInputAction = new PlayerInputAction();
+        _playerInputAction.Enable();
+
+        if (_loader==null)
+        {
+            _loader = GetComponent<NetworkSceneManagerBase>();
+
+            DontDestroyOnLoad(gameObject);
+
+            if (_autoConnect)
+            {
+                if (this._authenticationValues == null)
+                {
+                    this._authenticationValues = new AuthenticationValues();
+                }
+                StartSession( _sharedMode ? GameMode.Shared : GameMode.AutoHostOrClient, _autoSession, false);
+            }
+            else
+            {
+                SceneManager.LoadSceneAsync( _introScene );
+            }
+        }
+    }
+
+    private void Connect()
+    {
+        if (_runner == null)
+        {
+            SetConnectionStatus(ConnectionStatus.Connecting);
             _runner = Instantiate(networkRunnerPrefab);
             _runner.transform.SetParent(transform);
             _runner.name = "Session";
 
             /*GameObject go = new GameObject("Session");
 			go.transform.SetParent(transform);
-
 			_runner = go.AddComponent<NetworkRunner>();*/
-			_runner.AddCallbacks(this);
-		}
-	}
+            _runner.AddCallbacks(this);
+        }
+    }
 
-	public void Disconnect()
-	{
-		if (_runner != null)
-		{
-			SetConnectionStatus(ConnectionStatus.Disconnected);
-			_runner.Shutdown();
-		}
-	}
+    public void Disconnect()
+    {
+        if (_runner != null)
+        {
+            SetConnectionStatus(ConnectionStatus.Disconnected);
+            _runner.Shutdown();
+        }
+    }
 
-	public void JoinSession(SessionInfo info)
-	{
-		SessionProps props = new SessionProps(info.Properties);
-		//props.PlayerLimit = info.MaxPlayers;
-		props.RoomName = info.Name;
-		StartSession(_sharedMode ? GameMode.Shared : GameMode.Client, props);
-	}
-	
-	public void CreateSession(SessionProps props)
-	{
-		StartSession(_sharedMode ? GameMode.Shared : GameMode.Host, props, !_sharedMode);
-	}
+    public void JoinSession(SessionInfo info)
+    {
+        SessionProps props = new SessionProps(info.Properties);
+        //props.PlayerLimit = info.MaxPlayers;
+        props.RoomName = info.Name;
+        StartSession(_sharedMode ? GameMode.Shared : GameMode.Client, props);
+    }
 
-	private async void StartSession(GameMode mode, SessionProps props, bool disableClientSessionCreation=true)
-	{
-		Connect();
+    public void CreateSession(SessionProps props)
+    {
+        StartSession(_sharedMode ? GameMode.Shared : GameMode.Host, props, !_sharedMode);
+    }
 
-		SetConnectionStatus(ConnectionStatus.Starting);
 
-		//Debug.Log($"Starting game with session {props.RoomName}, player limit {props.PlayerLimit}");
-		_runner.ProvideInput = mode != GameMode.Server;
-		StartGameResult result = await _runner.StartGame(new StartGameArgs
-		{
-			GameMode = mode,
-			CustomLobbyName = _lobbyId,
-			SceneManager = _loader,
-			SessionName = props.RoomName,
-			//PlayerCount = props.PlayerLimit,
-			SessionProperties = props.Properties,
-			DisableClientSessionCreation = disableClientSessionCreation
-		});
-		if(!result.Ok)
-			SetConnectionStatus(ConnectionStatus.Failed, result.ShutdownReason.ToString());
-	}
+    private async void StartSession(GameMode mode, SessionProps props, bool disableClientSessionCreation=true)
+    {
+        Connect();
 
-	public async Task EnterLobby(string lobbyId, Action<List<SessionInfo>> onSessionListUpdated)
-	{
-		Connect();
-
-		_lobbyId = lobbyId;
-		_onSessionListUpdated = onSessionListUpdated;
-
-		SetConnectionStatus(ConnectionStatus.EnteringLobby);
-		var result = await _runner.JoinSessionLobby(SessionLobby.Custom, lobbyId);
-
-		if (!result.Ok) {
-			_onSessionListUpdated = null;
-			SetConnectionStatus(ConnectionStatus.Failed);
-			onSessionListUpdated(null);
-		}
-	}
-
-	public Session Session
-	{
-		get => _session;
-		set { _session = value; _session.transform.SetParent(_runner.transform); }
-	}
-
-	public Player GetPlayer()
-	{
-		return _runner?.GetPlayerObject(_runner.LocalPlayer)?.GetComponent<Player>();
-	}
-	
-	public void ForEachPlayer(Action<Player> action)
-	{
-		if (_runner)
-		{
-			foreach (PlayerRef plyRef in _runner.ActivePlayers)
-			{
-				NetworkObject plyObj = _runner.GetPlayerObject(plyRef);
-				if (plyObj)
-				{
-					Player ply = plyObj.GetComponent<Player>();
-					action(ply);
-				}
-			}
-		}
-	}
-
-	private void SetConnectionStatus(ConnectionStatus status, string reason="")
-	{
-		if (ConnectionStatus == status)
-			return;
-		ConnectionStatus = status;
-
-		if (!string.IsNullOrWhiteSpace(reason) && reason != "Ok")
-		{
-			_errorBox.Show(status,reason);
-		}
+        SetConnectionStatus(ConnectionStatus.Starting);
 		
-		Debug.Log($"ConnectionStatus={status} {reason}");
-	}
-	
-	/// <summary>
-	/// Fusion Event Handlers
-	/// </summary>
+        //Debug.Log($"Starting game with session {props.RoomName}, player limit {props.PlayerLimit}");
+        _runner.ProvideInput = mode != GameMode.Server;
+        StartGameResult result = await _runner.StartGame(new StartGameArgs
+        {
+            // SceneObjectProvider = GetSceneProvider(_runner),
+            GameMode = mode,
+            CustomLobbyName = _lobbyId,
+            SceneManager = _loader,
+            SessionName = props.RoomName,
+            //PlayerCount = props.PlayerLimit,
+            SessionProperties = props.Properties,
+            DisableClientSessionCreation = disableClientSessionCreation,
+            AuthValues = _authenticationValues
+        });
+        if(!result.Ok)
+            SetConnectionStatus(ConnectionStatus.Failed, result.ShutdownReason.ToString());
+    }
 
-	public void OnConnectedToServer(NetworkRunner runner)
-	{
-		Debug.Log("Connected to server");
-		SetConnectionStatus(ConnectionStatus.Connected);
-	}
+    public async Task EnterLobby(string lobbyId, Action<List<SessionInfo>> onSessionListUpdated)
+    {
+        Connect();
 
-	public void OnDisconnectedFromServer(NetworkRunner runner)
-	{
-		Debug.Log("Disconnected from server");
-		Disconnect();
-	}
+        _lobbyId = lobbyId;
+        _onSessionListUpdated = onSessionListUpdated;
 
-	public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
-	{
-		Debug.Log($"Connect failed {reason}");
-		Disconnect();
-		SetConnectionStatus(ConnectionStatus.Failed, reason.ToString());
-	}
+        SetConnectionStatus(ConnectionStatus.EnteringLobby);
+        var result = await _runner.JoinSessionLobby(SessionLobby.Custom, lobbyId);
 
-	public void OnPlayerJoined(NetworkRunner runner, PlayerRef playerRef)
-	{
-		Debug.Log($"Player {playerRef} Joined!");
-		if ( _session==null && IsSessionOwner)
-		{
-			Debug.Log("Spawning world");
-			_session = runner.Spawn(_sessionPrefab, Vector3.zero, Quaternion.identity);
-		}
+        if (!result.Ok) {
+            _onSessionListUpdated = null;
+            SetConnectionStatus(ConnectionStatus.Failed);
+            onSessionListUpdated(null);
+        }
+    }
 
-		if (runner.IsServer || runner.Topology == SimulationConfig.Topologies.Shared && playerRef == runner.LocalPlayer)
-		{
-			Debug.Log("Spawning player");
-			runner.Spawn(_playerPrefab, Vector3.zero, Quaternion.identity, playerRef, (runner, obj) => runner.SetPlayerObject(playerRef, obj) );
-		}
+    public Session Session
+    {
+        get => _session;
+        set { _session = value; _session.transform.SetParent(_runner.transform); }
+    }
 
-		SetConnectionStatus(ConnectionStatus.Started);
-	}
+    public Player GetPlayer()
+    {
+        return _runner?.GetPlayerObject(_runner.LocalPlayer)?.GetComponent<Player>();
+    }
 
-	public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
-	{
-		Debug.Log($"{player.PlayerId} disconnected.");
+    public void ForEachPlayer(Action<Player> action)
+    {
+        if (_runner)
+        {
+            foreach (PlayerRef plyRef in _runner.ActivePlayers)
+            {
+                NetworkObject plyObj = _runner.GetPlayerObject(plyRef);
+                if (plyObj)
+                {
+                    Player ply = plyObj.GetComponent<Player>();
+                    action(ply);
+                }
+            }
+        }
+    }
 
-		if (runner.IsServer)
-		{
-			NetworkObject playerObj = runner.GetPlayerObject(player);
-			if (playerObj)
-			{
-				if (playerObj != null && playerObj.HasStateAuthority)
-				{
-					Debug.Log("De-spawning Player");
-					playerObj.GetComponent<Player>().Despawn();
-				}
-			}
-		}
-	}
+    private void SetConnectionStatus(ConnectionStatus status, string reason="")
+    {
+        if (ConnectionStatus == status)
+            return;
+        ConnectionStatus = status;
 
-	public void OnShutdown(NetworkRunner runner, ShutdownReason reason)
-	{
-		Debug.Log($"OnShutdown {reason}");
-		SetConnectionStatus(ConnectionStatus.Disconnected, reason.ToString());
+        if (!string.IsNullOrWhiteSpace(reason) && reason != "Ok")
+        {
+            _errorBox.Show(status,reason);
+        }
 
-		if(_runner!=null && _runner.gameObject)
-			Destroy(_runner.gameObject);
+        Debug.Log($"ConnectionStatus={status} {reason}");
+    }
 
-		_runner = null;
-		_session = null;
+    public void SetAuthenticationValues(AuthenticationValues authValues)
+    {
+        _authenticationValues = authValues;
+    }
 
-		if(Application.isPlaying)
-			SceneManager.LoadSceneAsync(_introScene);
-	}
+    private void SetUserManager(UserManager userManager)
+    {
+        if (this.userManager != null)
+        {
+            return;
+        }
 
-	public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token)
-	{
-		request.Accept();
-	}
+        this.userManager = userManager;
+    }
 
-	private void Update() 
-	{
-		var isInteract = _playerInputAction.Player.Interact.IsPressed();
-		_data.ButtonFlags |= isInteract ? ButtonFlag.INTERACT : 0;
+    private void CreateUserSession(Dictionary<string, object> session_data)
+    {
+        var userData = session_data[UserDataConstants.UserDataObject] as object[];
+        var userFacultyID = ((userData[UserDataConstants.UserDataFacultyID] as object[])?[0] as Int64?) ?? default(Int64);
+        var userFacultyName = ((userData[UserDataConstants.UserDataFacultyName] as object[])?[0] as string) ?? default(string);
+        var userFullName = ((userData[UserDataConstants.UserDataFullName] as object[])?[0] as string) ?? default(string);
+        var userInGameNickname = ((userData[UserDataConstants.UserDataInGameNickname] as object[])?[0] as string) ?? default(string);
+        var userUniversityName = ((userData[UserDataConstants.UserDataUniversityName] as object[])?[0] as string) ?? default(string);
+        var userID = ((userData[UserDataConstants.UserDataUserID] as object[])?[0] as string) ?? default(string);
+        var userRole = ((userData[UserDataConstants.UserDataUserUnivRole] as object[])?[0] as string) ?? default(string);
+        var success = Enum.TryParse<UserUniversityRole>(userRole, out var parsedUserRole);
+        if (!success)
+        {
+            throw new SystemException("Can't parse User Role");
+        }
+        var userUniversityID = ((userData[UserDataConstants.UserDataUserUniversityID] as object[])?[0] as Int64?) ?? default(Int64);
+
+        var sessionData = session_data[AuthUserData.AuthUserDataObject] as object[];
+        var authBearer = (sessionData[AuthUserData.AuthToken] as object[])?[0] as string;
+        var sessionToken = (sessionData[AuthUserData.AuthSessionToken] as object[])?[0] as string;
+
+
+        UserData uUserData = new UserData(userFacultyID, userFacultyName, userFullName, userInGameNickname,
+            userUniversityName, userID, parsedUserRole, userUniversityID);
+        UserSession uUserSession = gameObject.AddComponent<UserSession>();
+        UserManager userManager = gameObject.AddComponent<UserManager>();
+        uUserSession.Initialize(sessionToken, authBearer);
+        userManager.Initialize(uUserData, uUserSession);
+        
+        SetUserManager(userManager);
+    }
+
+    /// <summary>
+    /// Fusion Event Handlers
+    /// </summary>
+
+    public void OnConnectedToServer(NetworkRunner runner)
+    {
+        Debug.Log("Connected to server");
+        SetConnectionStatus(ConnectionStatus.Connected);
+    }
+
+    public void OnDisconnectedFromServer(NetworkRunner runner)
+    {
+        Debug.Log("Disconnected from server");
+        Disconnect();
+    }
+
+    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
+    {
+        Debug.Log($"Connect failed {reason}");
+        Disconnect();
+        SetConnectionStatus(ConnectionStatus.Failed, reason.ToString());
+    }
+
+    public void OnPlayerJoined(NetworkRunner runner, PlayerRef playerRef)
+    {
+        Debug.Log($"Player {playerRef} Joined!");
+        if ( _session==null && IsSessionOwner)
+        {
+            Debug.Log("Spawning world");
+            _session = runner.Spawn(_sessionPrefab, Vector3.zero, Quaternion.identity);
+        }
+
+        if (runner.IsServer || runner.Topology == SimulationConfig.Topologies.Shared && playerRef == runner.LocalPlayer)
+        {
+            Debug.Log("Spawning player");
+            runner.Spawn(_playerPrefab, Vector3.zero, Quaternion.identity, playerRef, (runner, obj) => runner.SetPlayerObject(playerRef, obj) );
+        }
+
+        SetConnectionStatus(ConnectionStatus.Started);
+    }
+
+    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
+    {
+        Debug.Log($"{player.PlayerId} disconnected.");
+
+        if (runner.IsServer)
+        {
+            NetworkObject playerObj = runner.GetPlayerObject(player);
+            if (playerObj)
+            {
+                if (playerObj != null && playerObj.HasStateAuthority)
+                {
+                    Debug.Log("De-spawning Player");
+                    playerObj.GetComponent<Player>().Despawn();
+                }
+            }
+        }
+    }
+
+    public void OnShutdown(NetworkRunner runner, ShutdownReason reason)
+    {
+        Debug.LogWarning($"{nameof(OnShutdown)}: {nameof(ShutdownReason)}: OnShutdown {reason}");
+        SetConnectionStatus(ConnectionStatus.Disconnected, reason.ToString());
+
+        if(_runner!=null && _runner.gameObject)
+            Destroy(_runner.gameObject);
+
+        _runner = null;
+        _session = null;
+
+        if(Application.isPlaying)
+            SceneManager.LoadSceneAsync(_introScene);
+    }
+
+    public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token)
+    {
+        request.Accept();
+    }
+
+    private void Update() 
+    {
+        var isInteract = _playerInputAction.Player.Interact.IsPressed();
+        _data.ButtonFlags |= isInteract ? ButtonFlag.INTERACT : 0;
         var isEscape = _playerInputAction.Player.Escape.IsPressed();
         _data.ButtonFlags |= isEscape ? ButtonFlag.ESCAPE : 0;
     }
-	
 
-	public void OnInput(NetworkRunner runner, NetworkInput input)
-	{
-		if (!AllowInput)
-			return;
 
-		Vector3 inputVector = _playerInputAction.Player.Move.ReadValue<Vector3>();
-		inputVector.Normalize();
+    public void OnInput(NetworkRunner runner, NetworkInput input)
+    {
+        if (!AllowInput)
+            return;
 
-		// Persistent button flags like GetKey should be read when needed so they always have the actual state for this tick
-		_data.ButtonFlags |= inputVector.y > 0 ? ButtonFlag.FORWARD : 0;
-		_data.ButtonFlags |= inputVector.x < 0 ? ButtonFlag.LEFT : 0;
-		_data.ButtonFlags |= inputVector.y < 0 ? ButtonFlag.BACKWARD : 0;
-		_data.ButtonFlags |= inputVector.x > 0 ? ButtonFlag.RIGHT : 0;
+        Vector3 inputVector = _playerInputAction.Player.Move.ReadValue<Vector3>();
+        inputVector.Normalize();
 
-		if (FpsCamera != null)
-			_data.YCamRotation = FpsCamera.ConsumeDelta();
+        // Persistent button flags like GetKey should be read when needed so they always have the actual state for this tick
+        _data.ButtonFlags |= inputVector.y > 0 ? ButtonFlag.FORWARD : 0;
+        _data.ButtonFlags |= inputVector.x < 0 ? ButtonFlag.LEFT : 0;
+        _data.ButtonFlags |= inputVector.y < 0 ? ButtonFlag.BACKWARD : 0;
+        _data.ButtonFlags |= inputVector.x > 0 ? ButtonFlag.RIGHT : 0;
 
-		input.Set( _data );
+        if (FpsCamera != null)
+            _data.YCamRotation = FpsCamera.ConsumeDelta();
 
-		// Clear the flags so they don't spill over into the next tick unless they're still valid input.
-		_data.ButtonFlags = 0;
-	}
+        input.Set( _data );
 
-	public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
-	{
-		SetConnectionStatus(ConnectionStatus.InLobby);
-		_onSessionListUpdated?.Invoke(sessionList);
-	}
+        // Clear the flags so they don't spill over into the next tick unless they're still valid input.
+        _data.ButtonFlags = 0;
+    }
 
-	public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
-	public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
-	public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
-	public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
-	public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ArraySegment<byte> data) { }
-	public void OnSceneLoadDone(NetworkRunner runner) { }
-	public void OnSceneLoadStart(NetworkRunner runner) { }
+    public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
+    {
+        SetConnectionStatus(ConnectionStatus.InLobby);
+        _onSessionListUpdated?.Invoke(sessionList);
+    }
+
+    public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
+    public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
+
+    public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) {
+        CreateUserSession(data);
+    }
+
+    public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
+    public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ArraySegment<byte> data) { }
+    public void OnSceneLoadDone(NetworkRunner runner) { }
+    public void OnSceneLoadStart(NetworkRunner runner) { }
 }
