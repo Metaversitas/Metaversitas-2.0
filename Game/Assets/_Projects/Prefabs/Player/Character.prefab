@@ -145,6 +145,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5202814610377760693}
   - component: {fileID: 5918572417253627795}
+  - component: {fileID: 746677731004286226}
   - component: {fileID: 448332936391554449}
   m_Layer: 0
   m_Name: CharacterInteraction
@@ -182,13 +183,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _interpolationDataSource: 0
   delayInteract: 0.7
+  _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
+  _CurrentObject: {fileID: 0}
+  __alatPraktikumNetwork: {fileID: 0}
+  _alatPraktikumLocal: {fileID: 0}
+  _Player: {fileID: 0}
+  _offlineMenu: {fileID: 0}
+--- !u!114 &746677731004286226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2069479688481530321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c12a19a648ad1dd43a61f782da4cc111, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interpolationDataSource: 0
   _notifInformative: {fileID: 6506788467949620410}
   _notifPraktikumMenu: {fileID: 1966083919748782892}
   _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
-  _CurrentObject: {fileID: 0}
-  __alatPraktikum: {fileID: 0}
-  _Player: {fileID: 0}
-  _offlineMenu: {fileID: 0}
 --- !u!65 &448332936391554449
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -327,11 +343,12 @@ GameObject:
   m_Component:
   - component: {fileID: 4610285444781331941}
   - component: {fileID: 4610285444781331942}
+  - component: {fileID: 701375930010103786}
+  - component: {fileID: -4747355549910533344}
+  - component: {fileID: 2786839203826599893}
   - component: {fileID: 4610285444781331943}
   - component: {fileID: 4610285444781331944}
   - component: {fileID: 7048927567492314046}
-  - component: {fileID: -4747355549910533344}
-  - component: {fileID: 2786839203826599893}
   - component: {fileID: 4788498069628935632}
   m_Layer: 0
   m_Name: Character
@@ -373,7 +390,6 @@ MonoBehaviour:
   _interpolationDataSource: 0
   _name: {fileID: 4610285446266597328}
   _animator: {fileID: 0}
-  _mesh: {fileID: 4610285446578239583}
   _interaction: {fileID: 5918572417253627795}
   _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
   _anchorCharacter: {fileID: 4568515329382100830}
@@ -385,6 +401,60 @@ MonoBehaviour:
   _xMovement: 0
   _yMovement: 0
   _Player: {fileID: 0}
+  __isReadInput: 0
+--- !u!114 &701375930010103786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4610285444781331945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 690c6d63cf1b5ca44a84d0524ba2b92a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interpolationDataSource: 0
+  _animator: {fileID: 0}
+  _character: {fileID: 0}
+  _gameStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
+  moveVelocity: 5
+  _xMovement: 0
+  _yMovement: 0
+--- !u!114 &-4747355549910533344
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4610285444781331945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4413e39804dafb499d043844b251283, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _isCursorLocked: 1
+  _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
+  _characterMovement: {fileID: 701375930010103786}
+--- !u!114 &2786839203826599893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4610285444781331945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64d043e75e30e4743864d6c7ac754032, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interpolationDataSource: 0
+  mouseSensitivity: 2
+  maxYDegrees: 70
+  _characterMovement: {fileID: 701375930010103786}
+  isOrthographic: 0
+  camPosition: {x: 0, y: 1.6, z: 0.35}
+  _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
 --- !u!114 &4610285444781331943
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -408,9 +478,11 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 4610285444781331942}
-  - {fileID: 4610285444781331944}
+  - {fileID: 701375930010103786}
   - {fileID: 2786839203826599893}
+  - {fileID: 4610285444781331944}
   - {fileID: 5918572417253627795}
+  - {fileID: 746677731004286226}
   SimulationBehaviours: []
 --- !u!114 &4610285444781331944
 MonoBehaviour:
@@ -456,37 +528,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &-4747355549910533344
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4610285444781331945}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4413e39804dafb499d043844b251283, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _gameStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
---- !u!114 &2786839203826599893
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4610285444781331945}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 64d043e75e30e4743864d6c7ac754032, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _interpolationDataSource: 0
-  mouseSensitivity: 2
-  maxYDegrees: 70
-  Character: {fileID: 4610285444781331942}
-  camPosition: {x: 0, y: 1.6, z: 0.35}
-  _stateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
 --- !u!136 &4788498069628935632
 CapsuleCollider:
   m_ObjectHideFlags: 0

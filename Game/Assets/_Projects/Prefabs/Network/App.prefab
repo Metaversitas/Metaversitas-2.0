@@ -1003,6 +1003,7 @@ MonoBehaviour:
   _sessionPrefab: {fileID: 1504012697553745423, guid: a27f54dbaca1cd9428637b268633b743, type: 3}
   _errorBox: {fileID: 6274724182691780849}
   _sharedMode: 0
+  _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
   _autoConnect: 0
   _skipStaging: 0
   _autoSession:
