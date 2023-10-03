@@ -171,11 +171,11 @@ public class CharacterInteraction : NetworkBehaviour
             }
             if (data.GetButton(ButtonFlag.LEFTCLICK))
             {
-                Debug.Log("Left Click Down");
+                // Debug.Log("Left Click Down");
                 AlatInteractor();
             } else
             {
-                Debug.Log("Left Click Up");
+                // Debug.Log("Left Click Up");
                 AlatUninteractor();
             }
         }

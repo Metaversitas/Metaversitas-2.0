@@ -1,6 +1,7 @@
 using Fusion;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 /// <summary>
 /// Visual representation of a Player - the Character is instantiated by the map once it's loaded.
@@ -51,6 +52,7 @@ public class Character : NetworkBehaviour
 		SpawnCharacterModel();
     }
 
+
 	private void SpawnCharacterModel()
     {
 		if (cowok)
@@ -87,7 +89,7 @@ public class Character : NetworkBehaviour
 	{
 		// This is a little brute-force, but it gets the job done.
 		// Could use an OnChanged listener on the properties instead.
-		_name.text = Player.Name.Value;
+		// _name.text = Player.Name.Value;
 	}
 
 	/*public override void FixedUpdateNetwork()
