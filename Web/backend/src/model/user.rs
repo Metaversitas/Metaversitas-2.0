@@ -137,7 +137,7 @@ where
     pub data: T,
 }
 
-#[derive(Debug, Serialize, Deserialize, Type, FromRedisValue, ToRedisArgs)]
+#[derive(Debug, Serialize, Deserialize, Type, FromRedisValue, ToRedisArgs, Clone)]
 #[sqlx(type_name = "user_university_role")]
 #[sqlx(rename_all = "lowercase")]
 pub enum UserUniversityRole {
@@ -157,4 +157,17 @@ pub struct ProfileUserData {
     #[sqlx(try_from = "i32")]
     pub user_university_id: u64,
     pub user_univ_role: UserUniversityRole,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AuthDataPhoton {
+    pub user_id: String,
+    pub in_game_nickname: String,
+    pub full_name: String,
+    pub university_name: String,
+    pub faculty_name: String,
+    pub faculty_id: u64,
+    pub user_university_id: u64,
+    pub user_univ_role: UserUniversityRole,
+    pub auth_cookie: String,
 }

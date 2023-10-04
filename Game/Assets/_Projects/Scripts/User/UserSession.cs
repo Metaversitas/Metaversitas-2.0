@@ -15,14 +15,15 @@ namespace Metaversitas.User
         private const string CookieSession = "session_token";
         private string _cookieValue;
 
-        public void Initialize(string sessionToken, string authBearer)
+        public void Initialize(string cookieValue)
         {
             if (_isInitialized)
             {
                 Debug.Log("User Session is already initialized");
                 return;
             }
-            _cookieValue = $"{CookieAuthorization}={authBearer};{CookieSession}={sessionToken}";
+            
+            _cookieValue = cookieValue;
             StartCoroutine(RefreshSession());
         }
         
@@ -31,7 +32,7 @@ namespace Metaversitas.User
             while (true)
             {
                 yield return new WaitForSeconds(FourMinutes);
-
+                
                 using var request = UnityWebRequest.Get(UriRefreshToken);
                 request.SetRequestHeader("Cookie", _cookieValue);
                 yield return request.SendWebRequest();
