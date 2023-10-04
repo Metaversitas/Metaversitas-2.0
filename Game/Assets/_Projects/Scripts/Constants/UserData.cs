@@ -2,21 +2,18 @@
 {
     public static class UserData
     {
-        public const string UserDataObject = "user_data";
-        public const int UserDataFacultyID = 0;
-        public const int UserDataFacultyName = 1;
-        public const int UserDataFullName = 2;
-        public const int UserDataInGameNickname = 3;
-        public const int UserDataUniversityName = 4;
-        public const int UserDataUserID = 5;
-        public const int UserDataUserUnivRole = 6;
-        public const int UserDataUserUniversityID = 7;
+        public const string KeyFacultyID = "faculty_id";
+        public const string KeyFacultyName = "faculty_name";
+        public const string KeyFullName = "full_name";
+        public const string KeyInGameNickname = "in_game_nickname";
+        public const string KeyUniversityName = "university_name";
+        public const string KeyUserID = "user_id";
+        public const string KeyUserUnivRole = "user_univ_role";
+        public const string KeyUniversityID = "user_university_id";
     }
 
     public static class AuthUserData
     {
-        public const string AuthUserDataObject = "auth_cookie";
-        public const int AuthToken = 0;
-        public const int AuthSessionToken = 1;
+        public const string KeyAuthCookie = "auth_cookie";
     }
 }

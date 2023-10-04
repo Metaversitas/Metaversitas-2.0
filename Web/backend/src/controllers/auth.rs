@@ -3,7 +3,7 @@ use crate::helpers::authentication::{
     delete_session, must_authorized, COOKIE_AUTH_NAME, COOKIE_SESSION_TOKEN_NAME,
 };
 use crate::helpers::errors::{AuthError, AuthErrorProvider, PhotonAuthError};
-use crate::model::user::{LoginSchema, RegisterUserSchema, UserJsonBody};
+use crate::model::user::{AuthDataPhoton, LoginSchema, RegisterUserSchema, UserJsonBody};
 
 use crate::service::game::GameService;
 use crate::service::user::UserService;
@@ -12,7 +12,7 @@ use axum::extract::rejection::JsonRejection;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::middleware;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use axum_extra::extract::cookie::CookieJar;
@@ -103,7 +103,7 @@ pub async fn login(
     State(login_service): State<Arc<LoginStateService>>,
     params: Option<Query<ParamsAuthenticate>>,
     payload: Result<Json<UserJsonBody<LoginSchema>>, JsonRejection>,
-) -> Result<impl IntoResponse, AuthErrorProvider> {
+) -> Result<Response, AuthErrorProvider> {
     let mut current_format = AuthFormatType::Default;
 
     if let Some(params) = params {
@@ -176,23 +176,28 @@ pub async fn login(
                             "Cookie not found"
                         ))))?
                         .value();
-                    let auth_cookie = json!({
-                        format!("{}", COOKIE_SESSION_TOKEN_NAME): session_id,
-                        format!("{}", COOKIE_AUTH_NAME): session_bearer,
-                    });
-                    let data = json!({"user_data": user_data, "auth_cookie": auth_cookie});
+                    let auth_data = AuthDataPhoton {
+                        user_id: user_id.to_owned(),
+                        in_game_nickname: nickname.to_owned(),
+                        full_name: user_data.full_name.to_owned(),
+                        university_name: user_data.university_name.to_owned(),
+                        faculty_name: user_data.faculty_name.to_owned(),
+                        faculty_id: user_data.faculty_id,
+                        user_university_id: user_data.user_university_id,
+                        user_univ_role: user_data.user_univ_role.clone(),
+                        auth_cookie: format!("{}={};{}={}", COOKIE_SESSION_TOKEN_NAME, session_id, COOKIE_AUTH_NAME, session_bearer),
+                    };
                     let response = json!({
                         "ResultCode": 1,
                         "UserId": user_id,
                         "Nickname": nickname,
-                        "Data": data,
-                        "AuthCookie": auth_cookie
+                        "Data": auth_data,
                     });
-                    Ok((StatusCode::OK, cookie_jar, Json(response)))
+                    Ok((StatusCode::OK, Json(response)).into_response())
                 }
                 AuthFormatType::Default => {
                     let response = json!({"success": true, "message": "Successfully logged in", "data": user_data});
-                    Ok((StatusCode::OK, cookie_jar, Json(response)))
+                    Ok((StatusCode::OK, cookie_jar, Json(response)).into_response())
                 }
             }
         }

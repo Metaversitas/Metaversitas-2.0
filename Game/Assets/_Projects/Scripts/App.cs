@@ -247,6 +247,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (this.userManager != null)
         {
+            Debug.LogWarning("User Manager already initiated");
             return;
         }
 
@@ -255,33 +256,29 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 
     private void CreateUserSession(Dictionary<string, object> session_data)
     {
-        var userData = session_data[UserDataConstants.UserDataObject] as object[];
-        var userFacultyID = ((userData[UserDataConstants.UserDataFacultyID] as object[])?[0] as Int64?) ?? default(Int64);
-        var userFacultyName = ((userData[UserDataConstants.UserDataFacultyName] as object[])?[0] as string) ?? default(string);
-        var userFullName = ((userData[UserDataConstants.UserDataFullName] as object[])?[0] as string) ?? default(string);
-        var userInGameNickname = ((userData[UserDataConstants.UserDataInGameNickname] as object[])?[0] as string) ?? default(string);
-        var userUniversityName = ((userData[UserDataConstants.UserDataUniversityName] as object[])?[0] as string) ?? default(string);
-        var userID = ((userData[UserDataConstants.UserDataUserID] as object[])?[0] as string) ?? default(string);
-        var userRole = ((userData[UserDataConstants.UserDataUserUnivRole] as object[])?[0] as string) ?? default(string);
+        
+        var userFacultyID = Convert.ToInt64(session_data[UserDataConstants.KeyFacultyID]);
+        var userFacultyName = session_data[UserDataConstants.KeyFacultyName].ToString();
+        var userFullName = session_data[UserDataConstants.KeyFullName].ToString();
+        var userInGameNickname = session_data[UserDataConstants.KeyInGameNickname].ToString();
+        var userUniversityName = session_data[UserDataConstants.KeyUniversityName].ToString();
+        var userID = session_data[UserDataConstants.KeyUserID].ToString();
+        var userRole = session_data[UserDataConstants.KeyUserUnivRole].ToString();
+        var userUniversityID = Convert.ToInt64(session_data[UserDataConstants.KeyUniversityID]);
+        var cookieValue = session_data[AuthUserData.KeyAuthCookie].ToString();
         var success = Enum.TryParse<UserUniversityRole>(userRole, out var parsedUserRole);
         if (!success)
         {
             throw new SystemException("Can't parse User Role");
         }
-        var userUniversityID = ((userData[UserDataConstants.UserDataUserUniversityID] as object[])?[0] as Int64?) ?? default(Int64);
-
-        var sessionData = session_data[AuthUserData.AuthUserDataObject] as object[];
-        var authBearer = (sessionData[AuthUserData.AuthToken] as object[])?[0] as string;
-        var sessionToken = (sessionData[AuthUserData.AuthSessionToken] as object[])?[0] as string;
-
 
         UserData uUserData = new UserData(userFacultyID, userFacultyName, userFullName, userInGameNickname,
             userUniversityName, userID, parsedUserRole, userUniversityID);
         UserSession uUserSession = gameObject.AddComponent<UserSession>();
         UserManager userManager = gameObject.AddComponent<UserManager>();
-        uUserSession.Initialize(sessionToken, authBearer);
+        uUserSession.Initialize(cookieValue);
         userManager.Initialize(uUserData, uUserSession);
-        
+
         SetUserManager(userManager);
     }
 
