@@ -1,5 +1,7 @@
 use crate::backend::AppState;
-use crate::helpers::authentication::{delete_session, must_authorized, COOKIE_SESSION_TOKEN_NAME};
+use crate::helpers::authentication::{
+    delete_session, must_authorized, COOKIE_AUTH_NAME, COOKIE_SESSION_TOKEN_NAME,
+};
 use crate::helpers::errors::{AuthError, AuthErrorProvider, PhotonAuthError};
 use crate::model::user::{LoginSchema, RegisterUserSchema, UserJsonBody};
 
@@ -151,8 +153,6 @@ pub async fn login(
         payload
     };
 
-    let mut response = json!({"success": true, "message": "Successfully logged in"});
-
     match &payload.user {
         LoginSchema::Default(user) => {
             let (user_data, cookie_jar) = login_service
@@ -160,8 +160,41 @@ pub async fn login(
                 .login(user.email.as_str(), user.password.as_str())
                 .await
                 .map_err(|err| AuthErrorProvider::from((err, &current_format)))?;
-            response["data"] = json!(user_data);
-            Ok((StatusCode::OK, cookie_jar, Json(response)))
+            match current_format {
+                AuthFormatType::Photon => {
+                    let user_id = user_data.user_id.to_owned();
+                    let nickname = user_data.in_game_nickname.to_owned();
+                    let session_id = &cookie_jar
+                        .get(COOKIE_SESSION_TOKEN_NAME)
+                        .ok_or(AuthErrorProvider::Photon(PhotonAuthError::Other(anyhow!(
+                            "Cookie not found"
+                        ))))?
+                        .value();
+                    let session_bearer = &cookie_jar
+                        .get(COOKIE_AUTH_NAME)
+                        .ok_or(AuthErrorProvider::Photon(PhotonAuthError::Other(anyhow!(
+                            "Cookie not found"
+                        ))))?
+                        .value();
+                    let auth_cookie = json!({
+                        format!("{}", COOKIE_SESSION_TOKEN_NAME): session_id,
+                        format!("{}", COOKIE_AUTH_NAME): session_bearer,
+                    });
+                    let data = json!({"user_data": user_data, "auth_cookie": auth_cookie});
+                    let response = json!({
+                        "ResultCode": 1,
+                        "UserId": user_id,
+                        "Nickname": nickname,
+                        "Data": data,
+                        "AuthCookie": auth_cookie
+                    });
+                    Ok((StatusCode::OK, cookie_jar, Json(response)))
+                }
+                AuthFormatType::Default => {
+                    let response = json!({"success": true, "message": "Successfully logged in", "data": user_data});
+                    Ok((StatusCode::OK, cookie_jar, Json(response)))
+                }
+            }
         }
         LoginSchema::Metamask(_user) => {
             //TODO: Add a service for validating metamask

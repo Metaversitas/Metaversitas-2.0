@@ -1,4 +1,3 @@
-use std::future::Future;
 use crate::config::Config;
 use crate::route::create_router;
 use axum::extract::Host;
@@ -8,6 +7,7 @@ use axum::response::Redirect;
 use axum::BoxError;
 use axum_server::tls_rustls::RustlsConfig;
 use sqlx::{Pool, Postgres};
+use std::future::Future;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
