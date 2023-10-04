@@ -42,6 +42,12 @@ public class Meter : NetworkBehaviour
         hinge.connectedAnchor = Startposition;
     }
 
+    [Rpc]
+    public void RPC_MouseClick()
+    {
+        Debug.Log("RPC_MouseClick");
+        MouseClick();
+    }
     public void MouseClick()
     {
         RaycastHit hit;

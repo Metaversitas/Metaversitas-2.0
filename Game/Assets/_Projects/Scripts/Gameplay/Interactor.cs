@@ -9,7 +9,7 @@ public class Interactor : MonoBehaviour
     public virtual void OnMouseDown()
     {
         Debug.Log("OnMouseDown");
-        _bandul.MouseClick();
+        _bandul.RPC_MouseClick();
         //_bandul.MousePosition();
     }
 
