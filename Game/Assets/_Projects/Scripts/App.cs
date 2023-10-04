@@ -372,7 +372,11 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
         _data.ButtonFlags |= isEscape ? ButtonFlag.ESCAPE : 0;
 		var isClick = _playerInputAction.Player.Mouse.IsPressed();
 		_data.ButtonFlags |= isClick ? ButtonFlag.LEFTCLICK : 0;
-    }
+		var isPTT = _playerInputAction.Player.PTT.IsPressed();
+		_data.ButtonFlags |= isPTT ? ButtonFlag.PTT : 0;
+
+	}
+	
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {

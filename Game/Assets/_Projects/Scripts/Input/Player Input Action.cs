@@ -89,6 +89,15 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""PTT"",
+                    ""type"": ""Button"",
+                    ""id"": ""b684ac99-6501-418a-bbb5-c769442bb4e4"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -311,6 +320,17 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
                     ""action"": ""Mouse"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c0ae691d-693e-4c7d-89a1-79f8b1060235"",
+                    ""path"": ""<Keyboard>/v"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard & Mouse"",
+                    ""action"": ""PTT"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -354,6 +374,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         m_Player_Look = m_Player.FindAction("Look", throwIfNotFound: true);
         m_Player_Escape = m_Player.FindAction("Escape", throwIfNotFound: true);
         m_Player_Mouse = m_Player.FindAction("Mouse", throwIfNotFound: true);
+        m_Player_PTT = m_Player.FindAction("PTT", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -422,6 +443,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Look;
     private readonly InputAction m_Player_Escape;
     private readonly InputAction m_Player_Mouse;
+    private readonly InputAction m_Player_PTT;
     public struct PlayerActions
     {
         private @PlayerInputAction m_Wrapper;
@@ -433,6 +455,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         public InputAction @Look => m_Wrapper.m_Player_Look;
         public InputAction @Escape => m_Wrapper.m_Player_Escape;
         public InputAction @Mouse => m_Wrapper.m_Player_Mouse;
+        public InputAction @PTT => m_Wrapper.m_Player_PTT;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -463,6 +486,9 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
             @Mouse.started += instance.OnMouse;
             @Mouse.performed += instance.OnMouse;
             @Mouse.canceled += instance.OnMouse;
+            @PTT.started += instance.OnPTT;
+            @PTT.performed += instance.OnPTT;
+            @PTT.canceled += instance.OnPTT;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -488,6 +514,9 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
             @Mouse.started -= instance.OnMouse;
             @Mouse.performed -= instance.OnMouse;
             @Mouse.canceled -= instance.OnMouse;
+            @PTT.started -= instance.OnPTT;
+            @PTT.performed -= instance.OnPTT;
+            @PTT.canceled -= instance.OnPTT;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -532,5 +561,6 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         void OnLook(InputAction.CallbackContext context);
         void OnEscape(InputAction.CallbackContext context);
         void OnMouse(InputAction.CallbackContext context);
+        void OnPTT(InputAction.CallbackContext context);
     }
 }

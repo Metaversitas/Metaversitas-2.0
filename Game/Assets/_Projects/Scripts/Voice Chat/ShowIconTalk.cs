@@ -8,16 +8,19 @@ using Fusion;
 public class ShowIconTalk : NetworkBehaviour
 {
     [SerializeField] private Image imageToHideAndShow;
+    [SerializeField] private Character _character;
     [Networked(OnChanged = nameof(OnChangedShowSpeaking))]
     public NetworkBool IsSpeaking { get; set; }
 
+    public float delayInteract = 1f;
+
+    [Networked]
+    public Player Player { get; set; }
+
+    [Networked]
+    private TickTimer delay { get; set; }
+
     // Start is called before the first frame update
-    void Start()
-    {
-        PushToTalk pushToTalk = FindObjectOfType<PushToTalk>();
-        pushToTalk.onTalk += PushTotalk_Active;
-        pushToTalk.onNonTalk += PushTotalk_Deactive;
-    }
 
     public static void OnChangedShowSpeaking(Changed<ShowIconTalk> changed)
     {
@@ -26,13 +29,18 @@ public class ShowIconTalk : NetworkBehaviour
         if (b.IsSpeaking)
         {
             b.imageToHideAndShow.enabled = true;
-            Debug.Log("Icon Active");
         }
         else
         {
             b.imageToHideAndShow.enabled = false;
-            Debug.Log("Icon Not-Active");
         }
+    }
+
+    public override void Spawned()
+    {
+        delay = TickTimer.CreateFromSeconds(Runner, delayInteract);
+        _character = GetComponent<Character>();
+
     }
 
     public void ToggleShow()
@@ -40,11 +48,27 @@ public class ShowIconTalk : NetworkBehaviour
         IsSpeaking = !IsSpeaking;
     }
 
-    private void PushTotalk_Active(object sender, EventArgs e){
-        IsSpeaking = true;
-    }
+    public override void FixedUpdateNetwork()
+    {
+        if (_character.Player == null) return;
+        if (_character.Player.InputEnabled == false) return;
 
-    private void PushTotalk_Deactive(object sender, EventArgs e){
-        IsSpeaking = false;
+        if (GetInput(out InputData data))
+        {
+            _character._isReadInput = true;
+            if (delay.ExpiredOrNotRunning(Runner) == false) return;
+
+            if (data.GetButton(ButtonFlag.PTT))
+            {
+                delay = TickTimer.CreateFromSeconds(Runner, delayInteract);
+                IsSpeaking = true;
+                Debug.Log("Icon Active");
+            }
+            else // No input
+            {
+                IsSpeaking = false;
+                Debug.Log("Icon Deactive");
+            }
+        }
     }
 }
