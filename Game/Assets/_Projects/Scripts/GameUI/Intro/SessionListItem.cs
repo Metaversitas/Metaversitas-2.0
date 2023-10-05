@@ -11,9 +11,11 @@ namespace GameUI.Intro
 		[SerializeField] private Text _name;
 		[SerializeField] private Text _map;
 		[SerializeField] private Text _players;
+        [SerializeField] private InputField _pass;
 
-		private Action<SessionInfo> _onJoin;
+        private Action<SessionInfo> _onJoin;
 		private SessionInfo _info;
+        private SessionProps _props;
 
 		public void Setup(SessionInfo info, Action<SessionInfo> onJoin)
 		{
@@ -22,11 +24,24 @@ namespace GameUI.Intro
 			_map.text = $"Map {new SessionProps(info.Properties).StartMap}";
 			_players.text = $"{info.PlayerCount}/{info.MaxPlayers}";
 			_onJoin = onJoin;
-		}
-		
-		public void OnJoin()
-		{
-			_onJoin(_info);
-		}
-	}
+
+            if (_props == null)
+            {
+                _props = new SessionProps(info.Properties);
+            }
+        }
+
+        public void OnJoin()
+        {
+            if (_props.RoomPass == _pass.text)
+            {
+                _onJoin(_info);
+            }
+            else
+            {
+                Debug.Log("Password Invalid");
+            }
+
+        }
+    }
 }
