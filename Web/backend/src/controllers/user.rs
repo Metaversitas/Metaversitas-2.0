@@ -2,7 +2,7 @@ use crate::backend::AppState;
 use crate::helpers::authentication::must_authorized;
 use crate::helpers::errors::AuthError;
 use crate::helpers::extractor::AuthenticatedUser;
-use crate::model::user::{ProfileResponse, ProfileUserData, UserUniversityRole};
+use crate::model::user::{ProfileResponse, ProfileUserData, UserUniversityRole, UserGender};
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -55,6 +55,7 @@ pub async fn get_profile(
             users.user_id as user_id,
             users.nickname as in_game_nickname,
             identity.full_name as full_name,
+            identity.gender as "gender!: UserGender",
             university.name as university_name,
             university_faculty.faculty_name as faculty_name,
             university_faculty.faculty_id as faculty_id,
@@ -78,6 +79,7 @@ pub async fn get_profile(
             faculty_id: query.faculty_id as u64,
             user_university_id: query.user_university_id as u64,
             user_univ_role: query.user_univ_role,
+            gender: query.gender
         };
 
         let profile_user_id = format!("profile:{}", auth_user.user_id.to_owned());

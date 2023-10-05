@@ -145,6 +145,14 @@ pub enum UserUniversityRole {
     Mahasiswa,
 }
 
+#[derive(Debug, Serialize, Deserialize, Type, Clone)]
+#[sqlx(type_name = "users_identity_gender")]
+#[sqlx(rename_all = "lowercase")]
+pub enum UserGender {
+    Male,
+    Female
+}
+
 #[derive(Debug, Serialize, Deserialize, FromRedisValue, ToRedisArgs, FromRow)]
 pub struct ProfileUserData {
     pub user_id: String,
@@ -157,6 +165,7 @@ pub struct ProfileUserData {
     #[sqlx(try_from = "i32")]
     pub user_university_id: u64,
     pub user_univ_role: UserUniversityRole,
+    pub gender: UserGender,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -170,4 +179,5 @@ pub struct AuthDataPhoton {
     pub user_university_id: u64,
     pub user_univ_role: UserUniversityRole,
     pub auth_cookie: String,
+    pub gender: UserGender,
 }
