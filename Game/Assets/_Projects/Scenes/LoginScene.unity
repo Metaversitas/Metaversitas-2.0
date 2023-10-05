@@ -1831,6 +1831,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   usernameField: {fileID: 2207991324909121020}
   passwordField: {fileID: 2207991323872407574}
+  sceneNameToLoad: HomeMenu
 --- !u!222 &687434253058561409
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4609,6 +4610,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inputName: {fileID: 687434252658141984}
+  _inputPass: {fileID: 0}
   _allowLateJoin: {fileID: 687434254183075241}
 --- !u!224 &687434254305367195
 RectTransform:
@@ -10182,11 +10184,13 @@ MonoBehaviour:
   _skipStaging: 0
   _autoSession:
     RoomName: AutoSession
+    RoomPass: ' '
     PlayMode: 0
     StartMap: 0
     AllowLateJoin: 0
   networkRunnerPrefab: {fileID: 3866670711834171497, guid: 64ee52ea8662e5442a03d27e618a7787, type: 3}
   FpsCamera: {fileID: 0}
+  userManager: {fileID: 0}
 --- !u!4 &6274724183874278453
 Transform:
   m_ObjectHideFlags: 0
@@ -10434,6 +10438,7 @@ MonoBehaviour:
   _name: {fileID: 1756630740397553568}
   _map: {fileID: 2579104795850849810}
   _players: {fileID: 1563495754840022695}
+  _pass: {fileID: 0}
 --- !u!222 &7495713957993573813
 CanvasRenderer:
   m_ObjectHideFlags: 0
