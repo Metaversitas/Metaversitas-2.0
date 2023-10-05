@@ -156,7 +156,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 8887954439901464022}
         m_TargetAssemblyTypeName: SpawnObject, Assembly-CSharp
-        m_MethodName: SpawnSelectedPrefab
+        m_MethodName: Rpc_SpawnSelectedPrefab
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1438,7 +1438,7 @@ MonoBehaviour:
   _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
   _prefabs:
   - {fileID: 5644269138109223212, guid: 2ba4c6846ce95dd419d63f35d3eb031d, type: 3}
-  - {fileID: 5004737625504439913, guid: 3dfb5d3722695354ba34a4d1a06c0845, type: 3}
+  - {fileID: 9162242776404036124, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
   _points:
   - {fileID: 0}
   spawnedObjects: []

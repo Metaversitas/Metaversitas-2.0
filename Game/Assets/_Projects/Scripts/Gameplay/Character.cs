@@ -41,7 +41,7 @@ public class Character : NetworkBehaviour
 	{
 		_isReadInput = false;
         _characterMovement = GetComponent<CharacterMovement>();
-        cowok = false;
+        cowok = true;
 		if (HasInputAuthority)
 		{
 			Role = "Dosen";

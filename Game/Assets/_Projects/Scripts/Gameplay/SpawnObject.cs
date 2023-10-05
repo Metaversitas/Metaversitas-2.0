@@ -23,6 +23,12 @@ public class SpawnObject : NetworkBehaviour
         selectedPrefabIndex = i;
     }
 
+    [Rpc]
+    public void Rpc_SpawnSelectedPrefab()
+    {
+        SpawnSelectedPrefab();
+    }
+
     public void SpawnSelectedPrefab()
     {
         if (selectedPrefabIndex >= 0 && selectedPrefabIndex < _prefabs.Length)
@@ -40,12 +46,6 @@ public class SpawnObject : NetworkBehaviour
 
                 // Spawn objek prefab baru dan simpan referensinya
                 spawnedObjects[i] = Runner.Spawn(prefab, _points[i].position, _points[i].rotation);
-
-                // Atur parent objek baru ke _points[i]
-                if (spawnedObjects[i] != null)
-                {
-                    spawnedObjects[i].transform.SetParent(_points[i]);
-                }
             }
         }
         _playerStateManager.TriggerPlayState();

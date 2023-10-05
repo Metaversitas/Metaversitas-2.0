@@ -217,7 +217,7 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 1, y: 2, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3733457903125417722
 GameObject:
@@ -958,6 +958,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4568515329382100830}
     m_Modifications:
+    - target: {fileID: 624753062471413476, guid: 10c67408b3948824eacd3d061b77a7cd, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 624753062471413478, guid: 10c67408b3948824eacd3d061b77a7cd, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -1045,6 +1049,10 @@ PrefabInstance:
     - target: {fileID: 624753062471413481, guid: 10c67408b3948824eacd3d061b77a7cd, type: 3}
       propertyPath: m_Name
       value: Nickname
+      objectReference: {fileID: 0}
+    - target: {fileID: 3336872143626839933, guid: 10c67408b3948824eacd3d061b77a7cd, type: 3}
+      propertyPath: m_text
+      value: Nama
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 10c67408b3948824eacd3d061b77a7cd, type: 3}

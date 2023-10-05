@@ -55,7 +55,7 @@ public class InformativeObject : NetworkBehaviour
     private void BillboardView()
     {
         var worldPos = transform.position + localPlayerObject.transform.rotation * Vector3.forward;
-        transform.LookAt(worldPos, localPlayerObject.transform.rotation * Vector3.up);
+        //transform.LookAt(worldPos, localPlayerObject.transform.rotation * Vector3.up);
     }
 
     private void LateUpdate()
