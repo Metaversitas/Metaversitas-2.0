@@ -1,7 +1,7 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{new_session, AuthToken, COOKIE_AUTH_NAME};
 use crate::helpers::errors::UserServiceError;
-use crate::model::user::{ProfileUserData, RegisteredUser, User, UserRole};
+use crate::model::user::{ProfileUserData, RegisteredUser, User, UserRole, UserGender};
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash};
@@ -30,6 +30,7 @@ impl UserService {
             users.password_hash as password_hash,
             users.nickname as in_game_nickname,
             identity.full_name as full_name,
+            identity.gender as "gender!: UserGender",
             university.name as university_name,
             university_faculty.faculty_name as faculty_name,
             university_faculty.faculty_id as faculty_id,
@@ -75,6 +76,7 @@ impl UserService {
             faculty_id: query.faculty_id as u64,
             user_university_id: query.user_university_id as u64,
             user_univ_role: query.user_univ_role,
+            gender: query.gender,
         };
 
         let cookie_jar = CookieJar::default();

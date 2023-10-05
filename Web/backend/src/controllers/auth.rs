@@ -186,6 +186,7 @@ pub async fn login(
                         user_university_id: user_data.user_university_id,
                         user_univ_role: user_data.user_univ_role.clone(),
                         auth_cookie: format!("{}={};{}={}", COOKIE_SESSION_TOKEN_NAME, session_id, COOKIE_AUTH_NAME, session_bearer),
+                        gender: user_data.gender,
                     };
                     let response = json!({
                         "ResultCode": 1,
@@ -196,7 +197,7 @@ pub async fn login(
                     Ok((StatusCode::OK, Json(response)).into_response())
                 }
                 AuthFormatType::Default => {
-                    let response = json!({"success": true, "message": "Successfully logged in", "data": user_data});
+                    let response = json!({"success": true, "message": "Successfully logged in"});
                     Ok((StatusCode::OK, cookie_jar, Json(response)).into_response())
                 }
             }

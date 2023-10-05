@@ -1831,7 +1831,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   usernameField: {fileID: 2207991324909121020}
   passwordField: {fileID: 2207991323872407574}
-  sceneNameToLoad: HomeMenu
+  sceneToLoad:
+    sceneAsset: {fileID: 102900000, guid: f60a315c2ede6b04ab7b913ba8490cb5, type: 3}
+    scenePath: Assets/_Projects/Scenes/HomeMenu.unity
 --- !u!222 &687434253058561409
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -10180,6 +10182,7 @@ MonoBehaviour:
   _sessionPrefab: {fileID: 1504012697553745423, guid: a27f54dbaca1cd9428637b268633b743, type: 3}
   _errorBox: {fileID: 6274724182672168714}
   _sharedMode: 0
+  _playerStateManager: {fileID: 0}
   _autoConnect: 0
   _skipStaging: 0
   _autoSession:

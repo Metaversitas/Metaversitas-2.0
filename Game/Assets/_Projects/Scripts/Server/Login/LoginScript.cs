@@ -9,7 +9,7 @@ public class LoginScript : MonoBehaviour
 {
     [SerializeField] private InputField usernameField;
     [SerializeField] private InputField passwordField;
-    [SerializeField] private string sceneNameToLoad;
+    [SerializeField] private SceneReference sceneToLoad;
 
     private App _app;
 
@@ -43,7 +43,7 @@ public class LoginScript : MonoBehaviour
         authValues.SetAuthPostData(body);
 
         _app.SetAuthenticationValues(authValues);
-        //_app.CreateSession(sessionProps);
-        SceneManager.LoadScene(sceneNameToLoad);
+        _app.CreateSession(sessionProps);
+        SceneManager.LoadSceneAsync(sceneToLoad);
     }
 }

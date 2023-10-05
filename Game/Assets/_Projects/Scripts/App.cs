@@ -267,14 +267,22 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
         var userRole = session_data[UserDataConstants.KeyUserUnivRole].ToString();
         var userUniversityID = Convert.ToInt64(session_data[UserDataConstants.KeyUniversityID]);
         var cookieValue = session_data[AuthUserData.KeyAuthCookie].ToString();
+        var successGender = Enum.TryParse<UserGender>(session_data[UserDataConstants.KeyUserGender].ToString(),
+            out var userGender);
+        if (!successGender)
+        {
+            Debug.LogError("Can't parse User Gender");
+            throw new SystemException("Can't parse User Gender");
+        }
         var success = Enum.TryParse<UserUniversityRole>(userRole, out var parsedUserRole);
         if (!success)
         {
+            Debug.LogError("Can't parse User Role");
             throw new SystemException("Can't parse User Role");
         }
 
         UserData uUserData = new UserData(userFacultyID, userFacultyName, userFullName, userInGameNickname,
-            userUniversityName, userID, parsedUserRole, userUniversityID);
+            userUniversityName, userID, parsedUserRole, userUniversityID, userGender);
         UserSession uUserSession = gameObject.AddComponent<UserSession>();
         UserManager userManager = gameObject.AddComponent<UserManager>();
         uUserSession.Initialize(cookieValue);

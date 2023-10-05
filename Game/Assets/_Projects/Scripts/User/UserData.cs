@@ -11,6 +11,12 @@ namespace Metaversitas.User
     }
     
     [Serializable]
+    public enum UserGender {
+        Male,
+        Female,
+    }
+    
+    [Serializable]
     public struct UserData
     {
         private Int64 _facultyID;
@@ -21,8 +27,9 @@ namespace Metaversitas.User
         private string _userID;
         private UserUniversityRole _userUnivRole;
         private Int64 _userUniversityID;
+        private UserGender _gender;
 
-        public UserData(Int64 facultyID, string facultyName, string fullName, string inGameNickname, string universityName, string userID, UserUniversityRole userUnivRole, Int64 userUniversityID)
+        public UserData(Int64 facultyID, string facultyName, string fullName, string inGameNickname, string universityName, string userID, UserUniversityRole userUnivRole, Int64 userUniversityID, UserGender gender)
         {
             _facultyID = facultyID;
             _facultyName = facultyName;
@@ -32,6 +39,7 @@ namespace Metaversitas.User
             _userID = userID;
             _userUniversityID = userUniversityID;
             _userUnivRole = userUnivRole;
+            _gender = gender;
         }
 
         public Int64 get_facultyID()
@@ -72,6 +80,11 @@ namespace Metaversitas.User
         public Int64 get_userUniversityID()
         {
             return _userUniversityID;
+        }
+
+        public UserGender get_userGender()
+        {
+            return _gender;
         }
     }
 }

@@ -22,16 +22,6 @@
         "ordinal": 3,
         "name": "is_live",
         "type_info": "Bool"
-      },
-      {
-        "ordinal": 4,
-        "name": "updated_at",
-        "type_info": "Timestamptz"
-      },
-      {
-        "ordinal": 5,
-        "name": "created_at",
-        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -42,8 +32,6 @@
     "nullable": [
       false,
       true,
-      false,
-      false,
       false,
       false
     ]

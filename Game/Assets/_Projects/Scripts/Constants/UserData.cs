@@ -10,6 +10,7 @@
         public const string KeyUserID = "user_id";
         public const string KeyUserUnivRole = "user_univ_role";
         public const string KeyUniversityID = "user_university_id";
+        public const string KeyUserGender = "gender";
     }
 
     public static class AuthUserData
