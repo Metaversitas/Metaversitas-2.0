@@ -58,6 +58,7 @@ namespace GameUI.Staging
 				sb.AppendLine($"Region: {s.Info.Region}");
 				sb.AppendLine($"Game Type: {s.Props.PlayMode}");
 				sb.AppendLine($"Map: {s.Props.StartMap}");
+				sb.AppendLine($"Password: {s.Props.RoomPass}");
 			}
 			_sessionInfo.text = sb.ToString();
 		}

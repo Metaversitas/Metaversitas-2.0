@@ -6,6 +6,7 @@ namespace GameUI.Intro
 	public class NewSessionPanel : MonoBehaviour
 	{
 		[SerializeField] private InputField _inputName;
+		[SerializeField] private InputField _inputPass;
 /*		[SerializeField] private Text _textMaxPlayers;
 		[SerializeField] private Toggle _toggleMap1;
 		[SerializeField] private Toggle _toggleMap2;*/
@@ -76,6 +77,7 @@ namespace GameUI.Intro
             props.PlayMode = _playMode;
 			//props.PlayerLimit = _maxPly;
 			props.RoomName = _inputName.text;
+			props.RoomPass = _inputPass.text;
 			props.AllowLateJoin = _allowLateJoin.isOn;
 			
 			// Pass the session properties to the app - this will unload the current scene and load the staging area if successful
