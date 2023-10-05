@@ -3,11 +3,13 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using Fusion.Photon.Realtime;
+using UnityEngine.SceneManagement;
 
 public class LoginScript : MonoBehaviour
 {
     [SerializeField] private InputField usernameField;
     [SerializeField] private InputField passwordField;
+    [SerializeField] private string sceneNameToLoad;
 
     private App _app;
 
@@ -41,6 +43,7 @@ public class LoginScript : MonoBehaviour
         authValues.SetAuthPostData(body);
 
         _app.SetAuthenticationValues(authValues);
-        _app.CreateSession(sessionProps);
+        //_app.CreateSession(sessionProps);
+        SceneManager.LoadScene(sceneNameToLoad);
     }
 }
