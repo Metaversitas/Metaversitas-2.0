@@ -1383,7 +1383,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Bambank!
+  m_Text: Natael
 --- !u!222 &616610169
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3855,7 +3855,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: C000000
+  m_Text: 21105052
 --- !u!222 &1890593377
 CanvasRenderer:
   m_ObjectHideFlags: 0

@@ -111,10 +111,6 @@ PrefabInstance:
       propertyPath: m_LookAt
       value: 
       objectReference: {fileID: 4317737446237845054}
-    - target: {fileID: 226129587896897427, guid: 8b3e99448be32bd4aa68fd67274bcaeb, type: 3}
-      propertyPath: m_Lens.ModeOverride
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 226129587896897428, guid: 8b3e99448be32bd4aa68fd67274bcaeb, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.109999895
@@ -223,7 +219,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4957755200344367029, guid: 3dfb5d3722695354ba34a4d1a06c0845, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.187
+      value: 0.13
       objectReference: {fileID: 0}
     - target: {fileID: 4957755200344367029, guid: 3dfb5d3722695354ba34a4d1a06c0845, type: 3}
       propertyPath: m_LocalPosition.z

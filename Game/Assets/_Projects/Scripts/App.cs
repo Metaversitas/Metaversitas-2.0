@@ -38,6 +38,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private Session _sessionPrefab;
     [SerializeField] private ErrorBox _errorBox;
     [SerializeField] private bool _sharedMode;
+    [SerializeField] private PlayerStateManager _playerStateManager;
 
     [Space(10)]
     [SerializeField] private bool _autoConnect;
@@ -378,6 +379,8 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         if (!AllowInput)
+            return;
+        if (_playerStateManager.CurrentGameState != GameState.Play)
             return;
 
         Vector3 inputVector = _playerInputAction.Player.Move.ReadValue<Vector3>();
