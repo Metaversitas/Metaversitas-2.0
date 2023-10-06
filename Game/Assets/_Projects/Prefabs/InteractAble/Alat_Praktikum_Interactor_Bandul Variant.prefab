@@ -107,10 +107,6 @@ PrefabInstance:
       propertyPath: NetworkGuid.RawGuidValue.Array.data[1]
       value: 9080970251867704361
       objectReference: {fileID: 0}
-    - target: {fileID: 226129587896897426, guid: 8b3e99448be32bd4aa68fd67274bcaeb, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 226129587896897427, guid: 8b3e99448be32bd4aa68fd67274bcaeb, type: 3}
       propertyPath: m_LookAt
       value: 
@@ -120,12 +116,8 @@ PrefabInstance:
       value: -0.109999895
       objectReference: {fileID: 0}
     - target: {fileID: 226129587896897428, guid: 8b3e99448be32bd4aa68fd67274bcaeb, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.3301
-      objectReference: {fileID: 0}
-    - target: {fileID: 226129587896897428, guid: 8b3e99448be32bd4aa68fd67274bcaeb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.866
+      value: -1.8660002
       objectReference: {fileID: 0}
     - target: {fileID: 226129587896897428, guid: 8b3e99448be32bd4aa68fd67274bcaeb, type: 3}
       propertyPath: m_LocalRotation.w
