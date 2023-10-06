@@ -214,7 +214,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 
     public UserManager get_userManager()
     {
-        return _userManager;
+        return userManager;
     }
 
 

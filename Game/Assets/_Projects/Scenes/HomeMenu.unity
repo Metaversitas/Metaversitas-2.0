@@ -5321,10 +5321,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   app: {fileID: 0}
-  fullName: {fileID: 0}
-  nim: {fileID: 0}
-  facultyid: {fileID: 0}
-  prodi: {fileID: 0}
+  fullName: {fileID: 1982246449}
+  nim: {fileID: 496205471}
+  facultyid: {fileID: 270152710}
+  prodi: {fileID: 167146182}
 --- !u!1 &1629123663
 GameObject:
   m_ObjectHideFlags: 0
