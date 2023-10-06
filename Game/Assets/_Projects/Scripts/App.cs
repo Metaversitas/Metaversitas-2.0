@@ -60,7 +60,10 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
     private AuthenticationValues _authenticationValues;
 
     public FPSCamera FpsCamera;
-    
+
+    private UserManager _userManager;
+
+
     [FormerlySerializedAs("_userManager")]
     [Space(10)]
     [SerializeField] private UserManager userManager;
@@ -208,6 +211,12 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
     {
         return _runner?.GetPlayerObject(_runner.LocalPlayer)?.GetComponent<Player>();
     }
+
+    public UserManager get_userManager()
+    {
+        return _userManager;
+    }
+
 
     public void ForEachPlayer(Action<Player> action)
     {
