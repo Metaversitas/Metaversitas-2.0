@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 226129586732877190}
   - component: {fileID: 226129586732877208}
   - component: {fileID: 3414227679368026662}
+  - component: {fileID: 4740073279237584755}
   m_Layer: 0
   m_Name: Alat_Praktikum_Interactor_Base
   m_TagString: Alat_Praktikum
@@ -93,6 +94,7 @@ MonoBehaviour:
   NetworkedBehaviours:
   - {fileID: 226129586732877190}
   - {fileID: 3414227679368026662}
+  - {fileID: 4740073279237584755}
   SimulationBehaviours: []
 --- !u!114 &3414227679368026662
 MonoBehaviour:
@@ -109,6 +111,34 @@ MonoBehaviour:
   _interpolationDataSource: 3
   _IsUsing:
     _value: 0
+--- !u!114 &4740073279237584755
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 226129586732877188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interpolationDataSource: 3
+  InterpolationSpace: 0
+  InterpolationTarget: {fileID: 0}
+  InterpolateErrorCorrection: 1
+  InterpolatedErrorCorrectionSettings:
+    MinRate: 3.3
+    MaxRate: 10
+    PosBlendStart: 0.25
+    PosBlendEnd: 1
+    PosMinCorrection: 0.025
+    PosTeleportDistance: 2
+    RotBlendStart: 0.1
+    RotBlendEnd: 0.5
+    RotTeleportRadians: 1.5
+  UseLegacySharedModeInterpolation: 0
+  TargetInterpolationDelay: 0.03
 --- !u!1 &226129586945868770
 GameObject:
   m_ObjectHideFlags: 0
