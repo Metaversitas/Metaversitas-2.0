@@ -740,7 +740,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &671003218
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -761,7 +761,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 671003217}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -812,7 +812,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 671003217}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.5, z: 25}
+  m_LocalPosition: {x: 0, y: 3.7, z: 25}
   m_LocalScale: {x: 150, y: 1, z: 150}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -938,10 +938,6 @@ PrefabInstance:
     - target: {fileID: 4321204873379126849, guid: 3e51ac0ac741aae4283af61fb9fb0b78, type: 3}
       propertyPath: m_Name
       value: Borobudur prototype 12
-      objectReference: {fileID: 0}
-    - target: {fileID: 4321204873379126849, guid: 3e51ac0ac741aae4283af61fb9fb0b78, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3e51ac0ac741aae4283af61fb9fb0b78, type: 3}
@@ -1206,8 +1202,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 1
-  orthographic size: 0.8
+  orthographic: 0
+  orthographic size: 1
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1231,7 +1227,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1742798473}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.2250001, y: 1.105, z: -1.877}
+  m_LocalPosition: {x: -3.76, y: 0.9301, z: -1.866}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1629,57 +1625,17 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2932229342923289894, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-      propertyPath: orthographic
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2932229342923289894, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-      propertyPath: orthographic size
-      value: 0.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 3218097047170277296, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-      propertyPath: orthographic
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3218097047170277296, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-      propertyPath: orthographic size
-      value: 0.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 5113979223273021263, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.42499995
-      objectReference: {fileID: 0}
-    - target: {fileID: 5113979223273021263, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.505
-      objectReference: {fileID: 0}
-    - target: {fileID: 5113979223273021263, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -1.877
-      objectReference: {fileID: 0}
-    - target: {fileID: 5808929588713411527, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.42499995
-      objectReference: {fileID: 0}
-    - target: {fileID: 5808929588713411527, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.505
-      objectReference: {fileID: 0}
-    - target: {fileID: 5808929588713411527, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -2.8769999
-      objectReference: {fileID: 0}
     - target: {fileID: 9162242775386947600, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.42499995
+      value: -0.109999895
       objectReference: {fileID: 0}
     - target: {fileID: 9162242775386947600, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.505
+      value: 0.3301
       objectReference: {fileID: 0}
     - target: {fileID: 9162242775386947600, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.877
+      value: -1.866
       objectReference: {fileID: 0}
     - target: {fileID: 9162242775386947600, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1764,8 +1720,6 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 9162242775272669811, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
     - {fileID: 9162242775272669810, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-    - {fileID: 830560412476677818, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
-    - {fileID: 6325022020566038175, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 26e8199f9d93b27429cc76be5416067e, type: 3}
 --- !u!1 &9162242776307734925 stripped
 GameObject:
@@ -1794,27 +1748,3 @@ MonoBehaviour:
   m_YawDamping: 0
   m_RollDamping: 0
   m_AngularDamping: 0
---- !u!114 &9162242776307734930
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9162242776307734925}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bd6043bde05a7fc4cba197d06915c1e3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Damping: {x: 0.1, y: 0.5, z: 0.3}
-  ShoulderOffset: {x: 0.5, y: -0.4, z: 0}
-  VerticalArmLength: 0.4
-  CameraSide: 1
-  CameraDistance: 2
-  CameraCollisionFilter:
-    serializedVersion: 2
-    m_Bits: 0
-  IgnoreTag: 
-  CameraRadius: 0.2
-  DampingIntoCollision: 0
-  DampingFromCollision: 2
