@@ -106,9 +106,6 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
             if (_autoConnect)
             {
                 StartSession( _sharedMode ? GameMode.Shared : GameMode.AutoHostOrClient, _autoSession, false);
-            }
-            else
-            {
                 SceneManager.LoadSceneAsync( _introScene );
             }
         }

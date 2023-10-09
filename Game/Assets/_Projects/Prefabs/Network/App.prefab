@@ -957,6 +957,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowHierarchyWindowOverlay: 1
   _loadScreen: {fileID: 6274724182146606746}
+  _homePage:
+    sceneAsset: {fileID: 102900000, guid: f60a315c2ede6b04ab7b913ba8490cb5, type: 3}
+    scenePath: Assets/_Projects/Scenes/HomeMenu.unity
   _lobby:
     sceneAsset: {fileID: 102900000, guid: 6cd2c06f03e110444aa1fe8b23192bbe, type: 3}
     scenePath: Assets/_Projects/Scenes/Lobby.unity
