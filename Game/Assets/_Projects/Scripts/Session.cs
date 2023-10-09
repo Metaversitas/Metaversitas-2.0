@@ -29,7 +29,7 @@ public class Session : NetworkBehaviour
 			if (_app.SkipStaging)
 				LoadMap(_app.AutoSession.StartMap);
 			else
-				Runner.SetActiveScene((int)MapIndex.Lobby);
+				Runner.SetActiveScene((int)MapIndex.HomePage);
 		}
 	}
 

@@ -43,7 +43,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
     [Space(10)]
     [SerializeField] private bool _autoConnect;
     [SerializeField] private bool _skipStaging;
-    [SerializeField] private SessionProps _autoSession = new SessionProps();
+    [SerializeField] private SessionProps _autoSession = new();
 
     private NetworkRunner _runner;
     [SerializeField] private NetworkRunner networkRunnerPrefab;
@@ -56,11 +56,8 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
     private bool _allowInput;
 
     private PlayerInputAction _playerInputAction;
-
     private AuthenticationValues _authenticationValues;
-
     public FPSCamera FpsCamera;
-
     private UserManager _userManager;
 
 
@@ -105,13 +102,9 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
             _loader = GetComponent<NetworkSceneManagerBase>();
 
             DontDestroyOnLoad(gameObject);
-
+            
             if (_autoConnect)
             {
-                if (this._authenticationValues == null)
-                {
-                    this._authenticationValues = new AuthenticationValues();
-                }
                 StartSession( _sharedMode ? GameMode.Shared : GameMode.AutoHostOrClient, _autoSession, false);
             }
             else
@@ -170,13 +163,8 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
         _runner.ProvideInput = mode != GameMode.Server;
         StartGameResult result = await _runner.StartGame(new StartGameArgs
         {
-            // SceneObjectProvider = GetSceneProvider(_runner),
             GameMode = mode,
-            CustomLobbyName = _lobbyId,
             SceneManager = _loader,
-            SessionName = props.RoomName,
-            //PlayerCount = props.PlayerLimit,
-            SessionProperties = props.Properties,
             DisableClientSessionCreation = disableClientSessionCreation,
             AuthValues = _authenticationValues
         });
@@ -192,7 +180,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
         _onSessionListUpdated = onSessionListUpdated;
 
         SetConnectionStatus(ConnectionStatus.EnteringLobby);
-        var result = await _runner.JoinSessionLobby(SessionLobby.Custom, lobbyId);
+        var result = await _runner.JoinSessionLobby(SessionLobby.Custom, lobbyId, _authenticationValues);
 
         if (!result.Ok) {
             _onSessionListUpdated = null;

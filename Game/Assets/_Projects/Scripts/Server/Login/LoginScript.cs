@@ -9,7 +9,6 @@ public class LoginScript : MonoBehaviour
 {
     [SerializeField] private InputField usernameField;
     [SerializeField] private InputField passwordField;
-    [SerializeField] private SceneReference sceneToLoad;
 
     private App _app;
 
@@ -25,25 +24,26 @@ public class LoginScript : MonoBehaviour
 
     public void Login()
     {
-        string email = usernameField.text;
-        string password = passwordField.text;
+        var email = usernameField.text;
+        var password = passwordField.text;
 
-        Dictionary<string, object> body = new Dictionary<string, object>();
-        body["user"] = new Dictionary<string, string>
+        Dictionary<string, object> body = new Dictionary<string, object>
         {
-            {"email", email},
-            {"password", password}
+            ["user"] = new Dictionary<string, string>
+            {
+                {"email", email},
+                {"password", password}
+            }
         };
 
-        SessionProps sessionProps = _app.AutoSession;
-        AuthenticationValues authValues = new AuthenticationValues
+        var sessionProps = _app.AutoSession;
+        var authValues = new AuthenticationValues
         {
-            AuthType = CustomAuthenticationType.Custom,
+            AuthType = CustomAuthenticationType.Custom
         };
         authValues.SetAuthPostData(body);
 
         _app.SetAuthenticationValues(authValues);
         _app.CreateSession(sessionProps);
-        SceneManager.LoadSceneAsync(sceneToLoad);
     }
 }

@@ -781,6 +781,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1950469789}
   m_CullTransparentMesh: 1
+--- !u!1 &2025395489
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2025395491}
+  - component: {fileID: 2025395490}
+  m_Layer: 0
+  m_Name: VoiceLogger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2025395490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2025395489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a86f533fd9917dd4da8601e9eb542c96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  LogLevel: 2
+--- !u!4 &2025395491
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2025395489}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6274724183874278453}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &297864243798396511
 GameObject:
   m_ObjectHideFlags: 0
@@ -1831,9 +1876,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   usernameField: {fileID: 2207991324909121020}
   passwordField: {fileID: 2207991323872407574}
-  sceneToLoad:
-    sceneAsset: {fileID: 102900000, guid: f60a315c2ede6b04ab7b913ba8490cb5, type: 3}
-    scenePath: Assets/_Projects/Scenes/HomeMenu.unity
 --- !u!222 &687434253058561409
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -9190,6 +9232,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowHierarchyWindowOverlay: 1
   _loadScreen: {fileID: 6274724182126831969}
+  _homePage:
+    sceneAsset: {fileID: 102900000, guid: f60a315c2ede6b04ab7b913ba8490cb5, type: 3}
+    scenePath: Assets/_Projects/Scenes/HomeMenu.unity
   _lobby:
     sceneAsset: {fileID: 102900000, guid: 6cd2c06f03e110444aa1fe8b23192bbe, type: 3}
     scenePath: Assets/_Projects/Scenes/Lobby.unity
@@ -10208,6 +10253,7 @@ Transform:
   m_Children:
   - {fileID: 6274724182126831970}
   - {fileID: 6274724182672168713}
+  - {fileID: 2025395491}
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
