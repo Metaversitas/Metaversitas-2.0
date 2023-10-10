@@ -26,10 +26,14 @@ public class Session : NetworkBehaviour
 		{
 			PostLoadCountDown = TickTimer.None;
 
-			if (_app.SkipStaging)
+			if (_app.SkipStaging) {
 				LoadMap(_app.AutoSession.StartMap);
-			else
-				Runner.SetActiveScene((int)MapIndex.HomePage);
+			} else {
+				if (_app.ChangeSceneOnConnected)
+				{
+					Runner.SetActiveScene(_app.FirstConnectedScene);
+				}
+			}
 		}
 	}
 

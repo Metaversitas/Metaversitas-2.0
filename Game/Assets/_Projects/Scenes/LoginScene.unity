@@ -744,12 +744,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6274724183888813008, guid: 8493feb6861a444459d7e7fa2452e845, type: 3}
-      propertyPath: _autoConnect
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6274724183888813008, guid: 8493feb6861a444459d7e7fa2452e845, type: 3}
-      propertyPath: _skipStaging
-      value: 0
+      propertyPath: _changeSceneOnConnected
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6274724183888813009, guid: 8493feb6861a444459d7e7fa2452e845, type: 3}
       propertyPath: m_Name
