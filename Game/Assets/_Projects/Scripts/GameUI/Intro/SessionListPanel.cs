@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Fusion;
 using UIComponents;
@@ -17,13 +18,17 @@ namespace GameUI.Intro
         [SerializeField]  private PlayMode _playMode;
 		private App _app;
 
+		private void OnEnable()
+		{
+			_app = App.FindInstance();
+		}
+
 		public async void Show(PlayMode mode)
 		{
 			gameObject.SetActive(true);
 			_playMode = mode;
 			_error.text = "";
 			_header.text = $"{mode} Lobby";
-			_app = App.FindInstance();
 			OnSessionListUpdated(new List<SessionInfo>());
 			await _app.EnterLobby($"GameMode{mode}", OnSessionListUpdated);
 		}
