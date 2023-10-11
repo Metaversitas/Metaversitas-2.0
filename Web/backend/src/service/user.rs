@@ -1,18 +1,20 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{new_session, AuthToken, COOKIE_AUTH_NAME};
-use crate::helpers::errors::UserServiceError;
-use crate::model::user::{ProfileUserData, RegisteredUser, User, UserRole, UserGender};
+use crate::helpers::errors::{AuthError, UserServiceError};
+use crate::model::user::{ProfileUserData, RegisteredUser, User, UserGender, UserRole};
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash};
 use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
-use redis::AsyncCommands;
+use redis::{AsyncCommands, JsonAsyncCommands};
 use std::sync::Arc;
 
 pub struct UserService {
-    app_state: Arc<AppState>,
+    pub app_state: Arc<AppState>,
 }
+
+const DEFAULT_TIME_CACHE_EXIST: time::Duration = time::Duration::minutes(30);
 
 impl UserService {
     pub fn new(app_state: Arc<AppState>) -> Self {
@@ -186,6 +188,76 @@ impl UserService {
         );
 
         Ok(cookie_jar)
+    }
+
+    pub async fn get_profile(&self, user_id: &str) -> Result<ProfileUserData, UserServiceError> {
+        let mut redis_conn = self.app_state.redis.get_async_connection().await.unwrap();
+        let is_exists = redis_conn
+            .exists::<String, usize>(format!("profile:{}", &user_id))
+            .await
+            .unwrap();
+
+        if is_exists == 1 {
+            let query_from_redis = redis_conn
+                .json_get::<String, &str, ProfileUserData>(format!("profile:{}", &user_id), "$")
+                .await
+                .unwrap();
+
+            Ok(query_from_redis)
+        } else if is_exists == 0 {
+            let query = sqlx::query!(r#"
+        select
+            users.user_id as user_id,
+            users.nickname as in_game_nickname,
+            identity.full_name as full_name,
+            identity.gender as "gender!: UserGender",
+            university.name as university_name,
+            university_faculty.faculty_name as faculty_name,
+            university_faculty.faculty_id as faculty_id,
+            university_identity.users_university_id as user_university_id,
+            university_identity.users_university_role as "user_univ_role!: UserUniversityRole"
+        from users
+        inner join users_identity as identity on users.user_id = identity.users_id
+        inner join users_university_identity as university_identity on identity.users_identity_id = university_identity.users_identity_id
+        inner join university on university_identity.university_id = university.university_id
+        inner join university_faculty on university.university_id = university_faculty.university_id
+        where users.user_id::text = $1"#, &user_id)
+            .fetch_one(&self.app_state.database)
+            .await
+            .map_err(|_| UserServiceError::DatabaseConnectionError)?;
+
+            let data = ProfileUserData {
+                user_id: query.user_id.to_string(),
+                in_game_nickname: query.in_game_nickname.to_owned(),
+                full_name: query.full_name.to_owned(),
+                university_name: query.university_name.to_owned(),
+                faculty_name: query.faculty_name.to_owned(),
+                faculty_id: query.faculty_id as u64,
+                user_university_id: query.user_university_id as u64,
+                user_univ_role: query.user_univ_role,
+                gender: query.gender,
+            };
+
+            let profile_user_id = format!("profile:{}", &user_id);
+            let timestamp_expire = (time::OffsetDateTime::now_utc() + DEFAULT_TIME_CACHE_EXIST)
+                .unix_timestamp() as usize;
+            let _ = redis_conn
+                .json_set::<String, String, ProfileUserData, redis::Value>(
+                    profile_user_id.to_owned(),
+                    "$".to_string(),
+                    &data,
+                )
+                .await
+                .unwrap();
+            let _ = redis_conn
+                .expire_at::<String, redis::Value>(profile_user_id.to_owned(), timestamp_expire)
+                .await
+                .unwrap();
+
+            Ok(data)
+        } else {
+            Err(UserServiceError::UnableToParse)
+        }
     }
 }
 

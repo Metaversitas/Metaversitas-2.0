@@ -28,11 +28,12 @@ public class Session : NetworkBehaviour
 
 			if (_app.SkipStaging) {
 				LoadMap(_app.AutoSession.StartMap);
-			} else {
-				if (_app.ChangeSceneOnConnected)
-				{
-					Runner.SetActiveScene(_app.FirstConnectedScene);
-				}
+			}
+			else
+			{
+				//TODO: This should be handled with careful!
+				//This will load into Lobby Scene when the Session is spawned.
+				Runner.SetActiveScene((int) MapIndex.Lobby);
 			}
 		}
 	}

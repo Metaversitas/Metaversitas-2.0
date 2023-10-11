@@ -150,7 +150,7 @@ pub enum UserUniversityRole {
 #[sqlx(rename_all = "lowercase")]
 pub enum UserGender {
     Male,
-    Female
+    Female,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRedisValue, ToRedisArgs, FromRow)]
@@ -178,6 +178,5 @@ pub struct AuthDataPhoton {
     pub faculty_id: u64,
     pub user_university_id: u64,
     pub user_univ_role: UserUniversityRole,
-    pub auth_cookie: String,
     pub gender: UserGender,
 }

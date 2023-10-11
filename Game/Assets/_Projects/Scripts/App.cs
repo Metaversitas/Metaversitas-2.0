@@ -35,9 +35,6 @@ public enum ConnectionStatus
 public class App : MonoBehaviour, INetworkRunnerCallbacks
 {
     [SerializeField] private SceneReference _introScene;
-    [SerializeField] private SceneReference _firstConnectedScene; 
-    public SceneReference FirstConnectedScene => _firstConnectedScene;
-
     [SerializeField] private bool _changeSceneOnConnected = true;
     public bool ChangeSceneOnConnected => _changeSceneOnConnected;
     

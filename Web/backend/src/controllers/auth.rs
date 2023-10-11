@@ -5,15 +5,16 @@ use crate::helpers::authentication::{
 use crate::helpers::errors::{AuthError, AuthErrorProvider, PhotonAuthError};
 use crate::model::user::{AuthDataPhoton, LoginSchema, RegisterUserSchema, UserJsonBody};
 
+use crate::helpers::extractor::AuthenticatedUser;
 use crate::service::game::GameService;
 use crate::service::user::UserService;
 use anyhow::anyhow;
 use axum::extract::rejection::JsonRejection;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
-use axum::middleware;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
+use axum::{middleware, Extension};
 use axum::{Json, Router};
 use axum_extra::extract::cookie::CookieJar;
 use garde::Validate;
@@ -25,6 +26,7 @@ use std::sync::Arc;
 pub const AUTH_PATH_CONTROLLER: &str = "/auth";
 pub const REGISTER_AUTH_PATH: &str = "/register";
 pub const LOGIN_AUTH_PATH: &str = "/login";
+pub const PHOTON_AUTH_PATH: &str = "/photon";
 pub const LOGOUT_AUTH_PATH: &str = "/logout";
 pub const REFRESH_TOKEN_AUTH_PATH: &str = "/refresh";
 
@@ -33,9 +35,11 @@ pub struct LoginStateService {
     pub game_service: Arc<GameService>,
 }
 
-pub async fn auth_router(app_state: Arc<AppState>) -> Router {
-    let game_service = Arc::new(GameService::new(Arc::clone(&app_state)));
-    let user_service = Arc::new(UserService::new(Arc::clone(&app_state)));
+pub async fn auth_router(
+    app_state: Arc<AppState>,
+    game_service: Arc<GameService>,
+    user_service: Arc<UserService>,
+) -> Router {
     let login_state_service = Arc::new(LoginStateService {
         game_service: Arc::clone(&game_service),
         user_service: Arc::clone(&user_service),
@@ -58,6 +62,12 @@ pub async fn auth_router(app_state: Arc<AppState>) -> Router {
             )),
         )
         .with_state(Arc::clone(&app_state))
+        .route(
+            PHOTON_AUTH_PATH,
+            get(photon_auth)
+                .with_state(Arc::clone(&app_state))
+                .layer(Extension(Arc::clone(&user_service))),
+        )
 }
 
 pub async fn refresh_token(
@@ -103,53 +113,27 @@ pub async fn login(
     State(login_service): State<Arc<LoginStateService>>,
     params: Option<Query<ParamsAuthenticate>>,
     payload: Result<Json<UserJsonBody<LoginSchema>>, JsonRejection>,
-) -> Result<Response, AuthErrorProvider> {
-    let mut current_format = AuthFormatType::Default;
-
+) -> Result<Response, AuthError> {
     if let Some(params) = params {
         //Validate params
         params.validate(&()).map_err(|err| {
             let message = err.to_string();
-            match current_format {
-                AuthFormatType::Photon => {
-                    AuthErrorProvider::Photon(PhotonAuthError::Other(anyhow::anyhow!(message)))
-                }
-                AuthFormatType::Default => {
-                    AuthErrorProvider::Default(AuthError::Other(anyhow::anyhow!(message)))
-                }
-            }
+            AuthError::Other(anyhow::anyhow!(message))
         })?;
-
-        // If params format exists
-        if let Some(format) = params.format.as_ref() {
-            match format {
-                FormatParamsAuth::Photon => {
-                    current_format = AuthFormatType::Photon;
-                }
-                FormatParamsAuth::NotExist => {
-                    return Err(AuthErrorProvider::Default(AuthError::Other(anyhow!(
-                        "Unknown format provider"
-                    ))))
-                }
-            }
-        }
 
         if let Some(game_version) = params.game_version.as_ref() {
             login_service
                 .game_service
                 .verify_game_version(game_version.as_str())
-                .await
-                .map_err(|err| AuthErrorProvider::from((err, &current_format)))?;
+                .await?;
         }
     }
     let payload = {
         // If not a valid Json
         let Json(payload) =
-            payload.map_err(|err| AuthErrorProvider::from((err, &current_format)))?;
+            payload?;
         // Validate json body
-        payload
-            .validate(&())
-            .map_err(|err| AuthErrorProvider::from((err, &current_format)))?;
+        payload.validate(&()).map_err(|err| AuthError::Other(anyhow::anyhow!("Unable to validate json payload")))?;
         payload
     };
 
@@ -158,58 +142,47 @@ pub async fn login(
             let (user_data, cookie_jar) = login_service
                 .user_service
                 .login(user.email.as_str(), user.password.as_str())
-                .await
-                .map_err(|err| AuthErrorProvider::from((err, &current_format)))?;
-            match current_format {
-                AuthFormatType::Photon => {
-                    let user_id = user_data.user_id.to_owned();
-                    let nickname = user_data.in_game_nickname.to_owned();
-                    let session_id = &cookie_jar
-                        .get(COOKIE_SESSION_TOKEN_NAME)
-                        .ok_or(AuthErrorProvider::Photon(PhotonAuthError::Other(anyhow!(
-                            "Cookie not found"
-                        ))))?
-                        .value();
-                    let session_bearer = &cookie_jar
-                        .get(COOKIE_AUTH_NAME)
-                        .ok_or(AuthErrorProvider::Photon(PhotonAuthError::Other(anyhow!(
-                            "Cookie not found"
-                        ))))?
-                        .value();
-                    let auth_data = AuthDataPhoton {
-                        user_id: user_id.to_owned(),
-                        in_game_nickname: nickname.to_owned(),
-                        full_name: user_data.full_name.to_owned(),
-                        university_name: user_data.university_name.to_owned(),
-                        faculty_name: user_data.faculty_name.to_owned(),
-                        faculty_id: user_data.faculty_id,
-                        user_university_id: user_data.user_university_id,
-                        user_univ_role: user_data.user_univ_role.clone(),
-                        auth_cookie: format!("{}={};{}={}", COOKIE_SESSION_TOKEN_NAME, session_id, COOKIE_AUTH_NAME, session_bearer),
-                        gender: user_data.gender,
-                    };
-                    let response = json!({
+                .await?;
+            let response = json!({"success": true, "message": "Successfully logged in"});
+            Ok((StatusCode::OK, cookie_jar, Json(response)).into_response())
+        }
+        LoginSchema::Metamask(_user) => {
+            //TODO: Add a service for validating metamask
+            Err(AuthError::Other(anyhow!(
+                "not implemented yet"
+            )))
+        }
+    }
+}
+
+pub async fn photon_auth(
+    auth_user: Result<AuthenticatedUser, AuthError>,
+    State(_app_state): State<Arc<AppState>>,
+    Extension(user_service): Extension<Arc<UserService>>,
+) -> Result<Response, PhotonAuthError> {
+    let auth_user = auth_user?;
+    let result = user_service.get_profile(auth_user.user_id.as_str()).await?;
+    let auth_data = AuthDataPhoton {
+        user_id: result.user_id.to_owned(),
+        in_game_nickname: result.in_game_nickname.to_owned(),
+        full_name: result.full_name.to_owned(),
+        university_name: result.university_name.to_owned(),
+        faculty_name: result.faculty_name.to_owned(),
+        faculty_id: result.faculty_id,
+        user_university_id: result.user_university_id,
+        user_univ_role: result.user_univ_role.clone(),
+        gender: result.gender,
+    };
+    let user_id = result.user_id.to_owned();
+    let nickname = result.in_game_nickname.to_owned();
+    let response = json!({
                         "ResultCode": 1,
                         "UserId": user_id,
                         "Nickname": nickname,
                         "Data": auth_data,
-                    });
-                    Ok((StatusCode::OK, Json(response)).into_response())
-                }
-                AuthFormatType::Default => {
-                    let response = json!({"success": true, "message": "Successfully logged in"});
-                    Ok((StatusCode::OK, cookie_jar, Json(response)).into_response())
-                }
-            }
-        }
-        LoginSchema::Metamask(_user) => {
-            //TODO: Add a service for validating metamask
-            Err(AuthErrorProvider::Default(AuthError::Other(anyhow!(
-                "not implemented yet"
-            ))))
-            // Ok((StatusCode::OK, Json(response)))
-        }
-    }
+    });
+    let response = (StatusCode::OK, Json(response)).into_response();
+    Ok(response)
 }
 
 pub async fn logout(
