@@ -1,15 +1,13 @@
 use crate::backend::AppState;
-use crate::helpers::authentication::must_authorized;
-use crate::helpers::errors::{AuthError, UserServiceError};
+use crate::helpers::errors::{AuthError};
 use crate::helpers::extractor::AuthenticatedUser;
-use crate::model::user::{ProfileResponse, ProfileUserData, UserGender, UserUniversityRole};
+use crate::model::user::{ProfileResponse};
 use crate::service::user::UserService;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
-use axum::{middleware, Extension, Json, Router};
-use redis::{AsyncCommands, JsonAsyncCommands};
+use axum::{Extension, Json, Router};
 use serde_json::json;
 use std::sync::Arc;
 
@@ -34,5 +32,5 @@ pub async fn get_profile(
         status: true,
         data: result
     });
-    return Ok((StatusCode::OK, Json(response)).into_response());
+    Ok((StatusCode::OK, Json(response)).into_response())
 }

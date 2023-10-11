@@ -2,14 +2,12 @@ use crate::backend::AppState;
 use crate::helpers::authentication::{COOKIE_AUTH_NAME, COOKIE_SESSION_TOKEN_NAME};
 use crate::helpers::errors::AuthError;
 use crate::model::user::SessionTokenClaims;
-use crate::service::user::UserService;
 use axum::async_trait;
 use axum::extract::{FromRef, FromRequestParts};
 use axum::http::request::Parts;
 use axum_extra::extract::CookieJar;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthenticatedUser {

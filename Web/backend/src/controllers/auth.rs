@@ -1,8 +1,8 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{
-    delete_session, must_authorized, COOKIE_AUTH_NAME, COOKIE_SESSION_TOKEN_NAME,
+    delete_session, must_authorized, COOKIE_SESSION_TOKEN_NAME,
 };
-use crate::helpers::errors::{AuthError, AuthErrorProvider, PhotonAuthError};
+use crate::helpers::errors::{AuthError, PhotonAuthError};
 use crate::model::user::{AuthDataPhoton, LoginSchema, RegisterUserSchema, UserJsonBody};
 
 use crate::helpers::extractor::AuthenticatedUser;
@@ -133,13 +133,13 @@ pub async fn login(
         let Json(payload) =
             payload?;
         // Validate json body
-        payload.validate(&()).map_err(|err| AuthError::Other(anyhow::anyhow!("Unable to validate json payload")))?;
+        payload.validate(&()).map_err(|_err| AuthError::Other(anyhow::anyhow!("Unable to validate json payload")))?;
         payload
     };
 
     match &payload.user {
         LoginSchema::Default(user) => {
-            let (user_data, cookie_jar) = login_service
+            let (_user_data, cookie_jar) = login_service
                 .user_service
                 .login(user.email.as_str(), user.password.as_str())
                 .await?;

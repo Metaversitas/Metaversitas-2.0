@@ -1,6 +1,6 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{new_session, AuthToken, COOKIE_AUTH_NAME};
-use crate::helpers::errors::{AuthError, UserServiceError};
+use crate::helpers::errors::{UserServiceError};
 use crate::model::user::{ProfileUserData, RegisteredUser, User, UserGender, UserRole};
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
 use argon2::password_hash::SaltString;
