@@ -1,86 +1,157 @@
 {
 	"info": {
-		"_postman_id": "f07e4dc4-b449-4710-8550-3013063e92dd",
-		"name": "Auth Collections",
+		"_postman_id": "d9b32f22-e95b-4f04-94e2-50ef78f618d4",
+		"name": "Metaversitas Collections",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "12717348",
-		"_collection_link": "https://web.postman.co/workspace/Metaversitas-API~a6ff04da-d877-4f16-aed9-7ed91b3887fc/collection/12717348-f07e4dc4-b449-4710-8550-3013063e92dd?action=share&source=collection_link&creator=12717348"
+		"_collection_link": "https://warped-zodiac-784315.postman.co/workspace/Metaversitas-API~a6ff04da-d877-4f16-aed9-7ed91b3887fc/collection/12717348-d9b32f22-e95b-4f04-94e2-50ef78f618d4?action=share&source=collection_link&creator=12717348"
 	},
 	"item": [
 		{
-			"name": "Register",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"user\": {\r\n        \"nickname\": \"IniMahasiswa2\",\r\n        \"email\": \"mahasiswa2@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user\": {\r\n        \"nickname\": \"IniMahasiswa2\",\r\n        \"email\": \"mahasiswa2@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/auth/register",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
 						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "https://{{host}}/auth/register",
-					"protocol": "https",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"auth",
-						"register"
-					]
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user\": {\r\n        \"email\": \"mahasiswa@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/auth/login",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "photon",
+									"description": "(Optional) Enable it when photon format needed.",
+									"disabled": true
+								},
+								{
+									"key": "game_version",
+									"value": "",
+									"description": "(Optional) Put current game version here",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host}}/auth/refresh",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Photon Authentication",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cookie_auth\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2NTkwNzRhMC0yMmE4LTQ3YmEtOWFjYy02ZDU1YTlkZjg0ZmIiLCJpYXQiOjE2OTY5OTk3NTIsImV4cCI6MTY5NzAwMDM1Miwic2lkIjoiY3Jtc2NnN091cU13RlRORjhIa3E3eUplM2ZnbWxJRXNFY3R2SjltVEFxaHVjbUx2Q0NDNDJxOHdxdjJwIn0.jwDZkVRs9ylYnOz6AJ3YRcW1o1g7EehfKCD7js19iYY\",\n    \"cookie_session\": \"crmscg7OuqMwFTNF8Hkq7yJe3fgmlIEsEctvJ9mTAqhucmLvCCC42q8wqv2p\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/auth/photon",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"photon"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		},
 		{
-			"name": "Login",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"user\": {\r\n        \"email\": \"test20@test.com\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+			"name": "User",
+			"item": [
+				{
+					"name": "Get Profile Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host}}/user/profile",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"user",
+								"profile"
+							]
 						}
-					}
-				},
-				"url": {
-					"raw": "{{host}}:{{port}}/auth/login",
-					"host": [
-						"{{host}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"auth",
-						"login"
-					]
+					},
+					"response": []
 				}
-			},
-			"response": []
-		},
-		{
-			"name": "Refresh Token",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "https://{{host}}/auth/refresh",
-					"protocol": "https",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"auth",
-						"refresh"
-					]
-				}
-			},
-			"response": []
+			]
 		},
 		{
 			"name": "Health Check",
@@ -95,32 +166,6 @@
 					],
 					"path": [
 						"health"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get Profile Data",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
-				"url": {
-					"raw": "https://{{host}}/user/profile",
-					"protocol": "https",
-					"host": [
-						"{{host}}"
-					],
-					"path": [
-						"user",
-						"profile"
 					]
 				}
 			},
@@ -150,7 +195,7 @@
 	"variable": [
 		{
 			"key": "host",
-			"value": "18.140.63.167",
+			"value": "metaversitas.rweebz.xyz",
 			"type": "string"
 		},
 		{
