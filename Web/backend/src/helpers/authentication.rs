@@ -12,6 +12,7 @@ use rand::Rng;
 use redis::{AsyncCommands, Value};
 use serde::Serialize;
 use std::sync::Arc;
+use crate::helpers::extractor::AuthenticatedUser;
 
 pub const COOKIE_SESSION_TOKEN_NAME: &str = "session_token";
 pub const COOKIE_AUTH_NAME: &str = "Authorization";
@@ -72,7 +73,7 @@ pub async fn must_authorized<B>(
         })
         .ok_or(AuthError::Unauthorized)?
         .ok_or(AuthError::UnknownTokenFormat)?;
-    let (is_changed, cookie_jar) = check_session(
+    let (is_changed, _, cookie_jar) = check_session(
         cookie_jar,
         Arc::clone(&state),
         session_token.to_owned(),
@@ -151,7 +152,7 @@ pub async fn check_session(
     state: Arc<AppState>,
     session_token: String,
     jwt_session: String,
-) -> Result<(bool, CookieJar), AuthError> {
+) -> Result<(bool, AuthenticatedUser, CookieJar), AuthError> {
     let token_data = jsonwebtoken::decode::<SessionTokenClaims>(
         jwt_session.as_str(),
         &jsonwebtoken::DecodingKey::from_secret(state.config.jwt_secret.as_bytes()),
@@ -193,6 +194,11 @@ pub async fn check_session(
         return Err(AuthError::Unauthorized);
     }
 
+    let auth_user = AuthenticatedUser {
+        user_id: jwt_user_id,
+        session_id: session_token.to_owned(),
+    };
+
     let current_time = chrono::Utc::now().timestamp() as usize;
     if token_data.claims.exp < current_time {
         let jwt_expire = (chrono::Utc::now() + chrono::Duration::minutes(10)).timestamp();
@@ -215,10 +221,10 @@ pub async fn check_session(
                 .http_only(true)
                 .finish(),
         );
-        return Ok((true, cookie_jar));
+        return Ok((true, auth_user, cookie_jar));
     }
 
-    Ok((false, cookie_jar))
+    Ok((false, auth_user, cookie_jar))
 }
 
 pub async fn delete_session(

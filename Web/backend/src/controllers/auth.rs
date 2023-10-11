@@ -1,11 +1,7 @@
 use crate::backend::AppState;
-use crate::helpers::authentication::{
-    delete_session, must_authorized, COOKIE_SESSION_TOKEN_NAME,
-};
+use crate::helpers::authentication::{delete_session, must_authorized, COOKIE_SESSION_TOKEN_NAME, check_session};
 use crate::helpers::errors::{AuthError, PhotonAuthError};
-use crate::model::user::{AuthDataPhoton, LoginSchema, RegisterUserSchema, UserJsonBody};
-
-use crate::helpers::extractor::AuthenticatedUser;
+use crate::model::user::{AuthDataPhoton, LoginSchema, RegisterUserSchema, RequestPhotonAuth, UserJsonBody};
 use crate::service::game::GameService;
 use crate::service::user::UserService;
 use anyhow::anyhow;
@@ -64,7 +60,7 @@ pub async fn auth_router(
         .with_state(Arc::clone(&app_state))
         .route(
             PHOTON_AUTH_PATH,
-            get(photon_auth)
+            post(photon_auth)
                 .with_state(Arc::clone(&app_state))
                 .layer(Extension(Arc::clone(&user_service))),
         )
@@ -156,11 +152,14 @@ pub async fn login(
 }
 
 pub async fn photon_auth(
-    auth_user: Result<AuthenticatedUser, AuthError>,
     State(_app_state): State<Arc<AppState>>,
     Extension(user_service): Extension<Arc<UserService>>,
+    payload: Result<Json<RequestPhotonAuth>, JsonRejection>
 ) -> Result<Response, PhotonAuthError> {
-    let auth_user = auth_user?;
+    let Json(payload) = payload?;
+    let cookie_jar = CookieJar::default();
+    let (_is_changed, auth_user, _cookie_jar) = check_session(cookie_jar, _app_state, payload.cookie_session, payload.cookie_auth).await?;
+
     let result = user_service.get_profile(auth_user.user_id.as_str()).await?;
     let auth_data = AuthDataPhoton {
         user_id: result.user_id.to_owned(),

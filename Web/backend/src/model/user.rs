@@ -169,6 +169,12 @@ pub struct ProfileUserData {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RequestPhotonAuth {
+    pub cookie_auth: String,
+    pub cookie_session: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AuthDataPhoton {
     pub user_id: String,
     pub in_game_nickname: String,
