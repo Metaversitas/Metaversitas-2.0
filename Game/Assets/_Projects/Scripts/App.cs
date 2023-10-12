@@ -67,6 +67,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
     [FormerlySerializedAs("_userManager")]
     [Space(10)]
     [SerializeField] private UserManager userManager;
+    private UserSession _userSession;
 
     public static App FindInstance()
     {
@@ -258,6 +259,21 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
         _authenticationValues = authValues;
     }
 
+    public void SetUserSession(string cookie_values)
+    {
+        if (_userSession == null)
+        {
+            var userSession = gameObject.AddComponent<UserSession>();
+            userSession.Initialize(cookie_values);
+            _userSession = userSession;
+        }
+        else
+        {
+            Debug.LogError("UserSession already initialized");
+            return;
+        }
+    }
+
     private void SetUserManager(UserManager userManager)
     {
         if (this.userManager != null)
@@ -280,7 +296,6 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
         var userID = session_data[UserDataConstants.KeyUserID].ToString();
         var userRole = session_data[UserDataConstants.KeyUserUnivRole].ToString();
         var userUniversityID = Convert.ToInt64(session_data[UserDataConstants.KeyUniversityID]);
-        var cookieValue = session_data[AuthUserData.KeyAuthCookie].ToString();
         var successGender = Enum.TryParse<UserGender>(session_data[UserDataConstants.KeyUserGender].ToString(),
             out var userGender);
         if (!successGender)
@@ -295,13 +310,17 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
             throw new SystemException("Can't parse User Role");
         }
 
-        UserData uUserData = new UserData(userFacultyID, userFacultyName, userFullName, userInGameNickname,
+        var uUserData = new UserData(userFacultyID, userFacultyName, userFullName, userInGameNickname,
             userUniversityName, userID, parsedUserRole, userUniversityID, userGender);
-        UserSession uUserSession = gameObject.AddComponent<UserSession>();
-        UserManager userManager = gameObject.AddComponent<UserManager>();
-        uUserSession.Initialize(cookieValue);
-        userManager.Initialize(uUserData, uUserSession);
+        var userManager = gameObject.AddComponent<UserManager>();
 
+        if (_userSession == null)
+        {
+            Debug.LogError("User Session haven't been initialized");
+            return;
+        }
+        
+        userManager.Initialize(uUserData, _userSession);
         SetUserManager(userManager);
     }
 

@@ -10,8 +10,6 @@ public class DisplayUserData : MonoBehaviour
     [SerializeField] private TMP_Text nim;
     [SerializeField] private TMP_Text facultyid;
     [SerializeField] private TMP_Text prodi;
-    public string gender;
-    public string role;
 
     void Start()
     {

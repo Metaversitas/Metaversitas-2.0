@@ -9473,7 +9473,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7037703345225886304}
   - component: {fileID: 7037703345225886309}
-  - component: {fileID: 7037703345225886310}
   m_Layer: 0
   m_Name: ServerScript
   m_TagString: Untagged
@@ -9493,6 +9492,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e1896e07b9ed6f4d8c16e16202cf0d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _homeMenu:
+    sceneAsset: {fileID: 102900000, guid: f60a315c2ede6b04ab7b913ba8490cb5, type: 3}
+    scenePath: Assets/_Projects/Scenes/HomeMenu.unity
   welcomePanel: {fileID: 8684125874914552916}
   user: {fileID: 5072451610316391647}
   username: {fileID: 2207991324909121020}
@@ -9501,22 +9503,6 @@ MonoBehaviour:
   progressCircle: {fileID: 2207991323985888911}
   loginButton: {fileID: 2207991323796394939}
   apiUrl: https://metaversitas.rweebz.xyz
---- !u!114 &7037703345225886310
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7037703345225886306}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88cdfecee15eda84385f45adb74079b1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  facultyNameText: {fileID: 0}
-  fullNameText: {fileID: 0}
-  inGameNicknameText: {fileID: 0}
-  universityNameText: {fileID: 0}
 --- !u!114 &7058067242012178177
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -5226,7 +5226,6 @@ GameObject:
   - component: {fileID: 1546740095}
   - component: {fileID: 1546740094}
   - component: {fileID: 1546740098}
-  - component: {fileID: 1546740099}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -5323,7 +5322,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1546740093}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 595cd48ccf65f534da1223ddb248b7ee, type: 3}
   m_Name: 
@@ -5333,25 +5332,6 @@ MonoBehaviour:
   nim: {fileID: 496205471}
   facultyid: {fileID: 270152710}
   prodi: {fileID: 167146182}
-  gender: 
-  role: 
---- !u!114 &1546740099
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1546740093}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88cdfecee15eda84385f45adb74079b1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  inGameNicknameText: {fileID: 1982246449}
-  nim: {fileID: 496205471}
-  kodeKampus: {fileID: 559731666}
-  programStudi: {fileID: 167146182}
-  kodeProgram: {fileID: 559731666}
 --- !u!1 &1629123663
 GameObject:
   m_ObjectHideFlags: 0
