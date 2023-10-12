@@ -7198,9 +7198,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 687434253053815600}
-        m_TargetAssemblyTypeName: LoginScript, Assembly-CSharp
-        m_MethodName: Login
+      - m_Target: {fileID: 7037703345225886309}
+        m_TargetAssemblyTypeName: ServerAPI, Assembly-CSharp
+        m_MethodName: OnLoginButtonClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -9480,7 +9480,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &7037703345225886309
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9496,7 +9496,7 @@ MonoBehaviour:
   welcomePanel: {fileID: 8684125874914552916}
   user: {fileID: 5072451610316391647}
   username: {fileID: 2207991324909121020}
-  password: {fileID: 2207991323872407574}
+  passwords: {fileID: 2207991323872407574}
   errorMessages: {fileID: 2207991324837788974}
   progressCircle: {fileID: 2207991323985888911}
   loginButton: {fileID: 2207991323796394939}
@@ -9513,7 +9513,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88cdfecee15eda84385f45adb74079b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  outputArea: {fileID: 1226946102}
+  facultyNameText: {fileID: 0}
+  fullNameText: {fileID: 0}
+  inGameNicknameText: {fileID: 0}
+  universityNameText: {fileID: 0}
 --- !u!114 &7058067242012178177
 MonoBehaviour:
   m_ObjectHideFlags: 0

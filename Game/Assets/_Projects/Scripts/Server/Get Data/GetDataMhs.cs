@@ -4,9 +4,6 @@ using UnityEngine.Networking;
 using TMPro;
 using System.Collections;
 
-
-
-// Kelas baru yang merepresentasikan data dari API
 [System.Serializable]
 public class Data
 {
@@ -20,7 +17,6 @@ public class Data
     public int user_university_id;
 }
 
-// Kelas baru yang merepresentasikan respons dari API
 [System.Serializable]
 public class Response
 {
@@ -30,47 +26,47 @@ public class Response
 
 public class GetDataMhs : MonoBehaviour
 {
-    [SerializeField]
-    private TextMeshProUGUI outputArea; // Mengganti tipe data menjadi TextMeshProUGUI
+    [SerializeField] private TextMeshProUGUI inGameNicknameText;
+    [SerializeField] private TextMeshProUGUI nim;
+    [SerializeField] private TextMeshProUGUI kodeKampus;
+    [SerializeField] private TextMeshProUGUI programStudi;
+    [SerializeField] private TextMeshProUGUI kodeProgram;
+/*    [SerializeField] private TextMeshProUGUI facultyNameText;
+    [SerializeField] private TextMeshProUGUI fullNameText;
+    [SerializeField] private TextMeshProUGUI universityNameText;*/
 
-    // Singleton instance
     private static GetDataMhs instance;
+    private Data userData;
 
     public static GetDataMhs Instance
     {
         get { return instance; }
     }
 
-    // Variabel baru untuk menyimpan data dari API
-    private Data userData;
-
     private void Awake()
     {
-        // Cek jika instance sudah ada
         if (instance != null && instance != this)
         {
-            // Destroy this object jika instance sudah ada
             Destroy(this.gameObject);
         }
         else
         {
-            // Set instance ke objek ini
             instance = this;
         }
     }
 
     void Start()
     {
-        if (outputArea != null)
+        if (nim != null && kodeKampus != null && inGameNicknameText != null && kodeProgram != null)
         {
-            // Panggil GetData langsung saat Start
             GetData();
         }
         else
         {
-            Debug.LogError("OutputArea is not assigned in the Inspector.");
+            // Debug.LogError("One or more TextMeshProUGUI elements are not assigned in the Inspector.");
         }
     }
+
 
     public void GetData()
     {
@@ -79,13 +75,17 @@ public class GetDataMhs : MonoBehaviour
 
     IEnumerator GetData_Coroutine()
     {
-        if (outputArea == null)
+        if (nim == null || kodeKampus == null || inGameNicknameText == null || kodeProgram == null)
         {
-            Debug.LogError("OutputArea is not assigned in the Inspector.");
+           // Debug.LogError("One or more TextMeshProUGUI elements are not assigned in the Inspector.");
             yield break;
         }
 
-        outputArea.text = "Loading...";
+/*        facultyNameText.text = "Loading...";
+        fullNameText.text = "Loading...";*/
+        inGameNicknameText.text = "Loading...";
+/*        universityNameText.text = "Loading...";*/
+
         string uri = "https://metaversitas.rweebz.xyz/user/profile";
 
         using (UnityWebRequest request = UnityWebRequest.Get(uri))
@@ -94,33 +94,31 @@ public class GetDataMhs : MonoBehaviour
 
             if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
             {
-                outputArea.text = request.error;
                 Debug.LogError("HTTP Error: " + request.error);
             }
             else
             {
-                // Parse JSON response
                 string json = request.downloadHandler.text;
                 Response response = JsonUtility.FromJson<Response>(json);
 
                 if (response != null && response.status)
                 {
-                    // Simpan data ke variabel userData
                     userData = response.data;
 
-                    // Akses nilai-nilai dari objek userData
-                    string facultyName = userData.faculty_name;
-                    string fullName = userData.full_name;
-                    string inGameNickname = userData.in_game_nickname;
-                    string universityName = userData.university_name;
+/*                    facultyNameText.text = $"{userData.faculty_name}";
+                    fullNameText.text = $"{userData.full_name}";*/
+                    inGameNicknameText.text = $"{userData.in_game_nickname}";
+/*                    universityNameText.text = $"{userData.university_name}";*/
 
-                    // Tampilkan data di TextMeshProUGUI
-                    outputArea.text = $"Faculty: {facultyName}\nFull Name: {fullName}\nIn-Game Nickname: {inGameNickname}\nUniversity: {universityName}";
+                    nim.text = $"{userData.user_university_id}";
+                    kodeKampus.text = $"{userData.user_id}"; //sementara pake user id
+                    programStudi.text = $"{userData.faculty_name}";
+                    kodeProgram.text = $"{userData.faculty_id}";
+
                     Debug.Log("Received Data: " + json);
                 }
                 else
                 {
-                    outputArea.text = "Data not found or status is false.";
                     Debug.LogError("Invalid data or status is false.");
                 }
             }
