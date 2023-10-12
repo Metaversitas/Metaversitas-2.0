@@ -44,6 +44,6 @@ public class LoginScript : MonoBehaviour
         authValues.SetAuthPostData(body);
 
         _app.SetAuthenticationValues(authValues);
-        _app.CreateSession(sessionProps);
+        _app.InitiateGame();
     }
 }

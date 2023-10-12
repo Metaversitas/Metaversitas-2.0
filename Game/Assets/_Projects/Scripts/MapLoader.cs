@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public enum MapIndex {
-	HomePage,
 	Lobby,
+	HomePage,
 	GameOver,
 	Metaland,
 	LabFisika,
@@ -25,8 +25,8 @@ public class MapLoader : NetworkSceneManagerBase
 	[SerializeField] private GameObject _loadScreen;
 
 	[Header("Scenes")]
-	[SerializeField] private SceneReference _homePage;
 	[SerializeField] private SceneReference _lobby;
+	[SerializeField] private SceneReference _homePage;
     [SerializeField] private SceneReference _metaland;
     [SerializeField] private SceneReference _museum;
     [SerializeField] private SceneReference _labFisika;
@@ -50,12 +50,12 @@ public class MapLoader : NetworkSceneManagerBase
 		string path;
 		switch ((MapIndex)(int)newScene)
 		{
-			
 			case MapIndex.Lobby: 
 				path = _lobby; 
 				break;
 			case MapIndex.GameOver: 
-				path = _gameOver; break;
+				path = _gameOver; 
+				break;
 			case MapIndex.Metaland: 
 				path = _metaland; 
 				break;
@@ -71,7 +71,9 @@ public class MapLoader : NetworkSceneManagerBase
 			case MapIndex.HomePage:
 				path = _homePage;
 				break;
-			default: path = ""; break;
+			default: 
+				path = ""; 
+				break;
 		}	
 		yield return SceneManager.LoadSceneAsync(path, LoadSceneMode.Single);
 		var loadedScene = SceneManager.GetSceneByPath( path );

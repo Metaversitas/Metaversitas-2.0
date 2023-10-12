@@ -2,7 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.Networking;
+using Fusion.Photon.Realtime;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class ServerAPI : MonoBehaviour
 {
@@ -10,16 +12,28 @@ public class ServerAPI : MonoBehaviour
     [SerializeField] Text user;
     [Space]
     [SerializeField] InputField username;
-    [SerializeField] InputField password;
+    [SerializeField] InputField passwords;
 
     [SerializeField] Text errorMessages;
     [SerializeField] GameObject progressCircle;
 
     [SerializeField] Button loginButton;
 
-    [SerializeField] string apiUrl; // URL API yang akan Anda panggil
+    [SerializeField] string apiUrl;
 
     UnityWebRequest www;
+
+    private App _app;
+
+    void Start()
+    {
+        _app = App.FindInstance();
+
+        if (_app == null)
+        {
+            Debug.LogError("Instance of App not found!");
+        }
+    }
 
     public void OnLoginButtonClicked()
     {
@@ -30,14 +44,11 @@ public class ServerAPI : MonoBehaviour
 
     IEnumerator Login()
     {
-        // Buat URL lengkap dengan endpoint yang sesuai
-        string endpoint = "/auth/login"; // Ganti dengan endpoint yang sesuai di API Anda
+        string endpoint = "/auth/login";
         string url = apiUrl + endpoint;
 
-        // Buat objek JSON untuk mengirim data username dan password
-        string json = "{\"user\": {\"email\": \"" + username.text + "\", \"password\": \"" + password.text + "\"}}";
+        string json = "{\"user\": {\"email\": \"" + username.text + "\", \"password\": \"" + passwords.text + "\"}}";
 
-        // Buat permintaan POST dengan data JSON
         www = UnityWebRequest.Post(url, "application/json");
         byte[] jsonBytes = System.Text.Encoding.UTF8.GetBytes(json);
         www.uploadHandler = new UploadHandlerRaw(jsonBytes);
@@ -60,20 +71,49 @@ public class ServerAPI : MonoBehaviour
                 }
                 else
                 {
-                    //open welcome panel
-                    welcomePanel.SetActive(true);
-                    user.text = username.text;
-                    Debug.Log("<color=green>" + www.downloadHandler.text + "</color>");
+                    var response_headers = www.GetResponseHeaders();
+                    foreach (var key in response_headers.Keys)
+                    {
+                        Debug.Log("Headers: \n");
+                        Debug.Log($"{key}:{response_headers[key]}");
+                    }
+                    //SetPhotonAuthentication();
 
                     // Panggil GetData setelah menampilkan tampilan homepage
                     GetDataMhs.Instance.GetData();
+
+                    SceneManager.LoadScene("HomeMenu");
+
+                    loginButton.interactable = true;
+                    progressCircle.SetActive(false);
                 }
             }
         }
 
-        loginButton.interactable = true;
-        progressCircle.SetActive(false);
-
         www.Dispose();
+    }
+
+    void SetPhotonAuthentication()
+    {
+        var sessionProps = _app.AutoSession;
+        var email = username.text;
+        var password = passwords.text;
+
+        var authValues = new AuthenticationValues
+        {
+            AuthType = CustomAuthenticationType.Custom
+        };
+        Dictionary<string, object> body = new Dictionary<string, object>
+        {
+            ["auth_data"] = new Dictionary<string, string>
+            {
+                {"cookie_auth", email},
+                {"cookie_session", password}
+            }
+        };
+        authValues.SetAuthPostData(body);
+
+        _app.SetAuthenticationValues(authValues);
+        _app.InitiateGame();
     }
 }

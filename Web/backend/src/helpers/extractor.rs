@@ -60,6 +60,10 @@ where
             return Err(AuthError::Unauthorized);
         }
 
+        if chrono::Utc::now().timestamp() as usize >= token_data.claims.exp {
+            return Err(AuthError::Other(anyhow::anyhow!("Expired token")));
+        }
+
         let auth_user = AuthenticatedUser {
             user_id: jwt_user_id,
             session_id: session_token,

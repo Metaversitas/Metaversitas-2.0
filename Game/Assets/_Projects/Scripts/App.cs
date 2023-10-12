@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 using Fusion.Photon.Realtime;
 using Metaversitas.User;
 using Metaversitas.Constants;
+using Unity.VisualScripting;
 using UnityEngine.Serialization;
 using UserData = Metaversitas.User.UserData;
 using UserDataConstants = Metaversitas.Constants.UserData;
@@ -34,6 +35,10 @@ public enum ConnectionStatus
 public class App : MonoBehaviour, INetworkRunnerCallbacks
 {
     [SerializeField] private SceneReference _introScene;
+    [SerializeField] private bool _changeSceneOnConnected = true;
+    public bool ChangeSceneOnConnected => _changeSceneOnConnected;
+    
+    [Space(10)]
     [SerializeField] private Player _playerPrefab;
     [SerializeField] private Session _sessionPrefab;
     [SerializeField] private ErrorBox _errorBox;
@@ -58,9 +63,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
     private PlayerInputAction _playerInputAction;
     private AuthenticationValues _authenticationValues;
     public FPSCamera FpsCamera;
-    private UserManager _userManager;
-
-
+    
     [FormerlySerializedAs("_userManager")]
     [Space(10)]
     [SerializeField] private UserManager userManager;
@@ -119,7 +122,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
             _runner = Instantiate(networkRunnerPrefab);
             _runner.transform.SetParent(transform);
             _runner.name = "Session";
-
+            
             /*GameObject go = new GameObject("Session");
 			go.transform.SetParent(transform);
 			_runner = go.AddComponent<NetworkRunner>();*/
@@ -149,7 +152,6 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
         StartSession(_sharedMode ? GameMode.Shared : GameMode.Host, props, !_sharedMode);
     }
 
-
     private async void StartSession(GameMode mode, SessionProps props, bool disableClientSessionCreation=true)
     {
         Connect();
@@ -161,12 +163,30 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
         StartGameResult result = await _runner.StartGame(new StartGameArgs
         {
             GameMode = mode,
+            SessionName = props.RoomName,
+            SessionProperties = props.Properties,
             SceneManager = _loader,
             DisableClientSessionCreation = disableClientSessionCreation,
-            AuthValues = _authenticationValues
+            AuthValues = _authenticationValues,
         });
         if(!result.Ok)
             SetConnectionStatus(ConnectionStatus.Failed, result.ShutdownReason.ToString());
+    }
+
+    public async void InitiateGame()
+    {
+        Connect();
+
+        SetConnectionStatus(ConnectionStatus.EnteringLobby);
+        
+        var result = await _runner.JoinSessionLobby(SessionLobby.Custom, $"GameModeFirst", _authenticationValues);
+        if (!result.Ok)
+        {
+            SetConnectionStatus(ConnectionStatus.Failed);
+            Debug.LogError($"error: {result.ErrorMessage}; shutdown_reason: {result.ShutdownReason}");
+        }
+        
+        SceneManager.LoadSceneAsync(_introScene);
     }
 
     public async Task EnterLobby(string lobbyId, Action<List<SessionInfo>> onSessionListUpdated)
@@ -178,7 +198,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 
         SetConnectionStatus(ConnectionStatus.EnteringLobby);
         var result = await _runner.JoinSessionLobby(SessionLobby.Custom, lobbyId, _authenticationValues);
-
+        
         if (!result.Ok) {
             _onSessionListUpdated = null;
             SetConnectionStatus(ConnectionStatus.Failed);

@@ -240,6 +240,30 @@ impl IntoResponse for PhotonAuthError {
     }
 }
 
+impl From<AuthError> for PhotonAuthError {
+    fn from(err: AuthError) -> Self {
+        match err {
+            AuthError::OutdatedGameVersion => PhotonAuthError::OutdatedGameVersion,
+            AuthError::InvalidGameVersion => PhotonAuthError::InvalidGameVersion,
+            AuthError::UserNotExist => PhotonAuthError::UserNotExist,
+            AuthError::InvalidUsernameOrPassword => PhotonAuthError::InvalidUsernameOrPassword,
+            AuthError::Unauthorized => PhotonAuthError::Unauthorized,
+            AuthError::UnknownTokenFormat => {
+                PhotonAuthError::Other(anyhow::anyhow!("Unknown token format"))
+            }
+            AuthError::UserRegistered => PhotonAuthError::UserAlreadyExists,
+            AuthError::UnableCreateSession => PhotonAuthError::UnableCreateSession,
+            AuthError::DatabaseError => PhotonAuthError::DatabaseError,
+            AuthError::RedisError => PhotonAuthError::RedisError,
+            AuthError::Unknown => PhotonAuthError::Other(anyhow::anyhow!("Unknown error happened")),
+            AuthError::JsonExtractorRejection(json) => {
+                PhotonAuthError::JsonExtractorRejection(json)
+            }
+            AuthError::Other(err) => PhotonAuthError::Other(err),
+        }
+    }
+}
+
 impl From<(JsonRejection, &AuthFormatType)> for AuthErrorProvider {
     fn from((err, format): (JsonRejection, &AuthFormatType)) -> Self {
         match format {
@@ -392,6 +416,22 @@ impl From<UserServiceError> for AuthError {
             UserServiceError::RedisConnectionError => AuthError::RedisError,
             UserServiceError::UnauthorizedAccess => AuthError::Unauthorized,
             UserServiceError::UnableToParse => AuthError::Other(anyhow!("Unable to parse")),
+        }
+    }
+}
+
+impl From<UserServiceError> for PhotonAuthError {
+    fn from(err: UserServiceError) -> Self {
+        match err {
+            UserServiceError::DatabaseConnectionError => PhotonAuthError::DatabaseError,
+            UserServiceError::UserDoesNotExist => PhotonAuthError::UserNotExist,
+            UserServiceError::PasswordNotMatch => PhotonAuthError::InvalidUsernameOrPassword,
+            UserServiceError::UnableCreateSession => PhotonAuthError::UnableCreateSession,
+            UserServiceError::UserAlreadyExists => PhotonAuthError::UserAlreadyExists,
+            UserServiceError::UnableHashPassword => PhotonAuthError::UnableCreateSession,
+            UserServiceError::RedisConnectionError => PhotonAuthError::RedisError,
+            UserServiceError::UnauthorizedAccess => PhotonAuthError::Unauthorized,
+            UserServiceError::UnableToParse => PhotonAuthError::Other(anyhow!("Unable to parse")),
         }
     }
 }

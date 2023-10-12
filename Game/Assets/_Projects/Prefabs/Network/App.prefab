@@ -1,5 +1,50 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4258870494797711737
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3619838360702741203}
+  - component: {fileID: 5795752340233000557}
+  m_Layer: 0
+  m_Name: VoiceLogger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3619838360702741203
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4258870494797711737}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 960, y: 540, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6274724183888813006}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5795752340233000557
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4258870494797711737}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a86f533fd9917dd4da8601e9eb542c96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  LogLevel: 2
 --- !u!1 &6274724181952818937
 GameObject:
   m_ObjectHideFlags: 0
@@ -940,6 +985,7 @@ Transform:
   m_Children:
   - {fileID: 6274724182146606745}
   - {fileID: 6274724182691780850}
+  - {fileID: 3619838360702741203}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -957,12 +1003,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowHierarchyWindowOverlay: 1
   _loadScreen: {fileID: 6274724182146606746}
-  _homePage:
-    sceneAsset: {fileID: 102900000, guid: f60a315c2ede6b04ab7b913ba8490cb5, type: 3}
-    scenePath: Assets/_Projects/Scenes/HomeMenu.unity
   _lobby:
     sceneAsset: {fileID: 102900000, guid: 6cd2c06f03e110444aa1fe8b23192bbe, type: 3}
     scenePath: Assets/_Projects/Scenes/Lobby.unity
+  _homePage:
+    sceneAsset: {fileID: 102900000, guid: f60a315c2ede6b04ab7b913ba8490cb5, type: 3}
+    scenePath: Assets/_Projects/Scenes/HomeMenu.unity
   _metaland:
     sceneAsset: {fileID: 102900000, guid: 8910d92c2c2522b4e98a67643caa7f4d, type: 3}
     scenePath: Assets/_Projects/Scenes/MetaLand.unity
@@ -1002,6 +1048,9 @@ MonoBehaviour:
   _introScene:
     sceneAsset: {fileID: 102900000, guid: bded3f1f427226d4085b2bb28029f14e, type: 3}
     scenePath: Assets/_Projects/Scenes/MainMenu.unity
+  _firstConnectedScene:
+    sceneAsset: {fileID: 102900000, guid: 6cd2c06f03e110444aa1fe8b23192bbe, type: 3}
+    scenePath: Assets/_Projects/Scenes/Lobby.unity
   _playerPrefab: {fileID: 7979975255234169267, guid: e72d6d346cd174a55b95f70e519243d3, type: 3}
   _sessionPrefab: {fileID: 1504012697553745423, guid: a27f54dbaca1cd9428637b268633b743, type: 3}
   _errorBox: {fileID: 6274724182691780849}

@@ -2,6 +2,7 @@ use crate::backend::AppState;
 use redis::{AsyncCommands, Value};
 use std::sync::Arc;
 use thiserror::Error;
+use crate::helpers::errors::AuthError;
 
 const REDIS_GAME_VERSION_KEY: &str = "game_version:";
 pub struct GameService {
@@ -76,3 +77,15 @@ pub enum GameServiceError {
     #[error("Unknown error on Redis")]
     RedisError,
 }
+
+impl From<GameServiceError> for AuthError {
+    fn from(err: GameServiceError) -> Self {
+        match err {
+            GameServiceError::InvalidGameVersion => AuthError::InvalidGameVersion,
+            GameServiceError::OutdatedGameVersion => AuthError::OutdatedGameVersion,
+            GameServiceError::DatabaseError => AuthError::DatabaseError,
+            GameServiceError::RedisError => AuthError::RedisError,
+        }
+    }
+}
+

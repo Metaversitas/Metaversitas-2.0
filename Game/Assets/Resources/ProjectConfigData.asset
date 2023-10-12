@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ProjectConfigData
   m_EditorClassIdentifier: 
   projectID: abdeec09-b099-4491-8bd5-dfe1220b84d4
-  chainID: '43112 '
+  chainID: 43112
   chain: DChain
   network: Testnet
   rpc: https://testnet.dchain.id/ext/bc/C/rpc

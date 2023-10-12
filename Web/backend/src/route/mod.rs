@@ -4,6 +4,8 @@ use crate::controllers::health::{health_checker, HEALTH_PATH_CONTROLLER};
 use crate::controllers::homepage::{homepage, HOMEPAGE_PATH_CONTROLLER};
 use crate::controllers::user::{user_router, USER_PATH_CONTROLLER};
 use crate::r#const::{ENV_ENVIRONMENT, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
+use crate::service::game::GameService;
+use crate::service::user::UserService;
 use axum::error_handling::HandleErrorLayer;
 use axum::http::StatusCode;
 use axum::{routing::get, BoxError, Json, Router};
@@ -49,8 +51,16 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
         .buffer(1000)
         .concurrency_limit(1000);
 
-    let auth_router = auth_router(Arc::clone(&app_state)).await;
-    let user_router = user_router(Arc::clone(&app_state)).await;
+    let game_service = Arc::new(GameService::new(Arc::clone(&app_state)));
+    let user_service = Arc::new(UserService::new(Arc::clone(&app_state)));
+
+    let auth_router = auth_router(
+        Arc::clone(&app_state),
+        Arc::clone(&game_service),
+        Arc::clone(&user_service),
+    )
+    .await;
+    let user_router = user_router(Arc::clone(&app_state), Arc::clone(&user_service)).await;
 
     Router::new()
         .nest(AUTH_PATH_CONTROLLER, auth_router)
