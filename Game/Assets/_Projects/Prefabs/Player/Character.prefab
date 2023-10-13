@@ -1197,6 +1197,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: VoiceBehaviour
       objectReference: {fileID: 0}
+    - target: {fileID: 6682285144301403859, guid: 637efb0f36dae544fb330a6963653ea4, type: 3}
+      propertyPath: Flags
+      value: 3073
+      objectReference: {fileID: 0}
+    - target: {fileID: 6682285144301403859, guid: 637efb0f36dae544fb330a6963653ea4, type: 3}
+      propertyPath: NetworkedBehaviours.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6682285144301403859, guid: 637efb0f36dae544fb330a6963653ea4, type: 3}
+      propertyPath: NetworkedBehaviours.Array.data[0]
+      value: 
+      objectReference: {fileID: 3163236190120506600}
+    - target: {fileID: 6682285144301403859, guid: 637efb0f36dae544fb330a6963653ea4, type: 3}
+      propertyPath: NetworkGuid.RawGuidValue.Array.data[0]
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6682285144301403859, guid: 637efb0f36dae544fb330a6963653ea4, type: 3}
+      propertyPath: NetworkGuid.RawGuidValue.Array.data[1]
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 637efb0f36dae544fb330a6963653ea4, type: 3}
 --- !u!114 &3163236190120506600 stripped
