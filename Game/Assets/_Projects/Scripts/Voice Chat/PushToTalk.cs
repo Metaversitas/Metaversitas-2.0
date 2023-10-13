@@ -22,14 +22,14 @@ public class PushToTalk : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (settingVoice.activeSelf == true)
-        {
+        /*if (settingVoice.activeSelf == true)
+        {*/
             ActivatePushToTalk();
-        }
+        /*}
         else
         {
             DeactivatePushToTalk();
-        }
+        }*/
         
     }
 
