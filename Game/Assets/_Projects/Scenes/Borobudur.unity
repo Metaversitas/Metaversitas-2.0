@@ -1232,6 +1232,63 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!1001 &288907715
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_RootOrder
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 8.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621493, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061665957037621494, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
+      propertyPath: m_Name
+      value: InformativeRelief
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 41711a59247ac274c95842d9b8e3d33c, type: 3}
 --- !u!1 &305340001
 GameObject:
   m_ObjectHideFlags: 0
@@ -1800,7 +1857,7 @@ MonoBehaviour:
   DestroyWhenStateAuthorityLeaves: 0
   AllowStateAuthorityOverride: 1
   AoiPositionSource: {fileID: 0}
-  Flags: 2561
+  Flags: 133633
   NetworkGuid:
     RawGuidValue: 2c3a917ab9154a49bf8e889ba0fe119f
   NestedObjects: []
@@ -2007,7 +2064,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &449825188
 Transform:
   m_ObjectHideFlags: 0
@@ -2355,6 +2412,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 7961955204013128763, guid: fb0adeb67a265b148985f1e76e6c055a, type: 3}
+      propertyPath: assetSoal
+      value: 
+      objectReference: {fileID: 4900000, guid: 601bea1e67bc7dd48b963bcbfccf53f8, type: 3}
     - target: {fileID: 8927375176666189826, guid: fb0adeb67a265b148985f1e76e6c055a, type: 3}
       propertyPath: m_RootOrder
       value: 4
@@ -2923,7 +2984,7 @@ MonoBehaviour:
   DestroyWhenStateAuthorityLeaves: 0
   AllowStateAuthorityOverride: 1
   AoiPositionSource: {fileID: 0}
-  Flags: 2561
+  Flags: 133633
   NetworkGuid:
     RawGuidValue: 78d749b1b34d43678314574f75c1da74
   NestedObjects: []
@@ -3478,7 +3539,7 @@ MonoBehaviour:
   DestroyWhenStateAuthorityLeaves: 0
   AllowStateAuthorityOverride: 1
   AoiPositionSource: {fileID: 0}
-  Flags: 2561
+  Flags: 133633
   NetworkGuid:
     RawGuidValue: d0ea257ea1b64c5190fd4079a5a31260
   NestedObjects: []
@@ -3834,7 +3895,7 @@ MonoBehaviour:
   DestroyWhenStateAuthorityLeaves: 0
   AllowStateAuthorityOverride: 1
   AoiPositionSource: {fileID: 0}
-  Flags: 2561
+  Flags: 133633
   NetworkGuid:
     RawGuidValue: 3160540de8624dc7865b94145a73ffc7
   NestedObjects: []
@@ -4098,6 +4159,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 7961955204013128763, guid: fb0adeb67a265b148985f1e76e6c055a, type: 3}
+      propertyPath: assetSoal
+      value: 
+      objectReference: {fileID: 4900000, guid: 601bea1e67bc7dd48b963bcbfccf53f8, type: 3}
     - target: {fileID: 8927375176666189826, guid: fb0adeb67a265b148985f1e76e6c055a, type: 3}
       propertyPath: m_RootOrder
       value: 2
@@ -4311,7 +4376,7 @@ MonoBehaviour:
   DestroyWhenStateAuthorityLeaves: 0
   AllowStateAuthorityOverride: 1
   AoiPositionSource: {fileID: 0}
-  Flags: 2561
+  Flags: 133633
   NetworkGuid:
     RawGuidValue: c0d7fd3429914534a76124fa1fa3f058
   NestedObjects: []
@@ -4383,6 +4448,10 @@ PrefabInstance:
     - target: {fileID: 1369315656020693957, guid: 3e51ac0ac741aae4283af61fb9fb0b78, type: 3}
       propertyPath: m_Center.z
       value: 30.541767
+      objectReference: {fileID: 0}
+    - target: {fileID: 1407411470142627539, guid: 3e51ac0ac741aae4283af61fb9fb0b78, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 1593518236386212844, guid: 3e51ac0ac741aae4283af61fb9fb0b78, type: 3}
       propertyPath: m_LocalPosition.y
@@ -6033,6 +6102,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 7961955204013128763, guid: fb0adeb67a265b148985f1e76e6c055a, type: 3}
+      propertyPath: assetSoal
+      value: 
+      objectReference: {fileID: 4900000, guid: 601bea1e67bc7dd48b963bcbfccf53f8, type: 3}
     - target: {fileID: 8927375176666189826, guid: fb0adeb67a265b148985f1e76e6c055a, type: 3}
       propertyPath: m_RootOrder
       value: 3
@@ -6246,7 +6319,7 @@ MonoBehaviour:
   DestroyWhenStateAuthorityLeaves: 0
   AllowStateAuthorityOverride: 1
   AoiPositionSource: {fileID: 0}
-  Flags: 2561
+  Flags: 133633
   NetworkGuid:
     RawGuidValue: cc56d902bd824c21a12785dd22c832fb
   NestedObjects: []
@@ -6590,6 +6663,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 7961955204013128763, guid: fb0adeb67a265b148985f1e76e6c055a, type: 3}
+      propertyPath: assetSoal
+      value: 
+      objectReference: {fileID: 4900000, guid: 601bea1e67bc7dd48b963bcbfccf53f8, type: 3}
     - target: {fileID: 8927375176666189826, guid: fb0adeb67a265b148985f1e76e6c055a, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -7065,7 +7142,7 @@ MonoBehaviour:
   DestroyWhenStateAuthorityLeaves: 0
   AllowStateAuthorityOverride: 1
   AoiPositionSource: {fileID: 0}
-  Flags: 2561
+  Flags: 133633
   NetworkGuid:
     RawGuidValue: 63cce4f202b9484bafac8cb5ab11ceb2
   NestedObjects: []
@@ -7842,7 +7919,7 @@ MonoBehaviour:
   DestroyWhenStateAuthorityLeaves: 0
   AllowStateAuthorityOverride: 1
   AoiPositionSource: {fileID: 0}
-  Flags: 2561
+  Flags: 133633
   NetworkGuid:
     RawGuidValue: 087ff88a0ea246938d36b2031ce21add
   NestedObjects: []
