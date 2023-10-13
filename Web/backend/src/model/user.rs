@@ -169,9 +169,14 @@ pub struct ProfileUserData {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RequestPhotonAuth {
+pub struct BodyPhotonAuth {
     pub cookie_auth: String,
     pub cookie_session: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RequestPhotonAuth {
+    pub auth_data: BodyPhotonAuth,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

@@ -158,7 +158,7 @@ pub async fn photon_auth(
 ) -> Result<Response, PhotonAuthError> {
     let Json(payload) = payload?;
     let cookie_jar = CookieJar::default();
-    let (_is_changed, auth_user, _cookie_jar) = check_session(cookie_jar, _app_state, payload.cookie_session, payload.cookie_auth).await?;
+    let (_is_changed, auth_user, _cookie_jar) = check_session(cookie_jar, _app_state, payload.auth_data.cookie_session, payload.auth_data.cookie_auth).await?;
 
     let result = user_service.get_profile(auth_user.user_id.as_str()).await?;
     let auth_data = AuthDataPhoton {
