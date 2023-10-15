@@ -15,7 +15,7 @@ pub enum UserRole {
     User,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, FromRedisValue)]
 pub struct User {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,

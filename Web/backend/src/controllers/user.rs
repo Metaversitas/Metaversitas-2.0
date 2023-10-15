@@ -1,9 +1,9 @@
 use crate::backend::AppState;
-use crate::helpers::errors::{AuthError};
+use crate::helpers::errors::AuthError;
 use crate::helpers::extractor::AuthenticatedUser;
-use crate::model::user::{ProfileResponse};
+use crate::model::user::ProfileResponse;
 use crate::service::user::UserService;
-use axum::extract::State;
+use axum::extract::{FromRef, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
@@ -11,20 +11,28 @@ use axum::{Extension, Json, Router};
 use serde_json::json;
 use std::sync::Arc;
 
+#[derive(Clone, FromRef)]
+pub struct UserServiceRouter {
+    pub user_service: Arc<UserService>,
+    pub app_state: Arc<AppState>,
+}
+
 pub const USER_PATH_CONTROLLER: &str = "/user";
 pub async fn user_router(app_state: Arc<AppState>, user_service: Arc<UserService>) -> Router {
-    Router::new().route(
-        "/profile",
-        get(get_profile)
-            .with_state(Arc::clone(&app_state))
-            .layer(Extension(user_service)),
-    )
+    let user_service_router = UserServiceRouter {
+        user_service: Arc::clone(&user_service),
+        app_state: Arc::clone(&app_state),
+    };
+
+    Router::new()
+        .route("/profile", get(get_profile))
+        .with_state(user_service_router)
 }
 
 pub async fn get_profile(
-    auth_user: Result<AuthenticatedUser, AuthError>,
     State(_app_state): State<Arc<AppState>>,
-    Extension(user_service): Extension<Arc<UserService>>,
+    State(user_service): State<Arc<UserService>>,
+    auth_user: Result<AuthenticatedUser, AuthError>,
 ) -> Result<Response, AuthError> {
     let auth_user = auth_user?;
     let result = user_service.get_profile(auth_user.user_id.as_str()).await?;

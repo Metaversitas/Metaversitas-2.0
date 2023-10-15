@@ -1,9 +1,11 @@
 use crate::backend::AppState;
 use crate::controllers::auth::{auth_router, AUTH_PATH_CONTROLLER};
+use crate::controllers::classroom::{classroom_router, CLASSROOM_PATH_CONTROLLER};
 use crate::controllers::health::{health_checker, HEALTH_PATH_CONTROLLER};
 use crate::controllers::homepage::{homepage, HOMEPAGE_PATH_CONTROLLER};
 use crate::controllers::user::{user_router, USER_PATH_CONTROLLER};
 use crate::r#const::{ENV_ENVIRONMENT, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
+use crate::service::classroom::ClassroomService;
 use crate::service::game::GameService;
 use crate::service::user::UserService;
 use axum::error_handling::HandleErrorLayer;
@@ -53,6 +55,7 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
 
     let game_service = Arc::new(GameService::new(Arc::clone(&app_state)));
     let user_service = Arc::new(UserService::new(Arc::clone(&app_state)));
+    let classroom_service = Arc::new(ClassroomService::new(Arc::clone(&app_state)));
 
     let auth_router = auth_router(
         Arc::clone(&app_state),
@@ -61,10 +64,17 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
     )
     .await;
     let user_router = user_router(Arc::clone(&app_state), Arc::clone(&user_service)).await;
+    let classroom_router = classroom_router(
+        Arc::clone(&app_state),
+        Arc::clone(&classroom_service),
+        Arc::clone(&user_service),
+    )
+    .await;
 
     Router::new()
         .nest(AUTH_PATH_CONTROLLER, auth_router)
         .nest(USER_PATH_CONTROLLER, user_router)
+        .nest(CLASSROOM_PATH_CONTROLLER, classroom_router)
         .route(HEALTH_PATH_CONTROLLER, get(health_checker))
         .route(HOMEPAGE_PATH_CONTROLLER, get(homepage))
         .layer(service_builder)

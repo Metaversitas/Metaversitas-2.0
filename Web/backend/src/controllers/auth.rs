@@ -1,7 +1,11 @@
 use crate::backend::AppState;
-use crate::helpers::authentication::{delete_session, must_authorized, COOKIE_SESSION_TOKEN_NAME, check_session};
+use crate::helpers::authentication::{
+    check_session, delete_session, must_authorized, COOKIE_SESSION_TOKEN_NAME,
+};
 use crate::helpers::errors::{AuthError, PhotonAuthError};
-use crate::model::user::{AuthDataPhoton, LoginSchema, RegisterUserSchema, RequestPhotonAuth, UserJsonBody};
+use crate::model::user::{
+    AuthDataPhoton, LoginSchema, RegisterUserSchema, RequestPhotonAuth, UserJsonBody,
+};
 use crate::service::game::GameService;
 use crate::service::user::UserService;
 use anyhow::anyhow;
@@ -126,10 +130,11 @@ pub async fn login(
     }
     let payload = {
         // If not a valid Json
-        let Json(payload) =
-            payload?;
+        let Json(payload) = payload?;
         // Validate json body
-        payload.validate(&()).map_err(|_err| AuthError::Other(anyhow::anyhow!("Unable to validate json payload")))?;
+        payload
+            .validate(&())
+            .map_err(|_err| AuthError::Other(anyhow::anyhow!("Unable to validate json payload")))?;
         payload
     };
 
@@ -144,9 +149,7 @@ pub async fn login(
         }
         LoginSchema::Metamask(_user) => {
             //TODO: Add a service for validating metamask
-            Err(AuthError::Other(anyhow!(
-                "not implemented yet"
-            )))
+            Err(AuthError::Other(anyhow!("not implemented yet")))
         }
     }
 }
@@ -154,11 +157,17 @@ pub async fn login(
 pub async fn photon_auth(
     State(_app_state): State<Arc<AppState>>,
     Extension(user_service): Extension<Arc<UserService>>,
-    payload: Result<Json<RequestPhotonAuth>, JsonRejection>
+    payload: Result<Json<RequestPhotonAuth>, JsonRejection>,
 ) -> Result<Response, PhotonAuthError> {
     let Json(payload) = payload?;
     let cookie_jar = CookieJar::default();
-    let (_is_changed, auth_user, _cookie_jar) = check_session(cookie_jar, _app_state, payload.auth_data.cookie_session, payload.auth_data.cookie_auth).await?;
+    let (_is_changed, auth_user, _cookie_jar) = check_session(
+        cookie_jar,
+        _app_state,
+        payload.auth_data.cookie_session,
+        payload.auth_data.cookie_auth,
+    )
+    .await?;
 
     let result = user_service.get_profile(auth_user.user_id.as_str()).await?;
     let auth_data = AuthDataPhoton {
