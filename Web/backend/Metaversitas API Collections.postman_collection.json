@@ -45,7 +45,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user\": {\r\n        \"email\": \"mahasiswa@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
+							"raw": "{\r\n    \"user\": {\r\n        \"email\": \"dosen@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -53,7 +53,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{host}}/auth/login",
+							"raw": "https://{{host}}/auth/login?format=photon",
 							"protocol": "https",
 							"host": [
 								"{{host}}"
@@ -66,8 +66,7 @@
 								{
 									"key": "format",
 									"value": "photon",
-									"description": "(Optional) Enable it when photon format needed.",
-									"disabled": true
+									"description": "(Optional) Enable it when photon format needed."
 								},
 								{
 									"key": "game_version",
@@ -106,7 +105,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"cookie_auth\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2NTkwNzRhMC0yMmE4LTQ3YmEtOWFjYy02ZDU1YTlkZjg0ZmIiLCJpYXQiOjE2OTY5OTk3NTIsImV4cCI6MTY5NzAwMDM1Miwic2lkIjoiY3Jtc2NnN091cU13RlRORjhIa3E3eUplM2ZnbWxJRXNFY3R2SjltVEFxaHVjbUx2Q0NDNDJxOHdxdjJwIn0.jwDZkVRs9ylYnOz6AJ3YRcW1o1g7EehfKCD7js19iYY\",\n    \"cookie_session\": \"crmscg7OuqMwFTNF8Hkq7yJe3fgmlIEsEctvJ9mTAqhucmLvCCC42q8wqv2p\"\n}",
+							"raw": "{\n    \"auth_data\": {\n        \"cookie_auth\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjM2YwNGEzMC0zOGFjLTQ3NGQtYjdkYS04ZmI4ODk0OTVkNzUiLCJpYXQiOjE2OTcxNzc4OTQsImV4cCI6MTY5NzE3ODQ5NCwic2lkIjoiS3VuempSTWhnTnl5MHdzbHVYRzhPeHVNMDdSTmxFRUdMQzNFdm45bllIV2hwdkJlekxndTRUbGlPNm1MIn0.s9SbmoEhHjjYZYdjxQRGGla4DMWk_QTxuquccEkDJB0\",\n        \"cookie_session\": \"KunzjRMhgNyy0wsluXG8OxuM07RNlEEGLC3Evn9nYHWhpvBezLgu4TliO6mL\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -146,6 +145,46 @@
 							"path": [
 								"user",
 								"profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Classroom",
+			"item": [
+				{
+					"name": "Get Available Classroom",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Create Classroom (Lecturer only)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"subject_name\": \"Math\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/classroom",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"classroom"
 							]
 						}
 					},
