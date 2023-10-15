@@ -1,5 +1,6 @@
 use crate::backend::AppState;
 use crate::helpers::errors::AuthError;
+use crate::helpers::extractor::AuthenticatedUser;
 use crate::model::user::{SessionTokenClaims, User};
 use axum::extract::State;
 use axum::http::header::SET_COOKIE;
@@ -12,7 +13,6 @@ use rand::Rng;
 use redis::{AsyncCommands, Value};
 use serde::Serialize;
 use std::sync::Arc;
-use crate::helpers::extractor::AuthenticatedUser;
 
 pub const COOKIE_SESSION_TOKEN_NAME: &str = "session_token";
 pub const COOKIE_AUTH_NAME: &str = "Authorization";

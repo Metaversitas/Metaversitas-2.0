@@ -1,6 +1,6 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{new_session, AuthToken, COOKIE_AUTH_NAME};
-use crate::helpers::errors::{UserServiceError};
+use crate::helpers::errors::UserServiceError;
 use crate::model::user::{ProfileUserData, RegisteredUser, User, UserGender, UserRole};
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
 use argon2::password_hash::SaltString;
@@ -188,6 +188,55 @@ impl UserService {
         );
 
         Ok(cookie_jar)
+    }
+
+    pub async fn get_user_data(&self, user_id: &str) -> Result<User, UserServiceError> {
+        let user_data_key = format!("user_data:{}", &user_id);
+        let mut redis_conn = self.app_state.redis.get_async_connection().await.unwrap();
+        let is_exists = redis_conn
+            .exists::<String, usize>(user_data_key.to_owned())
+            .await
+            .unwrap();
+
+        if is_exists == 0 {
+            let query = sqlx::query!(
+                r#"
+            select users.role as "role!: UserRole"
+            from users
+            where users.user_id::text = $1
+            "#,
+                &user_id
+            )
+            .fetch_one(&self.app_state.database)
+            .await
+            .map_err(|_| UserServiceError::DatabaseConnectionError)?;
+
+            let data = User {
+                id: None,
+                role: Some(query.role),
+                email: None,
+                password_hash: None,
+                nickname: None,
+                verified: None,
+                created_at: None,
+                updated_at: None,
+            };
+            let _ = redis_conn
+                .json_set::<String, String, User, redis::Value>(
+                    user_data_key.to_owned(),
+                    "$".to_string(),
+                    &data,
+                )
+                .await
+                .unwrap();
+            Ok(data)
+        } else {
+            let query_from_redis = redis_conn
+                .json_get::<String, &str, User>(user_data_key.to_owned(), "$")
+                .await
+                .unwrap();
+            Ok(query_from_redis)
+        }
     }
 
     pub async fn get_profile(&self, user_id: &str) -> Result<ProfileUserData, UserServiceError> {
