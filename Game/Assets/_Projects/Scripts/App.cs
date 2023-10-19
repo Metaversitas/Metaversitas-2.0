@@ -190,6 +190,19 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
         SceneManager.LoadSceneAsync(_introScene);
     }
 
+    public async void LogoutGame()
+    {
+
+        Destroy(userManager);
+        Destroy(_userSession);
+        userManager = null;
+        _userSession = null;
+
+        Disconnect();
+
+        SceneManager.LoadSceneAsync("LoginScene");
+    }
+
     public async Task EnterLobby(string lobbyId, Action<List<SessionInfo>> onSessionListUpdated)
     {
         Connect();
@@ -284,6 +297,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
 
         this.userManager = userManager;
     }
+
 
     private void CreateUserSession(Dictionary<string, object> session_data)
     {
