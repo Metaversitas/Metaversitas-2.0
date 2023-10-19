@@ -9,7 +9,7 @@ using TMPro;
 
 public class QuizManager : MonoBehaviour
 {
-    public TextAsset assetSoal;
+        public TextAsset assetSoal;
 
     private string[] soal;
 

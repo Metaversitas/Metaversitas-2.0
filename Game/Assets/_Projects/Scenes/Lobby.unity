@@ -2066,23 +2066,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 7431105789516679351, guid: a4e3bb85b7e9b48e0bb8539f4cbc4e72, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7431105789723849887, guid: a4e3bb85b7e9b48e0bb8539f4cbc4e72, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7431105789784707198, guid: a4e3bb85b7e9b48e0bb8539f4cbc4e72, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7431105790145199950, guid: a4e3bb85b7e9b48e0bb8539f4cbc4e72, type: 3}
       propertyPath: m_Name
       value: PlayerSetup
-      objectReference: {fileID: 0}
-    - target: {fileID: 7431105790145199950, guid: a4e3bb85b7e9b48e0bb8539f4cbc4e72, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7431105790145199951, guid: a4e3bb85b7e9b48e0bb8539f4cbc4e72, type: 3}
       propertyPath: m_Pivot.x
@@ -2170,15 +2166,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7431105790416381037, guid: a4e3bb85b7e9b48e0bb8539f4cbc4e72, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7431105790940874054, guid: a4e3bb85b7e9b48e0bb8539f4cbc4e72, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7431105791346160058, guid: a4e3bb85b7e9b48e0bb8539f4cbc4e72, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a4e3bb85b7e9b48e0bb8539f4cbc4e72, type: 3}
