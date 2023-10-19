@@ -1,14 +1,9 @@
 fileFormatVersion: 2
-guid: 3785d02bfc0565545bb9953d78bc6b60
+guid: b99763f0969c99347a7a627a3d6f2a94
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Rumput
-    second: {fileID: 2100000, guid: 30484bc12641ead488616cccf039e488, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
