@@ -1680,7 +1680,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 128809156}
         m_TargetAssemblyTypeName: HomeMenu, Assembly-CSharp
-        m_MethodName: exit_Game
+        m_MethodName: logout_game
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
