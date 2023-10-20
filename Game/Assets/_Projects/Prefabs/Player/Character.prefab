@@ -393,7 +393,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _interpolationDataSource: 0
-  _name: {fileID: 0}
+  _name: {fileID: 4019427547281036104}
   _animator: {fileID: 0}
   _interaction: {fileID: 5918572417253627795}
   _playerStateManager: {fileID: 2189212240736461234, guid: f69cb1d48aa37684484dafdff35aa3b6, type: 3}
@@ -402,6 +402,7 @@ MonoBehaviour:
   _characterCewe: {fileID: 5299533100225056374, guid: 5b6dcd9f9b3aeb94fb339a774bf233a0, type: 3}
   cowok: 0
   Role: 
+  app: {fileID: 0}
   moveVelocity: 5
   _xMovement: 0
   _yMovement: 0
@@ -1061,6 +1062,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 624753062471413478, guid: 10c67408b3948824eacd3d061b77a7cd, type: 3}
   m_PrefabInstance: {fileID: 1840023389169595445}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &4019427547281036104 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3336872143626839933, guid: 10c67408b3948824eacd3d061b77a7cd, type: 3}
+  m_PrefabInstance: {fileID: 1840023389169595445}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1935967451655189516
 PrefabInstance:
   m_ObjectHideFlags: 0
