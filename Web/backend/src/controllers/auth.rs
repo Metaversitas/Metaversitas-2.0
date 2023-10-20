@@ -1,8 +1,7 @@
 use crate::backend::AppState;
-use crate::helpers::authentication::{
-    check_session, delete_session, must_authorized, COOKIE_SESSION_TOKEN_NAME,
-};
-use crate::helpers::errors::{AuthError, PhotonAuthError};
+use crate::helpers::authentication::{check_session, delete_session, COOKIE_SESSION_TOKEN_NAME};
+use crate::helpers::errors::auth::{AuthError, PhotonAuthError};
+use crate::helpers::extractor::AuthenticatedUser;
 use crate::model::user::{
     AuthDataPhoton, LoginSchema, RegisterUserSchema, RequestPhotonAuth, UserJsonBody,
 };
@@ -10,11 +9,10 @@ use crate::service::game::GameService;
 use crate::service::user::UserService;
 use anyhow::anyhow;
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{Query, State};
+use axum::extract::{FromRef, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
-use axum::{middleware, Extension};
 use axum::{Json, Router};
 use axum_extra::extract::cookie::CookieJar;
 use garde::Validate;
@@ -30,7 +28,9 @@ pub const PHOTON_AUTH_PATH: &str = "/photon";
 pub const LOGOUT_AUTH_PATH: &str = "/logout";
 pub const REFRESH_TOKEN_AUTH_PATH: &str = "/refresh";
 
+#[derive(Clone, FromRef)]
 pub struct LoginStateService {
+    pub app_state: Arc<AppState>,
     pub user_service: Arc<UserService>,
     pub game_service: Arc<GameService>,
 }
@@ -40,34 +40,19 @@ pub async fn auth_router(
     game_service: Arc<GameService>,
     user_service: Arc<UserService>,
 ) -> Router {
-    let login_state_service = Arc::new(LoginStateService {
+    let login_state_service = LoginStateService {
+        app_state: Arc::clone(&app_state),
         game_service: Arc::clone(&game_service),
         user_service: Arc::clone(&user_service),
-    });
+    };
 
     Router::new()
         .route(REGISTER_AUTH_PATH, post(register))
-        .with_state(Arc::clone(&user_service))
-        .route(
-            LOGIN_AUTH_PATH,
-            post(login).with_state(Arc::clone(&login_state_service)),
-        )
+        .route(LOGIN_AUTH_PATH, post(login))
         .route(REFRESH_TOKEN_AUTH_PATH, get(refresh_token))
-        .with_state(Arc::clone(&user_service))
-        .route(
-            LOGOUT_AUTH_PATH,
-            post(logout).route_layer(middleware::from_fn_with_state(
-                Arc::clone(&app_state),
-                must_authorized,
-            )),
-        )
-        .with_state(Arc::clone(&app_state))
-        .route(
-            PHOTON_AUTH_PATH,
-            post(photon_auth)
-                .with_state(Arc::clone(&app_state))
-                .layer(Extension(Arc::clone(&user_service))),
-        )
+        .route(LOGOUT_AUTH_PATH, post(logout))
+        .route(PHOTON_AUTH_PATH, post(photon_auth))
+        .with_state(login_state_service)
 }
 
 pub async fn refresh_token(
@@ -110,7 +95,8 @@ pub async fn register(
 }
 
 pub async fn login(
-    State(login_service): State<Arc<LoginStateService>>,
+    State(user_service): State<Arc<UserService>>,
+    State(game_service): State<Arc<GameService>>,
     params: Option<Query<ParamsAuthenticate>>,
     payload: Result<Json<UserJsonBody<LoginSchema>>, JsonRejection>,
 ) -> Result<Response, AuthError> {
@@ -122,8 +108,7 @@ pub async fn login(
         })?;
 
         if let Some(game_version) = params.game_version.as_ref() {
-            login_service
-                .game_service
+            game_service
                 .verify_game_version(game_version.as_str())
                 .await?;
         }
@@ -140,8 +125,7 @@ pub async fn login(
 
     match &payload.user {
         LoginSchema::Default(user) => {
-            let (_user_data, cookie_jar) = login_service
-                .user_service
+            let cookie_jar = user_service
                 .login(user.email.as_str(), user.password.as_str())
                 .await?;
             let response = json!({"success": true, "message": "Successfully logged in"});
@@ -156,7 +140,7 @@ pub async fn login(
 
 pub async fn photon_auth(
     State(_app_state): State<Arc<AppState>>,
-    Extension(user_service): Extension<Arc<UserService>>,
+    State(user_service): State<Arc<UserService>>,
     payload: Result<Json<RequestPhotonAuth>, JsonRejection>,
 ) -> Result<Response, PhotonAuthError> {
     let Json(payload) = payload?;
@@ -196,7 +180,9 @@ pub async fn photon_auth(
 pub async fn logout(
     State(state): State<Arc<AppState>>,
     cookie_jar: CookieJar,
+    auth_user: Result<AuthenticatedUser, AuthError>,
 ) -> Result<impl IntoResponse, AuthError> {
+    let _ = auth_user?;
     let cookie_jar = delete_session(Arc::clone(&state), cookie_jar).await?;
     let response = json!({"success": true, "message": "Successfully logged out"});
     Ok((StatusCode::OK, cookie_jar, Json(response)))

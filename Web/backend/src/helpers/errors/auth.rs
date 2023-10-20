@@ -1,4 +1,5 @@
 use crate::controllers::auth::AuthFormatType;
+use crate::helpers::errors::user::UserServiceError;
 use crate::service::game::GameServiceError;
 use anyhow::anyhow;
 use axum::extract::rejection::{JsonRejection, QueryRejection};
@@ -8,31 +9,6 @@ use axum::response::Response;
 use axum::Json;
 use serde_json::json;
 use thiserror::Error;
-
-#[derive(Debug, Error)]
-pub enum ApiError {
-    #[error(transparent)]
-    ValidationError(#[from] anyhow::Error),
-    #[error(transparent)]
-    JsonExtractorRejection(#[from] JsonRejection),
-}
-
-impl IntoResponse for ApiError {
-    fn into_response(self) -> Response {
-        let (status, message) = match self {
-            ApiError::ValidationError(err) => (StatusCode::UNPROCESSABLE_ENTITY, err.to_string()),
-            ApiError::JsonExtractorRejection(json_rejection) => {
-                (json_rejection.status(), json_rejection.to_string())
-            }
-        };
-
-        let payload = json!({
-            "message": message,
-        });
-
-        (status, Json(payload)).into_response()
-    }
-}
 
 #[derive(Debug, Error)]
 pub enum AuthError {
@@ -66,54 +42,76 @@ pub enum AuthError {
 
 impl IntoResponse for AuthError {
     fn into_response(self) -> Response {
-        let (status, message) = match self {
+        match self {
             AuthError::InvalidUsernameOrPassword => (
                 StatusCode::UNAUTHORIZED,
-                "Invalid username or password".to_string(),
-            ),
-            AuthError::Unauthorized => {
-                (StatusCode::UNAUTHORIZED, "Unauthorized access".to_string())
-            }
+                Json(json!({"message": "Invalid username or password"})),
+            )
+                .into_response(),
+            AuthError::Unauthorized => (
+                StatusCode::UNAUTHORIZED,
+                Json(json!({"message": "Unauthorized access"})),
+            )
+                .into_response(),
+
             AuthError::UnknownTokenFormat => (
                 StatusCode::UNPROCESSABLE_ENTITY,
-                "Unknown format of token".to_string(),
-            ),
-            AuthError::UserRegistered => {
-                (StatusCode::CONFLICT, "User already registered".to_string())
-            }
+                Json(json!({"message": "Unknown format of token"})),
+            )
+                .into_response(),
+            AuthError::UserRegistered => (
+                StatusCode::CONFLICT,
+                Json(json!({"message": "User already registered"})),
+            )
+                .into_response(),
             AuthError::UnableCreateSession => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal Server Error".to_string(),
-            ),
+                Json(json!({"message": "Internal Server Error"})),
+            )
+                .into_response(),
             AuthError::DatabaseError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal Server Error".to_string(),
-            ),
+                Json(json!({"message": "Internal Server Error"})),
+            )
+                .into_response(),
             AuthError::Unknown => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal Server Error".to_string(),
-            ),
-            AuthError::Other(error) => (StatusCode::INTERNAL_SERVER_ERROR, error.to_string()),
+                Json(json!({"message": "Internal Server Error"})),
+            )
+                .into_response(),
+            AuthError::Other(error) => {
+                tracing::error!("Got an error: {}", error.to_string());
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({"message": "Internal Server Error"})),
+                )
+                    .into_response()
+            }
             AuthError::JsonExtractorRejection(json_rejection) => {
-                (json_rejection.status(), json_rejection.to_string())
+                let payload = json!({"message": json_rejection.to_string()});
+                (json_rejection.status(), Json(payload)).into_response()
             }
-            AuthError::UserNotExist => {
-                (StatusCode::UNAUTHORIZED, "User does not exist.".to_string())
-            }
-            AuthError::OutdatedGameVersion => {
-                (StatusCode::FORBIDDEN, "Outdated game version.".to_string())
-            }
-            AuthError::InvalidGameVersion => {
-                (StatusCode::FORBIDDEN, "Invalid game version.".to_string())
-            }
+            AuthError::UserNotExist => (
+                StatusCode::UNAUTHORIZED,
+                Json(json!({"message": "User does not exist."})),
+            )
+                .into_response(),
+            AuthError::OutdatedGameVersion => (
+                StatusCode::FORBIDDEN,
+                Json(json!({"message": "Outdated game version."})),
+            )
+                .into_response(),
+            AuthError::InvalidGameVersion => (
+                StatusCode::FORBIDDEN,
+                Json(json!({"message": "Invalid game version."})),
+            )
+                .into_response(),
             AuthError::RedisError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal server error.".to_string(),
-            ),
-        };
-        let payload = json!({ "message": message });
-
-        (status, Json(payload)).into_response()
+                Json(json!({"message": "Internal server error."})),
+            )
+                .into_response(),
+        }
     }
 }
 
@@ -334,6 +332,17 @@ impl From<(UserServiceError, &AuthFormatType)> for AuthErrorProvider {
                     anyhow::anyhow!("Unable to parse incoming data."),
                 )),
             },
+            UserServiceError::UnexpectedError(err) => {
+                tracing::error!("Got an error: {}", err.to_string());
+                match format {
+                    AuthFormatType::Photon => {
+                        AuthErrorProvider::Photon(PhotonAuthError::Other(anyhow!("")))
+                    }
+                    AuthFormatType::Default => {
+                        AuthErrorProvider::Default(AuthError::Other(anyhow!("")))
+                    }
+                }
+            }
         }
     }
 }
@@ -382,28 +391,6 @@ impl From<(GameServiceError, &AuthFormatType)> for AuthErrorProvider {
     }
 }
 
-#[derive(Error, Debug)]
-pub enum UserServiceError {
-    #[error("Can not connect into Database.")]
-    DatabaseConnectionError,
-    #[error("User does not exist.")]
-    UserDoesNotExist,
-    #[error("Password does not match.")]
-    PasswordNotMatch,
-    #[error("Unable to create a session.")]
-    UnableCreateSession,
-    #[error("User already registered.")]
-    UserAlreadyExists,
-    #[error("Failed to hash password.")]
-    UnableHashPassword,
-    #[error("Can not connect into Redis.")]
-    RedisConnectionError,
-    #[error("Unauthorized access.")]
-    UnauthorizedAccess,
-    #[error("Unable parse incoming data")]
-    UnableToParse,
-}
-
 impl From<UserServiceError> for AuthError {
     fn from(err: UserServiceError) -> Self {
         match err {
@@ -416,6 +403,10 @@ impl From<UserServiceError> for AuthError {
             UserServiceError::RedisConnectionError => AuthError::RedisError,
             UserServiceError::UnauthorizedAccess => AuthError::Unauthorized,
             UserServiceError::UnableToParse => AuthError::Other(anyhow!("Unable to parse")),
+            UserServiceError::UnexpectedError(err) => {
+                tracing::error!("Got an error: {}", err.to_string());
+                AuthError::Unknown
+            }
         }
     }
 }
@@ -432,54 +423,10 @@ impl From<UserServiceError> for PhotonAuthError {
             UserServiceError::RedisConnectionError => PhotonAuthError::RedisError,
             UserServiceError::UnauthorizedAccess => PhotonAuthError::Unauthorized,
             UserServiceError::UnableToParse => PhotonAuthError::Other(anyhow!("Unable to parse")),
-        }
-    }
-}
-
-#[derive(Error, Debug)]
-pub enum ClassroomControllerError {
-    #[error("Unable to create classroom")]
-    UnableCreateClass,
-    #[error("Unauthorized Access")]
-    Unauthorized,
-    #[error(transparent)]
-    Other(#[from] anyhow::Error),
-    #[error(transparent)]
-    JsonRejection(#[from] JsonRejection),
-    #[error("Unknown error happened")]
-    Unknown,
-}
-
-impl IntoResponse for ClassroomControllerError {
-    fn into_response(self) -> Response {
-        let (status, message) = match self {
-            ClassroomControllerError::Unauthorized => {
-                (StatusCode::UNAUTHORIZED, "Unauthorized access!".to_string())
+            UserServiceError::UnexpectedError(err) => {
+                tracing::error!("Got an error: {}", err.to_string());
+                PhotonAuthError::Other(anyhow!(""))
             }
-            ClassroomControllerError::Other(err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
-            }
-            ClassroomControllerError::Unknown => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal server error.".to_string(),
-            ),
-            ClassroomControllerError::UnableCreateClass => (
-                StatusCode::FORBIDDEN,
-                "Forbidden to create a classroom".to_string(),
-            ),
-            ClassroomControllerError::JsonRejection(err) => (StatusCode::UNPROCESSABLE_ENTITY, err.to_string())
-        };
-        let payload = json!({"message": message});
-        (status, Json(payload)).into_response()
-    }
-}
-
-impl From<AuthError> for ClassroomControllerError {
-    fn from(err: AuthError) -> Self {
-        match err {
-            AuthError::Unauthorized => ClassroomControllerError::Unauthorized,
-            AuthError::Other(err) => ClassroomControllerError::Other(err),
-            _ => ClassroomControllerError::Unknown,
         }
     }
 }

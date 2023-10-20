@@ -7,6 +7,8 @@ use crate::controllers::user::{user_router, USER_PATH_CONTROLLER};
 use crate::r#const::{ENV_ENVIRONMENT, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 use crate::service::classroom::ClassroomService;
 use crate::service::game::GameService;
+use crate::service::subject::SubjectService;
+use crate::service::teacher::TeacherService;
 use crate::service::user::UserService;
 use axum::error_handling::HandleErrorLayer;
 use axum::http::StatusCode;
@@ -28,6 +30,7 @@ impl CorsConfig {
 }
 
 pub async fn create_router(app_state: Arc<AppState>) -> Router {
+    #![allow(clippy::panic)]
     let cors = match std::env::var(ENV_ENVIRONMENT) {
         Ok(env) => {
             if ENV_ENVIRONMENT_PRODUCTION == env.as_str() {
@@ -55,7 +58,12 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
 
     let game_service = Arc::new(GameService::new(Arc::clone(&app_state)));
     let user_service = Arc::new(UserService::new(Arc::clone(&app_state)));
-    let classroom_service = Arc::new(ClassroomService::new(Arc::clone(&app_state)));
+    let subject_service = Arc::new(SubjectService::new(Arc::clone(&app_state)));
+    let classroom_service = Arc::new(ClassroomService::new(
+        Arc::clone(&app_state),
+        Arc::clone(&subject_service),
+    ));
+    let teacher_service = Arc::new(TeacherService::new(Arc::clone(&app_state)));
 
     let auth_router = auth_router(
         Arc::clone(&app_state),
@@ -68,6 +76,8 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
         Arc::clone(&app_state),
         Arc::clone(&classroom_service),
         Arc::clone(&user_service),
+        Arc::clone(&teacher_service),
+        Arc::clone(&subject_service),
     )
     .await;
 

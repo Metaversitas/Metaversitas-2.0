@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Student {
-    pub student_id: String,
-    pub user_id: String,
+pub struct Subject {
+    pub subject_id: String,
+    pub name: String,
 }
