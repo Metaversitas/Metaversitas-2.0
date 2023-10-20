@@ -1,5 +1,5 @@
 use crate::backend::AppState;
-use crate::helpers::errors::AuthError;
+use crate::helpers::errors::auth::AuthError;
 use crate::helpers::extractor::AuthenticatedUser;
 use crate::model::user::ProfileResponse;
 use crate::service::user::UserService;
@@ -7,7 +7,7 @@ use axum::extract::{FromRef, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
-use axum::{Extension, Json, Router};
+use axum::{Json, Router};
 use serde_json::json;
 use std::sync::Arc;
 

@@ -1,12 +1,12 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{COOKIE_AUTH_NAME, COOKIE_SESSION_TOKEN_NAME};
-use crate::helpers::errors::AuthError;
+use crate::helpers::errors::auth::AuthError;
 use crate::model::user::{SessionTokenClaims, UserRole, UserUniversityRole};
 use crate::service::user::UserService;
 use anyhow::anyhow;
+use axum::async_trait;
 use axum::extract::{FromRef, FromRequestParts};
 use axum::http::request::Parts;
-use axum::{async_trait, Extension, RequestPartsExt};
 use axum_extra::extract::CookieJar;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -103,7 +103,9 @@ where
             user_id: auth_user.user_id.to_owned(),
             session_id: auth_user.session_id.to_owned(),
             university_role: profile.user_univ_role,
-            user_role: user.role.unwrap(),
+            user_role: user
+                .role
+                .ok_or(AuthError::Other(anyhow!("Got an empty role")))?,
         })
     }
 }

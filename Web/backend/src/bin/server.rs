@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use anyhow::Result;
 use axum_server::tls_rustls::RustlsConfig;
 use dotenvy::dotenv;
@@ -41,6 +43,10 @@ async fn main() -> Result<()> {
         redis_uri_scheme, &config.redis_host_name, &config.redis_port
     );
     let redis_client = redis::Client::open(redis_conn_url).unwrap();
+    let _ = redis_client
+        .get_async_connection()
+        .await
+        .expect("Unable to connect with redis");
 
     let ssl_config = RustlsConfig::from_pem_file(
         std::env::current_dir()

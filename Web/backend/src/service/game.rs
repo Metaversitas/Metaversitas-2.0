@@ -1,5 +1,5 @@
 use crate::backend::AppState;
-use crate::helpers::errors::AuthError;
+use crate::helpers::errors::auth::AuthError;
 use redis::{AsyncCommands, Value};
 use std::sync::Arc;
 use thiserror::Error;
