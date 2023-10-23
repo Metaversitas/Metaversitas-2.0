@@ -61,6 +61,10 @@ namespace GameUI.Intro
                     // Sesuaikan dengan map yang sesuai
                     props.StartMap = MapIndex.Museum;
                     break;
+                case PlayMode.Malioboro:
+                    // Sesuaikan dengan map yang sesuai
+                    props.StartMap = MapIndex.Malioboro;
+                    break;
             }
             props.PlayMode = _playMode;
 			props.RoomName = _inputName.text;

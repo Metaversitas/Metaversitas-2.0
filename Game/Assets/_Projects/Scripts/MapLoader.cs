@@ -12,6 +12,7 @@ public enum MapIndex {
 	LabFisika,
 	Borobudur,
 	Museum,
+    Malioboro,
 };
 
 /// <summary>
@@ -33,6 +34,7 @@ public class MapLoader : NetworkSceneManagerBase
 	[SerializeField] private SceneReference _borobudur;
     [SerializeField] private SceneReference _gameOver;
 	[SerializeField] private SceneReference[] _maps;
+	[SerializeField] private SceneReference _malioboro;
 
 	private void Awake()
 	{
@@ -68,10 +70,13 @@ public class MapLoader : NetworkSceneManagerBase
             case MapIndex.Borobudur: 
 	            path = _borobudur; 
 	            break;
+            case MapIndex.Malioboro:
+				path = _malioboro;
+                break;
 			case MapIndex.HomePage:
 				path = _homePage;
 				break;
-			default: 
+            default: 
 				path = ""; 
 				break;
 		}	

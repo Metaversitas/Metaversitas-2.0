@@ -35,5 +35,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Projects/Scenes/HomeMenu.unity
     guid: f60a315c2ede6b04ab7b913ba8490cb5
+  - enabled: 1
+    path: Assets/_Projects/Scenes/Malioboro.unity
+    guid: 46307e3dc1b61b748b295453c872eece
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: da942947bfe4358449c3ec9beb47801a, type: 2}

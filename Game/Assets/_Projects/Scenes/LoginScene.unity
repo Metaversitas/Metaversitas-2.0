@@ -4717,6 +4717,7 @@ MonoBehaviour:
   _inputName: {fileID: 687434252658141984}
   _inputPass: {fileID: 0}
   _allowLateJoin: {fileID: 687434254183075241}
+  _pertemuan: {fileID: 0}
 --- !u!224 &687434254305367195
 RectTransform:
   m_ObjectHideFlags: 0
