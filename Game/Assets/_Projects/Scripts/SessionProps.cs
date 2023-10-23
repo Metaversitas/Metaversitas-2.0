@@ -21,6 +21,7 @@ public class SessionProps
 	public PlayMode PlayMode;
 	public MapIndex StartMap;
 	public bool AllowLateJoin;
+	public string RoomPertemuan;
 
 	/// <summary>
 	/// Support code that allow conversion of the above fields to and from the SessionProperty dictionary needed by Fusion
