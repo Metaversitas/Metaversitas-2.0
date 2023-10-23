@@ -25,6 +25,9 @@ public class QuizInteract : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (_playerStateManager.CurrentGameState == GameState.Intro)
+            return;
+
         if (Input.GetKeyDown(KeyCode.Q))
         {
             if(_playerStateManager.CurrentGameState == GameState.Play){

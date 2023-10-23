@@ -16,6 +16,8 @@ public class CursorLock : MonoBehaviour
 
     private void Update()
     {
+        if (_playerStateManager.CurrentGameState == GameState.Intro)
+            return;
         if (Input.GetKeyDown(KeyCode.Escape))
             ToggleCursorLock();
         else if (_playerStateManager.CurrentGameState == GameState.Play)

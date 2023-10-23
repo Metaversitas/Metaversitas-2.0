@@ -208,6 +208,9 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
             chatClient.Service();
             
         }
+        if (_playerStateManager.CurrentGameState == GameState.Intro)
+            return;
+
         if (Input.GetKeyDown(KeyCode.Return) && !privMessage)
         {
             if (!isChating)
