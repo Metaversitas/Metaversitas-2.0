@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,10 +9,12 @@ namespace GameUI.Intro
 		[SerializeField] private InputField _inputName;
 		[SerializeField] private InputField _inputPass;
 		[SerializeField] private Toggle _allowLateJoin;
+		[SerializeField] private TMP_Dropdown _pertemuan;
 
 		private PlayMode _playMode;
+        private int _pickedEntryIndex;
 
-		public void Show(PlayMode mode)
+        public void Show(PlayMode mode)
 		{
 			gameObject.SetActive(true);
 			_playMode = mode;
@@ -34,6 +37,12 @@ namespace GameUI.Intro
 				_inputName.text = "Room1";
 		}
 		
+		public void GetDropdownValue()
+		{
+            _pickedEntryIndex = _pertemuan.value;
+
+		}
+
 		public void OnCreateSession()
 		{
 			SessionProps props = new SessionProps();
@@ -57,6 +66,8 @@ namespace GameUI.Intro
 			props.RoomName = _inputName.text;
 			props.RoomPass = _inputPass.text;
 			props.AllowLateJoin = _allowLateJoin.isOn;
+			props.RoomPertemuan = _pertemuan.options[_pickedEntryIndex].text;
+			
 			
 			// Pass the session properties to the app - this will unload the current scene and load the staging area if successful
 			App.FindInstance().CreateSession(props);
