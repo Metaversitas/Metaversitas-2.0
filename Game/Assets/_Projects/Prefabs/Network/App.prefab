@@ -1033,6 +1033,11 @@ MonoBehaviour:
     scenePath: Assets/_Projects/Scenes/Borobudur.unity
   - sceneAsset: {fileID: 102900000, guid: 1d89df3424c5d654f8ece730a10e9de9, type: 3}
     scenePath: Assets/_Projects/Scenes/Museum.unity
+  - sceneAsset: {fileID: 102900000, guid: 46307e3dc1b61b748b295453c872eece, type: 3}
+    scenePath: Assets/_Projects/Scenes/Malioboro.unity
+  _malioboro:
+    sceneAsset: {fileID: 102900000, guid: 46307e3dc1b61b748b295453c872eece, type: 3}
+    scenePath: Assets/_Projects/Scenes/Malioboro.unity
 --- !u!114 &6274724183888813008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1062,6 +1067,7 @@ MonoBehaviour:
     PlayMode: 0
     StartMap: 0
     AllowLateJoin: 0
+    RoomPertemuan: 
   networkRunnerPrefab: {fileID: 3866670711834171497, guid: 64ee52ea8662e5442a03d27e618a7787, type: 3}
   FpsCamera: {fileID: 0}
   userManager: {fileID: 0}
