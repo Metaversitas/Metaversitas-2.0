@@ -8,7 +8,7 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 pub struct StudentService {
-    pub app_state: Arc<AppState>,
+    app_state: Arc<AppState>,
 }
 
 impl StudentService {

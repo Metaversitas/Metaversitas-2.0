@@ -12,7 +12,7 @@ use redis::{AsyncCommands, JsonAsyncCommands};
 use std::sync::Arc;
 
 pub struct UserService {
-    pub app_state: Arc<AppState>,
+    app_state: Arc<AppState>,
 }
 
 const DEFAULT_TIME_CACHE_EXIST: time::Duration = time::Duration::minutes(30);

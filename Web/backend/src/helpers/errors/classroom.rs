@@ -20,6 +20,18 @@ pub enum ClassroomServiceError {
 
 #[derive(Error, Debug)]
 pub enum ClassroomControllerError {
+    #[error("Student has a schedule that conflict.")]
+    StudentHasScheduleConflict,
+    #[error("Classroom is not exists")]
+    ClassroomIsNotExists,
+    #[error("Student isn't exists")]
+    StudentIsNotExists,
+    #[error("Classroom already full")]
+    ClassroomFull,
+    #[error("Student already enrolled")]
+    StudentAlreadyEnrolled,
+    #[error("Lecturer can't enroll classes")]
+    LecturerNotAbleToEnroll,
     #[error("Unable to create classroom")]
     UnableCreateClass,
     #[error("Unauthorized Access")]
@@ -28,6 +40,12 @@ pub enum ClassroomControllerError {
     Other(#[from] anyhow::Error),
     #[error(transparent)]
     JsonRejection(#[from] JsonRejection),
+    #[error(transparent)]
+    ClassroomServiceError(#[from] ClassroomServiceError),
+    #[error(transparent)]
+    SubjectServiceError(#[from] SubjectServiceError),
+    #[error(transparent)]
+    TeacherServiceError(#[from] TeacherServiceError),
     #[error("Unknown error happened")]
     Unknown,
 }
@@ -40,7 +58,10 @@ impl IntoResponse for ClassroomControllerError {
             }
             ClassroomControllerError::Other(err) => {
                 tracing::error!("{}", err.to_string());
-                (StatusCode::INTERNAL_SERVER_ERROR, "".to_string())
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Internal Server Error".to_string(),
+                )
             }
             ClassroomControllerError::Unknown => (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -53,6 +74,41 @@ impl IntoResponse for ClassroomControllerError {
             ClassroomControllerError::JsonRejection(err) => {
                 (StatusCode::UNPROCESSABLE_ENTITY, err.to_string())
             }
+            ClassroomControllerError::LecturerNotAbleToEnroll => (
+                StatusCode::FORBIDDEN,
+                "Lecturer should not be able to enroll a class without being pointed.".to_string(),
+            ),
+            ClassroomControllerError::StudentAlreadyEnrolled => (
+                StatusCode::FORBIDDEN,
+                "Student already enrolled!".to_string(),
+            ),
+            ClassroomControllerError::ClassroomFull => {
+                (StatusCode::FORBIDDEN, "Classroom already full!".to_string())
+            }
+            ClassroomControllerError::StudentIsNotExists => {
+                (StatusCode::FORBIDDEN, "Student is not exists.".to_string())
+            }
+            ClassroomControllerError::ClassroomIsNotExists => (
+                StatusCode::FORBIDDEN,
+                "Classroom is not exists.".to_string(),
+            ),
+            ClassroomControllerError::StudentHasScheduleConflict => (
+                StatusCode::FORBIDDEN,
+                "Student already have a schedule that conflict with current requested class."
+                    .to_string(),
+            ),
+            ClassroomControllerError::ClassroomServiceError(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal server error.".to_string(),
+            ),
+            ClassroomControllerError::SubjectServiceError(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal server error.".to_string(),
+            ),
+            ClassroomControllerError::TeacherServiceError(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal server error.".to_string(),
+            ),
         };
         let payload = json!({"message": message});
         (status, Json(payload)).into_response()
@@ -65,43 +121,6 @@ impl From<AuthError> for ClassroomControllerError {
             AuthError::Unauthorized => ClassroomControllerError::Unauthorized,
             AuthError::Other(err) => ClassroomControllerError::Other(err),
             _ => ClassroomControllerError::Unknown,
-        }
-    }
-}
-
-impl From<ClassroomServiceError> for ClassroomControllerError {
-    fn from(err: ClassroomServiceError) -> Self {
-        match err {
-            ClassroomServiceError::UnauthorizedStudent => ClassroomControllerError::Unauthorized,
-            ClassroomServiceError::UnexpectedError(err) => {
-                ClassroomControllerError::Other(anyhow!("{}", err.to_string()))
-            }
-        }
-    }
-}
-
-impl From<TeacherServiceError> for ClassroomControllerError {
-    fn from(err: TeacherServiceError) -> Self {
-        match err {
-            TeacherServiceError::UuidParseFailed(err) => {
-                ClassroomControllerError::Other(anyhow!("{}", err.to_string()))
-            }
-            TeacherServiceError::UnexpectedError(err) => {
-                ClassroomControllerError::Other(anyhow!("{}", err.to_string()))
-            }
-        }
-    }
-}
-
-impl From<SubjectServiceError> for ClassroomServiceError {
-    fn from(err: SubjectServiceError) -> Self {
-        match err {
-            SubjectServiceError::NotFound => {
-                ClassroomServiceError::UnexpectedError(anyhow!("Not found any subject"))
-            }
-            SubjectServiceError::UnexpectedError(err) => {
-                ClassroomServiceError::UnexpectedError(anyhow!("{}", err.to_string()))
-            }
         }
     }
 }

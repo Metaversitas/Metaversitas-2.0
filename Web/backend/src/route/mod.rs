@@ -7,6 +7,7 @@ use crate::controllers::user::{user_router, USER_PATH_CONTROLLER};
 use crate::r#const::{ENV_ENVIRONMENT, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 use crate::service::classroom::ClassroomService;
 use crate::service::game::GameService;
+use crate::service::student::StudentService;
 use crate::service::subject::SubjectService;
 use crate::service::teacher::TeacherService;
 use crate::service::user::UserService;
@@ -64,6 +65,7 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
         Arc::clone(&subject_service),
     ));
     let teacher_service = Arc::new(TeacherService::new(Arc::clone(&app_state)));
+    let student_service = Arc::new(StudentService::new(Arc::clone(&app_state)));
 
     let auth_router = auth_router(
         Arc::clone(&app_state),
@@ -78,6 +80,7 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
         Arc::clone(&user_service),
         Arc::clone(&teacher_service),
         Arc::clone(&subject_service),
+        Arc::clone(&student_service),
     )
     .await;
 
