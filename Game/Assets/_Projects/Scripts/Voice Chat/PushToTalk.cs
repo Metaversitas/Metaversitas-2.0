@@ -12,25 +12,25 @@ public class PushToTalk : MonoBehaviour
 
     [SerializeField] private GameObject settingVoice;
     // private _speakingIndicator _speakingIndicator;
-    // Start is called before the first frame update
+
+
     void Awake()
     {
         if (_recorder == null)
             _recorder = GetComponent<Recorder>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         /*if (settingVoice.activeSelf == true)
         {*/
-            ActivatePushToTalk();
+        ActivatePushToTalk();
         /*}
         else
         {
             DeactivatePushToTalk();
         }*/
-        
+
     }
 
     public void ActivatePushToTalk()

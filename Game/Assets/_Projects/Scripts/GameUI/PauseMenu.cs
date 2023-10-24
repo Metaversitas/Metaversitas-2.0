@@ -20,6 +20,9 @@ public class PauseMenu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (_playerStateManager.CurrentGameState == GameState.Intro)
+            return;
+
         if (_playerStateManager.CurrentGameState == GameState.Pause)
         {
             _pauseMenu.SetActive(true);

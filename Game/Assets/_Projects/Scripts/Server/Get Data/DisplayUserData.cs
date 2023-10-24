@@ -1,6 +1,7 @@
 using Metaversitas.User;
 using UnityEngine;
 using TMPro;
+using System;
 
 public class DisplayUserData : MonoBehaviour
 {
@@ -15,8 +16,18 @@ public class DisplayUserData : MonoBehaviour
     {
         app = App.FindInstance();
 
-        // Get the user data.
-        UserData userData = app.get_userManager().get_userData();
+        // Try to get the user data.
+        UserData userData;
+        try
+        {
+            userData = app.get_userManager().get_userData();
+        }
+        catch (Exception e)
+        {
+            // Handle the exception.
+            Debug.Log(e.Message);
+            return;
+        }
 
         // Convert the user data to TMPro.TMP_Text objects.
         fullName.SetText(userData.get_fullName());

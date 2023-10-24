@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,15 +8,13 @@ namespace GameUI.Intro
 	{
 		[SerializeField] private InputField _inputName;
 		[SerializeField] private InputField _inputPass;
-/*		[SerializeField] private Text _textMaxPlayers;
-		[SerializeField] private Toggle _toggleMap1;
-		[SerializeField] private Toggle _toggleMap2;*/
 		[SerializeField] private Toggle _allowLateJoin;
-		
-		/*private int _maxPly = 4;*/
-		private PlayMode _playMode;
+		[SerializeField] private TMP_Dropdown _pertemuan;
 
-		public void Show(PlayMode mode)
+		private PlayMode _playMode;
+        private int _pickedEntryIndex;
+
+        public void Show(PlayMode mode)
 		{
 			gameObject.SetActive(true);
 			_playMode = mode;
@@ -27,19 +26,6 @@ namespace GameUI.Intro
 			gameObject.SetActive(false);
 		}
 
-		/*public void OnDecreaseMaxPlayers()
-		{
-			if(_maxPly>2)
-				_maxPly--;
-			UpdateUI();
-		}
-		public void OnIncreaseMaxPlayers()
-		{
-			if(_maxPly<16)
-				_maxPly++;
-			UpdateUI();
-		}*/
-
 		public void OnEditText()
 		{
 			UpdateUI();
@@ -47,13 +33,16 @@ namespace GameUI.Intro
 
 		private void UpdateUI()
 		{
-			/*_textMaxPlayers.text = $"Max Players: {_maxPly}";
-			if(!_toggleMap1.isOn && !_toggleMap2.isOn)
-				_toggleMap1.isOn = true;*/
 			if(string.IsNullOrWhiteSpace(_inputName.text))
 				_inputName.text = "Room1";
 		}
 		
+		public void GetDropdownValue()
+		{
+            _pickedEntryIndex = _pertemuan.value;
+
+		}
+
 		public void OnCreateSession()
 		{
 			SessionProps props = new SessionProps();
@@ -72,13 +61,17 @@ namespace GameUI.Intro
                     // Sesuaikan dengan map yang sesuai
                     props.StartMap = MapIndex.Museum;
                     break;
+                case PlayMode.Malioboro:
+                    // Sesuaikan dengan map yang sesuai
+                    props.StartMap = MapIndex.Malioboro;
+                    break;
             }
-            //props.StartMap = _toggleMap1.isOn ? MapIndex.Museum : MapIndex.Map1;
             props.PlayMode = _playMode;
-			//props.PlayerLimit = _maxPly;
 			props.RoomName = _inputName.text;
 			props.RoomPass = _inputPass.text;
 			props.AllowLateJoin = _allowLateJoin.isOn;
+			props.RoomPertemuan = _pertemuan.options[_pickedEntryIndex].text;
+			
 			
 			// Pass the session properties to the app - this will unload the current scene and load the staging area if successful
 			App.FindInstance().CreateSession(props);

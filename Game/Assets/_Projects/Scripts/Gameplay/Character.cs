@@ -1,6 +1,8 @@
 using Fusion;
 using UnityEngine;
 using UnityEngine.UI;
+using Metaversitas.User;
+using TMPro;
 using System;
 
 /// <summary>
@@ -11,7 +13,7 @@ using System;
 
 public class Character : NetworkBehaviour
 {
-	[SerializeField] private Text _name;
+	[SerializeField] private TMP_Text _name;
 	[SerializeField] private Animator _animator;
 	[SerializeField] private CharacterInteraction _interaction;
     [SerializeField] private PlayerStateManager _playerStateManager;
@@ -23,6 +25,7 @@ public class Character : NetworkBehaviour
 
 	public bool cowok;
 	public string Role;
+    public App app;
 
     public float moveVelocity = 5f;
 
@@ -39,15 +42,34 @@ public class Character : NetworkBehaviour
 
     public override void Spawned()
 	{
-		_isReadInput = false;
-        _characterMovement = GetComponent<CharacterMovement>();
-        cowok = true;
-		if (HasInputAuthority)
-		{
-			Role = "Dosen";
-            // Jika boolean "cowok" adalah true
-            
+        app = App.FindInstance();
+		UserData  userData;
+		UserGender userGender;
+		UserUniversityRole role;
+        try
+        {
+            userData = app.get_userManager().get_userData();
+			userGender = app.get_userManager().get_userData().get_userGender();
+			role = app.get_userManager().get_userData().get_userRole();
         }
+        catch (Exception e)
+        {
+            // Handle the exception.
+            Debug.Log(e.Message);
+            return;
+        }
+        _isReadInput = false;
+        _characterMovement = GetComponent<CharacterMovement>();
+        _name.SetText(userData.get_inGameNickname());
+        if (userData.get_userGender() == UserGender.Male)
+		{
+			cowok = true;
+        }
+		else
+		{
+			cowok = false;
+		}
+		Role = role.ToString();
 
 		SpawnCharacterModel();
     }
@@ -91,59 +113,4 @@ public class Character : NetworkBehaviour
 		// Could use an OnChanged listener on the properties instead.
 		// _name.text = Player.Name.Value;
 	}
-
-	/*public override void FixedUpdateNetwork()
-	{
-		if (Player == null) return;
-
-		if (Player.InputEnabled && GetInput(out InputData data))
-		{
-            _isReadInput = true;
-
-			if (data.GetButton(ButtonFlag.LEFT))
-            {
-				transform.position -= Runner.DeltaTime * moveVelocity * transform.right;
-				xMovement = -1;
-			} 
-			else if (data.GetButton(ButtonFlag.RIGHT))
-            {
-				transform.position += Runner.DeltaTime * moveVelocity * transform.right;
-				xMovement = 1;
-			} 
-			else if (data.GetButton(ButtonFlag.FORWARD))
-            {
-				transform.position += Runner.DeltaTime * moveVelocity * transform.forward;
-				yMovement = 1;
-			} 
-			else if (data.GetButton(ButtonFlag.BACKWARD))
-            {
-				transform.position -= Runner.DeltaTime * moveVelocity * transform.forward;
-				yMovement = -1;
-			}
-			else // No input
-			{
-				_isReadInput = false;
-				xMovement = 0;
-				yMovement = 0;
-			}
-
-			yCamRotation += data.YCamRotation;
-		}
-
-        transform.rotation = Quaternion.Euler(0, (float)yCamRotation, 0);
-	}
-
-    public override void Render()
-    {
-		if(_isReadInput)
-        {
-			_animator.SetFloat("xMovement", xMovement);
-			_animator.SetFloat("yMovement", yMovement);
-        }
-        else
-		{
-			_animator.SetFloat("xMovement", 0);
-            _animator.SetFloat("yMovement", 0);
-        }
-    }*/
 }
