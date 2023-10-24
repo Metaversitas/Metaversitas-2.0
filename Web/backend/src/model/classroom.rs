@@ -4,6 +4,17 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone, FromRedisValue)]
 pub struct Classroom {
     pub is_active: bool,
+    pub name: String,
+    pub description: String,
+    pub class_id: String,
+    pub subject_id: String,
+    pub subject_name: String,
+    pub start_time: String,
+    pub end_time: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreatedClassroom {
     pub class_id: String,
     pub subject_id: String,
     pub subject_name: String,
@@ -27,6 +38,8 @@ pub struct CreateClassroomParams {
     pub subject_name: Option<String>,
     pub students: Option<Vec<String>>,
     pub teachers: Option<Vec<String>>,
+    pub name: String,
+    pub description: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -49,4 +62,9 @@ pub struct UpdateClassroomParams {
     pub subject_name: Option<String>,
     pub students: Option<ActionType>,
     pub teachers: Option<ActionType>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DeleteClassroomParams {
+    pub class_ids: Vec<String>,
 }

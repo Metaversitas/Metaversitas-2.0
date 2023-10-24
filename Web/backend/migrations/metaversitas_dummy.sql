@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 15.4 (Debian 15.4-2.pgdg120+1)
--- Dumped by pg_dump version 15.4
+-- Dumped by pg_dump version 16.0
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -17,27 +17,11 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
---
-
-CREATE SCHEMA public;
-
-
-ALTER SCHEMA public OWNER TO pg_database_owner;
-
---
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: pg_database_owner
---
-
-COMMENT ON SCHEMA public IS 'standard public schema';
-
-
---
 -- Name: email_address; Type: DOMAIN; Schema: public; Owner: admin
 --
 
 CREATE DOMAIN public.email_address AS text
-	CONSTRAINT valid_email_format CHECK ((VALUE ~* '^(?:[^<>()\[\]\\.,;:\s@"]+(?:\.[^<>()\[\]\\.,;:\s@"]+)*|".+")@((?:\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(?:[a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,})$'::text));
+    CONSTRAINT valid_email_format CHECK ((VALUE ~* '^(?:[^<>()\[\]\\.,;:\s@"]+(?:\.[^<>()\[\]\\.,;:\s@"]+)*|".+")@((?:\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(?:[a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,})$'::text));
 
 
 ALTER DOMAIN public.email_address OWNER TO admin;
@@ -47,7 +31,7 @@ ALTER DOMAIN public.email_address OWNER TO admin;
 --
 
 CREATE DOMAIN public.ethereum_addresses AS text
-	CONSTRAINT valid_ethereum_address CHECK ((VALUE ~* '^0x[a-fA-F0-9]{40}$'::text));
+    CONSTRAINT valid_ethereum_address CHECK ((VALUE ~* '^0x[a-fA-F0-9]{40}$'::text));
 
 
 ALTER DOMAIN public.ethereum_addresses OWNER TO admin;
@@ -60,7 +44,7 @@ CREATE TYPE public.question_levels AS ENUM (
     'easy',
     'medium',
     'hard'
-);
+    );
 
 
 ALTER TYPE public.question_levels OWNER TO admin;
@@ -73,7 +57,7 @@ CREATE TYPE public.question_types AS ENUM (
     'choice',
     'descriptive',
     'table'
-);
+    );
 
 
 ALTER TYPE public.question_types OWNER TO admin;
@@ -83,7 +67,7 @@ ALTER TYPE public.question_types OWNER TO admin;
 --
 
 CREATE DOMAIN public.user_role AS text
-	CONSTRAINT user_role_check CHECK ((VALUE = ANY (ARRAY['administrator'::text, 'staff'::text, 'user'::text])));
+    CONSTRAINT user_role_check CHECK ((VALUE = ANY (ARRAY['administrator'::text, 'staff'::text, 'user'::text])));
 
 
 ALTER DOMAIN public.user_role OWNER TO admin;
@@ -93,7 +77,7 @@ ALTER DOMAIN public.user_role OWNER TO admin;
 --
 
 CREATE DOMAIN public.user_university_role AS text
-	CONSTRAINT user_university_role_check CHECK ((VALUE = ANY (ARRAY['dosen'::text, 'mahasiswa'::text])));
+    CONSTRAINT user_university_role_check CHECK ((VALUE = ANY (ARRAY['dosen'::text, 'mahasiswa'::text])));
 
 
 ALTER DOMAIN public.user_university_role OWNER TO admin;
@@ -103,7 +87,7 @@ ALTER DOMAIN public.user_university_role OWNER TO admin;
 --
 
 CREATE DOMAIN public.users_identity_gender AS text
-	CONSTRAINT user_identity_gender_check CHECK ((VALUE = ANY (ARRAY['male'::text, 'female'::text])));
+    CONSTRAINT user_identity_gender_check CHECK ((VALUE = ANY (ARRAY['male'::text, 'female'::text])));
 
 
 ALTER DOMAIN public.users_identity_gender OWNER TO admin;
@@ -117,79 +101,24 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public._sqlx_migrations (
-    version bigint NOT NULL,
-    description text NOT NULL,
-    installed_on timestamp with time zone DEFAULT now() NOT NULL,
-    success boolean NOT NULL,
-    checksum bytea NOT NULL,
-    execution_time bigint NOT NULL
+                                         version bigint NOT NULL,
+                                         description text NOT NULL,
+                                         installed_on timestamp with time zone DEFAULT now() NOT NULL,
+                                         success boolean NOT NULL,
+                                         checksum bytea NOT NULL,
+                                         execution_time bigint NOT NULL
 );
 
 
 ALTER TABLE public._sqlx_migrations OWNER TO admin;
 
 --
--- Name: answered_tables; Type: TABLE; Schema: public; Owner: admin
---
-
-CREATE TABLE public.answered_tables (
-    answered_table_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    answer_id uuid DEFAULT gen_random_uuid() NOT NULL
-);
-
-
-ALTER TABLE public.answered_tables OWNER TO admin;
-
---
--- Name: answered_tables_cells; Type: TABLE; Schema: public; Owner: admin
---
-
-CREATE TABLE public.answered_tables_cells (
-    cell_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    table_row_id uuid NOT NULL,
-    column_name text NOT NULL,
-    value text NOT NULL
-);
-
-
-ALTER TABLE public.answered_tables_cells OWNER TO admin;
-
---
--- Name: answered_tables_rows; Type: TABLE; Schema: public; Owner: admin
---
-
-CREATE TABLE public.answered_tables_rows (
-    answered_table_row_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    answered_table_id uuid NOT NULL
-);
-
-
-ALTER TABLE public.answered_tables_rows OWNER TO admin;
-
---
--- Name: answers; Type: TABLE; Schema: public; Owner: admin
---
-
-CREATE TABLE public.answers (
-    answer_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid NOT NULL,
-    question_id uuid NOT NULL,
-    choice_answer_id uuid,
-    text_answer text,
-    table_answer_id uuid
-);
-
-
-ALTER TABLE public.answers OWNER TO admin;
-
---
 -- Name: blockchain_authentication; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.blockchain_authentication (
-    blockchain_auth_id integer NOT NULL,
-    public_address public.ethereum_addresses NOT NULL,
-    nonce integer DEFAULT 0 NOT NULL
+                                                  blockchain_auth_id integer NOT NULL,
+                                                  public_address public.ethereum_addresses NOT NULL
 );
 
 
@@ -206,30 +135,44 @@ ALTER TABLE public.blockchain_authentication ALTER COLUMN blockchain_auth_id ADD
     NO MINVALUE
     NO MAXVALUE
     CACHE 1
-);
+    );
 
 
 --
--- Name: choices; Type: TABLE; Schema: public; Owner: admin
+-- Name: class_grades; Type: TABLE; Schema: public; Owner: admin
 --
 
-CREATE TABLE public.choices (
-    choice_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    question_id uuid NOT NULL,
-    choice_text text NOT NULL,
-    is_correct boolean NOT NULL
+CREATE TABLE public.class_grades (
+                                     grade_id uuid NOT NULL,
+                                     student_id uuid NOT NULL,
+                                     class_id uuid NOT NULL,
+                                     grade_value numeric(5,2) NOT NULL
 );
 
 
-ALTER TABLE public.choices OWNER TO admin;
+ALTER TABLE public.class_grades OWNER TO admin;
+
+--
+-- Name: class_schedule; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.class_schedule (
+                                       schedule_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                       class_id uuid NOT NULL,
+                                       start_time timestamp with time zone NOT NULL,
+                                       end_time timestamp with time zone
+);
+
+
+ALTER TABLE public.class_schedule OWNER TO admin;
 
 --
 -- Name: class_students; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.class_students (
-    class_id uuid NOT NULL,
-    student_id uuid NOT NULL
+                                       class_id uuid NOT NULL,
+                                       student_id uuid NOT NULL
 );
 
 
@@ -240,8 +183,8 @@ ALTER TABLE public.class_students OWNER TO admin;
 --
 
 CREATE TABLE public.class_teachers (
-    class_id uuid NOT NULL,
-    teacher_id uuid NOT NULL
+                                       class_id uuid NOT NULL,
+                                       teacher_id uuid NOT NULL
 );
 
 
@@ -252,9 +195,12 @@ ALTER TABLE public.class_teachers OWNER TO admin;
 --
 
 CREATE TABLE public.classes (
-    class_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    subject_id uuid NOT NULL,
-    is_active boolean NOT NULL
+                                class_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                subject_id uuid NOT NULL,
+                                is_active boolean NOT NULL,
+                                name text NOT NULL,
+                                description text NOT NULL,
+                                capacity integer NOT NULL
 );
 
 
@@ -265,11 +211,11 @@ ALTER TABLE public.classes OWNER TO admin;
 --
 
 CREATE TABLE public.exam_sessions (
-    session_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    exam_id uuid NOT NULL,
-    user_id uuid NOT NULL,
-    start_time timestamp with time zone NOT NULL,
-    end_time timestamp with time zone NOT NULL
+                                      session_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                      exam_id uuid NOT NULL,
+                                      user_id uuid NOT NULL,
+                                      start_time timestamp with time zone NOT NULL,
+                                      end_time timestamp with time zone NOT NULL
 );
 
 
@@ -280,11 +226,11 @@ ALTER TABLE public.exam_sessions OWNER TO admin;
 --
 
 CREATE TABLE public.exam_settings (
-    exam_id uuid NOT NULL,
-    passing_score numeric(5,2) NOT NULL,
-    multiple_attempts_allowed boolean DEFAULT false NOT NULL,
-    randomize_question boolean DEFAULT false NOT NULL,
-    time_limit integer NOT NULL
+                                      exam_id uuid NOT NULL,
+                                      passing_score numeric(5,2) NOT NULL,
+                                      multiple_attempts_allowed boolean DEFAULT false NOT NULL,
+                                      randomize_question boolean DEFAULT false NOT NULL,
+                                      time_limit integer NOT NULL
 );
 
 
@@ -302,83 +248,142 @@ COMMENT ON COLUMN public.exam_settings.time_limit IS 'in seconds';
 --
 
 CREATE TABLE public.exams (
-    exam_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    class_id uuid NOT NULL,
-    subject_id uuid NOT NULL,
-    name text NOT NULL,
-    description text,
-    created_by uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+                              exam_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                              class_id uuid NOT NULL,
+                              subject_id uuid NOT NULL,
+                              name text NOT NULL,
+                              description text,
+                              created_by uuid NOT NULL,
+                              created_at timestamp with time zone DEFAULT now() NOT NULL,
+                              updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
 ALTER TABLE public.exams OWNER TO admin;
 
 --
--- Name: exams_categories; Type: TABLE; Schema: public; Owner: admin
+-- Name: exams_score; Type: TABLE; Schema: public; Owner: admin
 --
 
-CREATE TABLE public.exams_categories (
-    category_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name text NOT NULL
+CREATE TABLE public.exams_score (
+                                    user_id uuid NOT NULL,
+                                    exam_id uuid NOT NULL,
+                                    score numeric(5,2) NOT NULL
 );
 
 
-ALTER TABLE public.exams_categories OWNER TO admin;
-
---
--- Name: exams_users_score; Type: TABLE; Schema: public; Owner: admin
---
-
-CREATE TABLE public.exams_users_score (
-    user_id uuid NOT NULL,
-    exam_id uuid NOT NULL,
-    score numeric(5,2) NOT NULL
-);
-
-
-ALTER TABLE public.exams_users_score OWNER TO admin;
+ALTER TABLE public.exams_score OWNER TO admin;
 
 --
 -- Name: game; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.game (
-    version bigint NOT NULL,
-    description text,
-    installed_on timestamp with time zone DEFAULT now() NOT NULL,
-    is_live boolean NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+                             version bigint NOT NULL,
+                             description text,
+                             installed_on timestamp with time zone DEFAULT now() NOT NULL,
+                             is_live boolean NOT NULL,
+                             updated_at timestamp with time zone DEFAULT now() NOT NULL,
+                             created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
 ALTER TABLE public.game OWNER TO admin;
 
 --
+-- Name: notification; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.notification (
+                                     notification_id uuid NOT NULL,
+                                     user_id uuid NOT NULL,
+                                     message text NOT NULL,
+                                     date_sent timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.notification OWNER TO admin;
+
+--
+-- Name: question_choices; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.question_choices (
+                                         choice_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                         question_id uuid NOT NULL,
+                                         choice_text text NOT NULL,
+                                         is_correct boolean NOT NULL
+);
+
+
+ALTER TABLE public.question_choices OWNER TO admin;
+
+--
+-- Name: question_exams; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.question_exams (
+                                       question_id uuid NOT NULL,
+                                       exam_id uuid NOT NULL
+);
+
+
+ALTER TABLE public.question_exams OWNER TO admin;
+
+--
 -- Name: questions; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.questions (
-    question_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    question_text text NOT NULL,
-    question_type public.question_types NOT NULL,
-    exam_id uuid NOT NULL,
-    question_level public.question_levels
+                                  question_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                  question_text text NOT NULL,
+                                  question_type public.question_types NOT NULL,
+                                  choice_answer_id uuid,
+                                  text_answer text,
+                                  table_answer jsonb,
+                                  table_question jsonb
 );
 
 
 ALTER TABLE public.questions OWNER TO admin;
 
 --
+-- Name: student_answers; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.student_answers (
+                                        answer_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                        user_id uuid NOT NULL,
+                                        question_id uuid NOT NULL,
+                                        choice_answer_id uuid,
+                                        text_answer text,
+                                        table_answer jsonb
+);
+
+
+ALTER TABLE public.student_answers OWNER TO admin;
+
+--
+-- Name: student_schedule; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.student_schedule (
+                                         schedule_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                         student_id uuid NOT NULL,
+                                         start_time timestamp with time zone NOT NULL,
+                                         end_time timestamp with time zone
+);
+
+
+ALTER TABLE public.student_schedule OWNER TO admin;
+
+--
 -- Name: students; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.students (
-    student_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name text NOT NULL,
-    user_id uuid NOT NULL
+                                 student_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                 user_id uuid NOT NULL
 );
 
 
@@ -389,21 +394,34 @@ ALTER TABLE public.students OWNER TO admin;
 --
 
 CREATE TABLE public.subjects (
-    subject_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name text NOT NULL
+                                 subject_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                 name text NOT NULL
 );
 
 
 ALTER TABLE public.subjects OWNER TO admin;
 
 --
+-- Name: teacher_schedule; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.teacher_schedule (
+                                         schedule_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                         teacher_id uuid NOT NULL,
+                                         start_time timestamp with time zone NOT NULL,
+                                         end_time timestamp with time zone
+);
+
+
+ALTER TABLE public.teacher_schedule OWNER TO admin;
+
+--
 -- Name: teachers; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.teachers (
-    teacher_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name text NOT NULL,
-    user_id uuid NOT NULL
+                                 teacher_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                                 user_id uuid NOT NULL
 );
 
 
@@ -414,8 +432,8 @@ ALTER TABLE public.teachers OWNER TO admin;
 --
 
 CREATE TABLE public.university (
-    university_id integer NOT NULL,
-    name text NOT NULL
+                                   university_id integer NOT NULL,
+                                   name text NOT NULL
 );
 
 
@@ -426,9 +444,9 @@ ALTER TABLE public.university OWNER TO admin;
 --
 
 CREATE TABLE public.university_faculty (
-    faculty_id integer NOT NULL,
-    university_id integer,
-    faculty_name text NOT NULL
+                                           faculty_id integer NOT NULL,
+                                           university_id integer,
+                                           faculty_name text NOT NULL
 );
 
 
@@ -445,7 +463,7 @@ ALTER TABLE public.university ALTER COLUMN university_id ADD GENERATED BY DEFAUL
     NO MINVALUE
     NO MAXVALUE
     CACHE 1
-);
+    );
 
 
 --
@@ -453,14 +471,14 @@ ALTER TABLE public.university ALTER COLUMN university_id ADD GENERATED BY DEFAUL
 --
 
 CREATE TABLE public.users (
-    user_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    email public.email_address NOT NULL,
-    password_hash text NOT NULL,
-    nickname text NOT NULL,
-    is_verified boolean NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    role public.user_role NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+                              user_id uuid DEFAULT gen_random_uuid() NOT NULL,
+                              email public.email_address NOT NULL,
+                              password_hash text NOT NULL,
+                              nickname text NOT NULL,
+                              is_verified boolean NOT NULL,
+                              created_at timestamp with time zone DEFAULT now() NOT NULL,
+                              role public.user_role NOT NULL,
+                              updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -471,9 +489,9 @@ ALTER TABLE public.users OWNER TO admin;
 --
 
 CREATE TABLE public.users_external_authentication (
-    external_authentication_id integer NOT NULL,
-    user_id uuid NOT NULL,
-    blockchain_auth_id integer
+                                                      external_authentication_id integer NOT NULL,
+                                                      user_id uuid NOT NULL,
+                                                      blockchain_auth_id integer
 );
 
 
@@ -490,7 +508,7 @@ ALTER TABLE public.users_external_authentication ALTER COLUMN external_authentic
     NO MINVALUE
     NO MAXVALUE
     CACHE 1
-);
+    );
 
 
 --
@@ -498,10 +516,10 @@ ALTER TABLE public.users_external_authentication ALTER COLUMN external_authentic
 --
 
 CREATE TABLE public.users_identity (
-    users_identity_id integer NOT NULL,
-    users_id uuid NOT NULL,
-    full_name text NOT NULL,
-    gender public.users_identity_gender NOT NULL
+                                       users_identity_id integer NOT NULL,
+                                       users_id uuid NOT NULL,
+                                       full_name text NOT NULL,
+                                       gender public.users_identity_gender NOT NULL
 );
 
 
@@ -518,7 +536,7 @@ ALTER TABLE public.users_identity ALTER COLUMN users_identity_id ADD GENERATED B
     MINVALUE 0
     NO MAXVALUE
     CACHE 1
-);
+    );
 
 
 --
@@ -526,12 +544,12 @@ ALTER TABLE public.users_identity ALTER COLUMN users_identity_id ADD GENERATED B
 --
 
 CREATE TABLE public.users_university_identity (
-    users_university_id integer NOT NULL,
-    users_id uuid NOT NULL,
-    users_identity_id integer NOT NULL,
-    users_university_role public.user_university_role NOT NULL,
-    university_id integer NOT NULL,
-    university_faculty_id integer NOT NULL
+                                                  users_university_id integer NOT NULL,
+                                                  users_id uuid NOT NULL,
+                                                  users_identity_id integer NOT NULL,
+                                                  users_university_role public.user_university_role NOT NULL,
+                                                  university_id integer NOT NULL,
+                                                  university_faculty_id integer NOT NULL
 );
 
 
@@ -552,43 +570,22 @@ INSERT INTO public._sqlx_migrations VALUES (20230906124156, 'init', '2023-09-19 
 
 
 --
--- Data for Name: answered_tables; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-
-
---
--- Data for Name: answered_tables_cells; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-
-
---
--- Data for Name: answered_tables_rows; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-
-
---
--- Data for Name: answers; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-
-
---
 -- Data for Name: blockchain_authentication; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
 
 
 --
--- Data for Name: choices; Type: TABLE DATA; Schema: public; Owner: admin
+-- Data for Name: class_grades; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
-INSERT INTO public.choices VALUES ('e916a0ed-2e4f-4ee7-a27f-25847a5f3eb4', '68102cd3-e903-4b34-8de8-68192ce8939d', '2', false);
-INSERT INTO public.choices VALUES ('e5622c74-8780-42f3-8309-72562dff6a4f', '68102cd3-e903-4b34-8de8-68192ce8939d', '3', false);
-INSERT INTO public.choices VALUES ('76c778ed-d24b-4f52-a514-aa5203e410cd', '68102cd3-e903-4b34-8de8-68192ce8939d', '4', true);
-INSERT INTO public.choices VALUES ('50444288-829d-47ff-a120-5e864e77d9c6', '68102cd3-e903-4b34-8de8-68192ce8939d', '5', false);
+
+
+--
+-- Data for Name: class_schedule; Type: TABLE DATA; Schema: public; Owner: admin
+--
+
+INSERT INTO public.class_schedule VALUES ('36c31d0b-9b14-4856-9c3a-1631d72b1f1e', '06e5c7ac-801e-457d-a576-94e34c3b12cd', '2023-10-21 20:26:56.619+00', '2023-10-21 23:59:59.053+00');
 
 
 --
@@ -596,7 +593,8 @@ INSERT INTO public.choices VALUES ('50444288-829d-47ff-a120-5e864e77d9c6', '6810
 --
 
 INSERT INTO public.class_students VALUES ('5b099ac5-5b17-4614-b7dd-4dfb26734eec', 'dcd3aaee-391b-4d72-9994-ba2a6409cb2c');
-INSERT INTO public.class_students VALUES ('5b099ac5-5b17-4614-b7dd-4dfb26734eec', '2852ed68-c7e6-4655-9f1a-7baede899f06');
+INSERT INTO public.class_students VALUES ('a08f5d29-af34-490c-884f-18e73a50393f', '2852ed68-c7e6-4655-9f1a-7baede899f06');
+INSERT INTO public.class_students VALUES ('06e5c7ac-801e-457d-a576-94e34c3b12cd', '2852ed68-c7e6-4655-9f1a-7baede899f06');
 
 
 --
@@ -604,18 +602,24 @@ INSERT INTO public.class_students VALUES ('5b099ac5-5b17-4614-b7dd-4dfb26734eec'
 --
 
 INSERT INTO public.class_teachers VALUES ('5b099ac5-5b17-4614-b7dd-4dfb26734eec', 'ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae');
+INSERT INTO public.class_teachers VALUES ('9b7aaf07-c88e-40c5-97ef-d6afd25fd767', 'ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae');
+INSERT INTO public.class_teachers VALUES ('06e5c7ac-801e-457d-a576-94e34c3b12cd', 'ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae');
 
 
 --
 -- Data for Name: classes; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
-INSERT INTO public.classes VALUES ('06e5c7ac-801e-457d-a576-94e34c3b12cd', '282f8c86-1432-4e8f-8f3c-a49bedf931dd', true);
-INSERT INTO public.classes VALUES ('5b099ac5-5b17-4614-b7dd-4dfb26734eec', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', true);
-INSERT INTO public.classes VALUES ('103470f8-64be-445c-9048-8512392ae8c3', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', true);
-INSERT INTO public.classes VALUES ('4b3cd71b-6e28-41d4-b620-5a9ced60f452', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', true);
-INSERT INTO public.classes VALUES ('c7895bf8-a712-4e7a-81bb-8c3ba7d69072', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', true);
-INSERT INTO public.classes VALUES ('3405e8dd-5458-4e6d-a24b-007751caaf01', '282f8c86-1432-4e8f-8f3c-a49bedf931dd', true);
+INSERT INTO public.classes VALUES ('a08f5d29-af34-490c-884f-18e73a50393f', '282f8c86-1432-4e8f-8f3c-a49bedf931dd', true, 'Test class #10', 'Lorem ipsum dolor sit amet', 40);
+INSERT INTO public.classes VALUES ('349e16c4-4801-4f6a-a850-a971f30af3da', '282f8c86-1432-4e8f-8f3c-a49bedf931dd', true, 'Test class #7', 'Lorem ipsum dolor sit amet', 40);
+INSERT INTO public.classes VALUES ('5b099ac5-5b17-4614-b7dd-4dfb26734eec', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', true, 'Test class #2', 'Lorem ipsum dolor sit amet', 40);
+INSERT INTO public.classes VALUES ('4b3cd71b-6e28-41d4-b620-5a9ced60f452', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', true, 'Test class #4', 'Lorem ipsum dolor sit amet', 40);
+INSERT INTO public.classes VALUES ('5b681f91-ff2a-4b39-89d9-c0ad76a7305d', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', true, 'Test class #8', 'Lorem ipsum dolor sit amet', 40);
+INSERT INTO public.classes VALUES ('103470f8-64be-445c-9048-8512392ae8c3', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', true, 'Test class #3', 'Lorem ipsum dolor sit amet', 40);
+INSERT INTO public.classes VALUES ('3405e8dd-5458-4e6d-a24b-007751caaf01', '282f8c86-1432-4e8f-8f3c-a49bedf931dd', true, 'Test class #6', 'Lorem ipsum dolor sit amet', 40);
+INSERT INTO public.classes VALUES ('c7895bf8-a712-4e7a-81bb-8c3ba7d69072', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', true, 'Test class #5', 'Lorem ipsum dolor sit amet', 40);
+INSERT INTO public.classes VALUES ('9b7aaf07-c88e-40c5-97ef-d6afd25fd767', '282f8c86-1432-4e8f-8f3c-a49bedf931dd', true, 'Test class #9', 'Lorem ipsum dolor sit amet', 40);
+INSERT INTO public.classes VALUES ('06e5c7ac-801e-457d-a576-94e34c3b12cd', '282f8c86-1432-4e8f-8f3c-a49bedf931dd', true, 'Test class #1', 'Lorem ipsum dolor sit amet', 40);
 
 
 --
@@ -639,15 +643,7 @@ INSERT INTO public.exams VALUES ('60fff264-2e9e-476e-9d05-10e38d1c8bca', '06e5c7
 
 
 --
--- Data for Name: exams_categories; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-INSERT INTO public.exams_categories VALUES ('3aeac3de-891c-4796-b8de-09c6d19ad137', 'Mathematics');
-INSERT INTO public.exams_categories VALUES ('e24ea3d1-f246-48cb-a0cc-003dbccfcfd2', 'Physics');
-
-
---
--- Data for Name: exams_users_score; Type: TABLE DATA; Schema: public; Owner: admin
+-- Data for Name: exams_score; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
 
@@ -660,34 +656,79 @@ INSERT INTO public.game VALUES (1, 'Alpha Version', '2023-09-21 13:09:49.033+00'
 
 
 --
+-- Data for Name: notification; Type: TABLE DATA; Schema: public; Owner: admin
+--
+
+
+
+--
+-- Data for Name: question_choices; Type: TABLE DATA; Schema: public; Owner: admin
+--
+
+INSERT INTO public.question_choices VALUES ('e916a0ed-2e4f-4ee7-a27f-25847a5f3eb4', '68102cd3-e903-4b34-8de8-68192ce8939d', '2', false);
+INSERT INTO public.question_choices VALUES ('e5622c74-8780-42f3-8309-72562dff6a4f', '68102cd3-e903-4b34-8de8-68192ce8939d', '3', false);
+INSERT INTO public.question_choices VALUES ('76c778ed-d24b-4f52-a514-aa5203e410cd', '68102cd3-e903-4b34-8de8-68192ce8939d', '4', true);
+INSERT INTO public.question_choices VALUES ('50444288-829d-47ff-a120-5e864e77d9c6', '68102cd3-e903-4b34-8de8-68192ce8939d', '5', false);
+INSERT INTO public.question_choices VALUES ('204d57b4-4e3d-4147-9be4-0e1afb5afa1f', 'dfaad579-bcb9-4217-a231-1c00961f97cc', '4', true);
+INSERT INTO public.question_choices VALUES ('907a4a17-7d69-47df-a32d-43ff55865e42', 'dfaad579-bcb9-4217-a231-1c00961f97cc', '1', false);
+INSERT INTO public.question_choices VALUES ('2f19af60-cdc8-4dba-9de3-24a10a85e984', 'dfaad579-bcb9-4217-a231-1c00961f97cc', '2', false);
+INSERT INTO public.question_choices VALUES ('19609867-bc63-4db5-a4b5-11bc0a3a1bb8', 'dfaad579-bcb9-4217-a231-1c00961f97cc', '3', false);
+
+
+--
+-- Data for Name: question_exams; Type: TABLE DATA; Schema: public; Owner: admin
+--
+
+
+
+--
 -- Data for Name: questions; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
-INSERT INTO public.questions VALUES ('68102cd3-e903-4b34-8de8-68192ce8939d', 'What is 2+2 is?', 'choice', '60fff264-2e9e-476e-9d05-10e38d1c8bca', NULL);
-INSERT INTO public.questions VALUES ('dfaad579-bcb9-4217-a231-1c00961f97cc', 'What is the square root of 16?', 'choice', '60fff264-2e9e-476e-9d05-10e38d1c8bca', NULL);
+INSERT INTO public.questions VALUES ('68102cd3-e903-4b34-8de8-68192ce8939d', 'What is 2+2 is?', 'choice', '76c778ed-d24b-4f52-a514-aa5203e410cd', NULL, NULL, NULL);
+INSERT INTO public.questions VALUES ('dfaad579-bcb9-4217-a231-1c00961f97cc', 'What is the square root of 16?', 'choice', '204d57b4-4e3d-4147-9be4-0e1afb5afa1f', NULL, NULL, NULL);
+
+
+--
+-- Data for Name: student_answers; Type: TABLE DATA; Schema: public; Owner: admin
+--
+
+
+
+--
+-- Data for Name: student_schedule; Type: TABLE DATA; Schema: public; Owner: admin
+--
+
+INSERT INTO public.student_schedule VALUES ('6ad3f129-4a42-4e18-941c-e90f7e86760e', 'dcd3aaee-391b-4d72-9994-ba2a6409cb2c', '2023-10-20 21:00:00.229+00', '2023-10-20 22:00:00.388+00');
 
 
 --
 -- Data for Name: students; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
-INSERT INTO public.students VALUES ('dcd3aaee-391b-4d72-9994-ba2a6409cb2c', 'Nama 2 Mahasiswa', 'de6a27a2-3cba-475a-a17e-70a512925d3d');
-INSERT INTO public.students VALUES ('2852ed68-c7e6-4655-9f1a-7baede899f06', 'Nama Lengkap Mahasiswa', '659074a0-22a8-47ba-9acc-6d55a9df84fb');
+INSERT INTO public.students VALUES ('dcd3aaee-391b-4d72-9994-ba2a6409cb2c', 'de6a27a2-3cba-475a-a17e-70a512925d3d');
+INSERT INTO public.students VALUES ('2852ed68-c7e6-4655-9f1a-7baede899f06', '659074a0-22a8-47ba-9acc-6d55a9df84fb');
 
 
 --
 -- Data for Name: subjects; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
-INSERT INTO public.subjects VALUES ('d24a4a07-9576-48dd-ad6b-daad5fe05058', 'Physics');
 INSERT INTO public.subjects VALUES ('282f8c86-1432-4e8f-8f3c-a49bedf931dd', 'Mathematics');
+INSERT INTO public.subjects VALUES ('d24a4a07-9576-48dd-ad6b-daad5fe05058', 'Physics');
+
+
+--
+-- Data for Name: teacher_schedule; Type: TABLE DATA; Schema: public; Owner: admin
+--
+
 
 
 --
 -- Data for Name: teachers; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
-INSERT INTO public.teachers VALUES ('ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae', 'Nama Lengkap Dosen', 'c3f04a30-38ac-474d-b7da-8fb889495d75');
+INSERT INTO public.teachers VALUES ('ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae', 'c3f04a30-38ac-474d-b7da-8fb889495d75');
 
 
 --
@@ -774,38 +815,6 @@ ALTER TABLE ONLY public._sqlx_migrations
 
 
 --
--- Name: answered_tables_cells answered_tables_cells_pk; Type: CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.answered_tables_cells
-    ADD CONSTRAINT answered_tables_cells_pk PRIMARY KEY (cell_id);
-
-
---
--- Name: answered_tables answered_tables_pk; Type: CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.answered_tables
-    ADD CONSTRAINT answered_tables_pk PRIMARY KEY (answered_table_id);
-
-
---
--- Name: answered_tables_rows answered_tables_rows_pk; Type: CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.answered_tables_rows
-    ADD CONSTRAINT answered_tables_rows_pk PRIMARY KEY (answered_table_row_id);
-
-
---
--- Name: answers answers_pk; Type: CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.answers
-    ADD CONSTRAINT answers_pk PRIMARY KEY (answer_id);
-
-
---
 -- Name: blockchain_authentication blockchain_authentication_public_address_key; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
@@ -822,35 +831,35 @@ ALTER TABLE ONLY public.blockchain_authentication
 
 
 --
--- Name: choices choices_pk; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: class_grades class_grades_pk; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.choices
-    ADD CONSTRAINT choices_pk PRIMARY KEY (choice_id);
+ALTER TABLE ONLY public.class_grades
+    ADD CONSTRAINT class_grades_pk PRIMARY KEY (class_id, grade_id, student_id);
 
 
 --
--- Name: class_students class_students_pk; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: class_schedule class_schedule_pk; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.class_schedule
+    ADD CONSTRAINT class_schedule_pk PRIMARY KEY (class_id, schedule_id);
+
+
+--
+-- Name: class_students class_students_unique_class_id_student_id; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.class_students
-    ADD CONSTRAINT class_students_pk UNIQUE (student_id);
+    ADD CONSTRAINT class_students_unique_class_id_student_id PRIMARY KEY (class_id, student_id);
 
 
 --
--- Name: class_teachers class_teachers_pk; Type: CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.class_teachers
-    ADD CONSTRAINT class_teachers_pk UNIQUE (class_id);
-
-
---
--- Name: class_teachers class_teachers_pk2; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: class_teachers class_teachers_unique_class_id_teacher_id; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.class_teachers
-    ADD CONSTRAINT class_teachers_pk2 UNIQUE (teacher_id);
+    ADD CONSTRAINT class_teachers_unique_class_id_teacher_id PRIMARY KEY (class_id, teacher_id);
 
 
 --
@@ -862,11 +871,11 @@ ALTER TABLE ONLY public.classes
 
 
 --
--- Name: classes classes_pk3; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: classes classes_unique_class_id_subject_id; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.classes
-    ADD CONSTRAINT classes_pk3 UNIQUE (class_id);
+    ADD CONSTRAINT classes_unique_class_id_subject_id UNIQUE (class_id, subject_id);
 
 
 --
@@ -874,7 +883,7 @@ ALTER TABLE ONLY public.classes
 --
 
 ALTER TABLE ONLY public.exam_sessions
-    ADD CONSTRAINT exam_sessions_pk PRIMARY KEY (session_id);
+    ADD CONSTRAINT exam_sessions_pk PRIMARY KEY (session_id, exam_id, user_id);
 
 
 --
@@ -883,14 +892,6 @@ ALTER TABLE ONLY public.exam_sessions
 
 ALTER TABLE ONLY public.exam_settings
     ADD CONSTRAINT exam_settings_pk PRIMARY KEY (exam_id);
-
-
---
--- Name: exams_categories exams_categories_pk; Type: CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.exams_categories
-    ADD CONSTRAINT exams_categories_pk PRIMARY KEY (category_id);
 
 
 --
@@ -918,6 +919,14 @@ ALTER TABLE ONLY public.exams
 
 
 --
+-- Name: exams_score exams_score_pk; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.exams_score
+    ADD CONSTRAINT exams_score_pk PRIMARY KEY (user_id, exam_id);
+
+
+--
 -- Name: game game_pk; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
@@ -926,11 +935,51 @@ ALTER TABLE ONLY public.game
 
 
 --
+-- Name: notification notification_pk; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.notification
+    ADD CONSTRAINT notification_pk PRIMARY KEY (notification_id, user_id);
+
+
+--
+-- Name: question_choices question_choices_pk; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.question_choices
+    ADD CONSTRAINT question_choices_pk PRIMARY KEY (choice_id);
+
+
+--
+-- Name: question_exams question_exams_pk; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.question_exams
+    ADD CONSTRAINT question_exams_pk PRIMARY KEY (exam_id, question_id);
+
+
+--
 -- Name: questions questions_pk; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.questions
     ADD CONSTRAINT questions_pk PRIMARY KEY (question_id);
+
+
+--
+-- Name: student_answers student_answers_pk; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.student_answers
+    ADD CONSTRAINT student_answers_pk PRIMARY KEY (answer_id);
+
+
+--
+-- Name: student_schedule student_schedule_pk; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.student_schedule
+    ADD CONSTRAINT student_schedule_pk PRIMARY KEY (student_id, schedule_id);
 
 
 --
@@ -950,6 +999,14 @@ ALTER TABLE ONLY public.students
 
 
 --
+-- Name: students students_unique_student_id_user_id; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.students
+    ADD CONSTRAINT students_unique_student_id_user_id UNIQUE (student_id, user_id);
+
+
+--
 -- Name: subjects subjects_pk; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
@@ -966,6 +1023,14 @@ ALTER TABLE ONLY public.subjects
 
 
 --
+-- Name: teacher_schedule teacher_schedule_pk; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.teacher_schedule
+    ADD CONSTRAINT teacher_schedule_pk PRIMARY KEY (schedule_id, teacher_id);
+
+
+--
 -- Name: teachers teachers_pk; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
@@ -979,6 +1044,14 @@ ALTER TABLE ONLY public.teachers
 
 ALTER TABLE ONLY public.teachers
     ADD CONSTRAINT teachers_pk2 UNIQUE (teacher_id);
+
+
+--
+-- Name: teachers teachers_unique_teacher_id_user_id; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.teachers
+    ADD CONSTRAINT teachers_unique_teacher_id_user_id UNIQUE (teacher_id, user_id);
 
 
 --
@@ -1054,59 +1127,35 @@ ALTER TABLE ONLY public.users_university_identity
 
 
 --
--- Name: answered_tables answered_tables_answers_answer_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: student_answers answers_choices_choice_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.answered_tables
-    ADD CONSTRAINT answered_tables_answers_answer_id_fk FOREIGN KEY (answer_id) REFERENCES public.answers(answer_id);
-
-
---
--- Name: answered_tables_rows answered_tables_rows_answered_tables_answered_table_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.answered_tables_rows
-    ADD CONSTRAINT answered_tables_rows_answered_tables_answered_table_id_fk FOREIGN KEY (answered_table_id) REFERENCES public.answered_tables(answered_table_id);
+ALTER TABLE ONLY public.student_answers
+    ADD CONSTRAINT answers_choices_choice_id_fk FOREIGN KEY (choice_answer_id) REFERENCES public.question_choices(choice_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
--- Name: answers answers_answered_tables_answered_table_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: class_grades class_grades_classes_null_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.answers
-    ADD CONSTRAINT answers_answered_tables_answered_table_id_fk FOREIGN KEY (table_answer_id) REFERENCES public.answered_tables(answered_table_id);
-
-
---
--- Name: answers answers_choices_choice_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.answers
-    ADD CONSTRAINT answers_choices_choice_id_fk FOREIGN KEY (choice_answer_id) REFERENCES public.choices(choice_id);
+ALTER TABLE ONLY public.class_grades
+    ADD CONSTRAINT class_grades_classes_null_fk FOREIGN KEY (class_id) REFERENCES public.classes(class_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
--- Name: answers answers_questions_question_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: class_grades class_grades_students_null_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.answers
-    ADD CONSTRAINT answers_questions_question_id_fk FOREIGN KEY (question_id) REFERENCES public.questions(question_id);
-
-
---
--- Name: answers answers_users_user_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.answers
-    ADD CONSTRAINT answers_users_user_id_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id);
+ALTER TABLE ONLY public.class_grades
+    ADD CONSTRAINT class_grades_students_null_fk FOREIGN KEY (student_id) REFERENCES public.students(student_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
--- Name: choices choices_questions_question_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: class_schedule class_schedule_classes_null_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.choices
-    ADD CONSTRAINT choices_questions_question_id_fk FOREIGN KEY (question_id) REFERENCES public.questions(question_id);
+ALTER TABLE ONLY public.class_schedule
+    ADD CONSTRAINT class_schedule_classes_null_fk FOREIGN KEY (class_id) REFERENCES public.classes(class_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1178,7 +1227,23 @@ ALTER TABLE ONLY public.exam_settings
 --
 
 ALTER TABLE ONLY public.exams
-    ADD CONSTRAINT exams_classes_class_id_fk FOREIGN KEY (class_id) REFERENCES public.classes(class_id);
+    ADD CONSTRAINT exams_classes_class_id_fk FOREIGN KEY (class_id) REFERENCES public.classes(class_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: exams_score exams_score_exams_exam_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.exams_score
+    ADD CONSTRAINT exams_score_exams_exam_id_fk FOREIGN KEY (exam_id) REFERENCES public.exams(exam_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: exams_score exams_score_users_user_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.exams_score
+    ADD CONSTRAINT exams_score_users_user_id_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1186,23 +1251,7 @@ ALTER TABLE ONLY public.exams
 --
 
 ALTER TABLE ONLY public.exams
-    ADD CONSTRAINT exams_subjects_subject_id_fk FOREIGN KEY (subject_id) REFERENCES public.subjects(subject_id);
-
-
---
--- Name: exams_users_score exams_users_score_exams_exam_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.exams_users_score
-    ADD CONSTRAINT exams_users_score_exams_exam_id_fk FOREIGN KEY (exam_id) REFERENCES public.exams(exam_id);
-
-
---
--- Name: exams_users_score exams_users_score_users_user_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.exams_users_score
-    ADD CONSTRAINT exams_users_score_users_user_id_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id);
+    ADD CONSTRAINT exams_subjects_subject_id_fk FOREIGN KEY (subject_id) REFERENCES public.subjects(subject_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1210,7 +1259,7 @@ ALTER TABLE ONLY public.exams_users_score
 --
 
 ALTER TABLE ONLY public.exams
-    ADD CONSTRAINT exams_users_user_id_fk FOREIGN KEY (created_by) REFERENCES public.users(user_id);
+    ADD CONSTRAINT exams_users_user_id_fk FOREIGN KEY (created_by) REFERENCES public.users(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1218,23 +1267,63 @@ ALTER TABLE ONLY public.exams
 --
 
 ALTER TABLE ONLY public.users_external_authentication
-    ADD CONSTRAINT external_authentication_blockchain_authentication_null_fk FOREIGN KEY (blockchain_auth_id) REFERENCES public.blockchain_authentication(blockchain_auth_id);
+    ADD CONSTRAINT external_authentication_blockchain_authentication_null_fk FOREIGN KEY (blockchain_auth_id) REFERENCES public.blockchain_authentication(blockchain_auth_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
--- Name: questions questions_exams_exam_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: notification notification_users_null_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.notification
+    ADD CONSTRAINT notification_users_null_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: question_choices question_choices_questions_question_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.question_choices
+    ADD CONSTRAINT question_choices_questions_question_id_fk FOREIGN KEY (question_id) REFERENCES public.questions(question_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: question_exams question_exams_exams_null_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.question_exams
+    ADD CONSTRAINT question_exams_exams_null_fk FOREIGN KEY (exam_id) REFERENCES public.exams(exam_id);
+
+
+--
+-- Name: questions questions_question_choices_null_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.questions
-    ADD CONSTRAINT questions_exams_exam_id_fk FOREIGN KEY (exam_id) REFERENCES public.exams(exam_id);
+    ADD CONSTRAINT questions_question_choices_null_fk FOREIGN KEY (choice_answer_id) REFERENCES public.question_choices(choice_id);
 
 
 --
--- Name: students students_users_identity_full_name_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: student_answers student_answers_questions_question_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.students
-    ADD CONSTRAINT students_users_identity_full_name_fk FOREIGN KEY (name) REFERENCES public.users_identity(full_name);
+ALTER TABLE ONLY public.student_answers
+    ADD CONSTRAINT student_answers_questions_question_id_fk FOREIGN KEY (question_id) REFERENCES public.questions(question_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: student_answers student_answers_users_user_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.student_answers
+    ADD CONSTRAINT student_answers_users_user_id_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: student_schedule student_schedule_students_null_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.student_schedule
+    ADD CONSTRAINT student_schedule_students_null_fk FOREIGN KEY (student_id) REFERENCES public.students(student_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1246,19 +1335,11 @@ ALTER TABLE ONLY public.students
 
 
 --
--- Name: answered_tables_cells table_row_id_constraint; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: teacher_schedule teacher_schedule_teachers_null_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.answered_tables_cells
-    ADD CONSTRAINT table_row_id_constraint FOREIGN KEY (table_row_id) REFERENCES public.answered_tables_rows(answered_table_row_id);
-
-
---
--- Name: teachers teachers_users_identity_full_name_fk; Type: FK CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.teachers
-    ADD CONSTRAINT teachers_users_identity_full_name_fk FOREIGN KEY (name) REFERENCES public.users_identity(full_name);
+ALTER TABLE ONLY public.teacher_schedule
+    ADD CONSTRAINT teacher_schedule_teachers_null_fk FOREIGN KEY (teacher_id) REFERENCES public.teachers(teacher_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1282,7 +1363,7 @@ ALTER TABLE ONLY public.university_faculty
 --
 
 ALTER TABLE ONLY public.users_external_authentication
-    ADD CONSTRAINT users_external_authentication_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id);
+    ADD CONSTRAINT users_external_authentication_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1290,7 +1371,7 @@ ALTER TABLE ONLY public.users_external_authentication
 --
 
 ALTER TABLE ONLY public.users_identity
-    ADD CONSTRAINT users_identity_users_id_fkey FOREIGN KEY (users_id) REFERENCES public.users(user_id);
+    ADD CONSTRAINT users_identity_users_id_fkey FOREIGN KEY (users_id) REFERENCES public.users(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1323,6 +1404,13 @@ ALTER TABLE ONLY public.users_university_identity
 
 ALTER TABLE ONLY public.users_university_identity
     ADD CONSTRAINT users_university_identity_users_identity_id_fkey FOREIGN KEY (users_identity_id) REFERENCES public.users_identity(users_identity_id);
+
+
+--
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: pg_database_owner
+--
+
+REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 
 
 --

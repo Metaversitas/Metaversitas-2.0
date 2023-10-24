@@ -53,7 +53,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{host}}/auth/login?format=photon",
+							"raw": "https://{{host}}/auth/login",
 							"protocol": "https",
 							"host": [
 								"{{host}}"
@@ -66,7 +66,8 @@
 								{
 									"key": "format",
 									"value": "photon",
-									"description": "(Optional) Enable it when photon format needed."
+									"description": "(Optional) Enable it when photon format needed.",
+									"disabled": true
 								},
 								{
 									"key": "game_version",
@@ -156,21 +157,321 @@
 			"name": "Classroom",
 			"item": [
 				{
+					"name": "Create Classroom",
+					"item": [
+						{
+							"name": "Create Classroom (Empty Teacher and Student) (By name)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"subject_name\": \"Math\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Classroom (Empty Teacher and Student) (By id)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"subject_id\": \"d24a4a07-9576-48dd-ad6b-daad5fe05058\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Classroom (Only Teacher)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"subject_name\": \"Math\",\r\n    \"teachers\": [\"ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Classroom (Only Students)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"subject_name\": \"Math\",\r\n    \"students\": [\"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\", \"2852ed68-c7e6-4655-9f1a-7baede899f06\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Update Classroom",
+					"item": [
+						{
+							"name": "Update Classroom (Teacher) (Replace current all of teachers)",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"teachers\": {\n        \"type\": \"All\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom",
+										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Classroom (Teacher) (Replace only given id)",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"teachers\": {\n        \"type\": \"Single\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom",
+										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Classroom (Students) (Replace only given id)",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"students\": {\n        \"type\": \"Single\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            },\n            {\n                \"type\": \"Add\",\n                \"id\": \"2852ed68-c7e6-4655-9f1a-7baede899f06\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom",
+										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Classroom (Students) (Replace current all of students)",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"students\": {\n        \"type\": \"All\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            },\n            {\n                \"type\": \"Add\",\n                \"id\": \"2852ed68-c7e6-4655-9f1a-7baede899f06\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom",
+										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "Get Available Classroom",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "https://{{host}}/classroom",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"classroom"
+							]
+						}
 					},
 					"response": []
 				},
 				{
-					"name": "Create Classroom (Lecturer only)",
+					"name": "Get Classroom Data",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/classroom/{{class_id}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"classroom",
+								"{{class_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Enroll Classroom",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"subject_name\": \"Math\"\r\n}",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd/enroll",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"classroom",
+								"06e5c7ac-801e-457d-a576-94e34c3b12cd",
+								"enroll"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete classroom",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"class_ids\": [\n        \"06e5c7ac-801e-457d-a576-94e34c3b12cd\",\n        \"5b099ac5-5b17-4614-b7dd-4dfb26734eec\"\n    ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -241,6 +542,10 @@
 			"key": "port",
 			"value": "443",
 			"type": "string"
+		},
+		{
+			"key": "class_id",
+			"value": "5b099ac5-5b17-4614-b7dd-4dfb26734eec"
 		}
 	]
 }
