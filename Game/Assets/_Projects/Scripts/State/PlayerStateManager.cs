@@ -7,6 +7,7 @@ public class PlayerStateManager : MonoBehaviour
     public event EventHandler PauseState;
     public event EventHandler ChattingState;
     public event EventHandler InteractState;
+    public event EventHandler IntroState;
     public event EventHandler EndState;
 
 
@@ -24,6 +25,12 @@ public class PlayerStateManager : MonoBehaviour
     {
         PlayState?.Invoke(this, EventArgs.Empty);
         SetGameState(GameState.Play);
+    }
+
+    public void TriggerIntroState()
+    {
+        IntroState?.Invoke(this, EventArgs.Empty);
+        SetGameState(GameState.Intro);
     }
 
     // Call this method to trigger the pause state event

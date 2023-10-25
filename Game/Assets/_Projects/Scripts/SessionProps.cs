@@ -9,7 +9,8 @@ public enum PlayMode
 {
 	LabFisika, 
 	Candi, 
-	Museum
+	Museum,
+	Malioboro
 }
 
 [Serializable]
