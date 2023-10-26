@@ -1,19 +1,50 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Video;
 
 public class Levels : MonoBehaviour
 {
-
-    [SerializeField] public  List<GameObject> gameObjects;
-
+    [SerializeField] private List<GameObject> gameObjects;
+    [SerializeField] private List<VideoClip> introVideos;
+    [SerializeField] private VideoPlayer introVideoPlayer;
 
     [SerializeField] private App _app;
-    string _level;
-    string _gamemode;
-
+    private string _level;
+    private string _gamemode;
 
     void Start()
+    {
+        InitializeSession();
+
+        DisplayIntroVideo();
+
+        switch (_gamemode)
+        {
+            case "LabFisika":
+                // Set active game objects on floor 1
+                break;
+            case "Candi":
+                // Set active game objects on floor 2 while keeping floor 1 active
+                SetActiveGameObjects();
+                break;
+            case "Museum":
+                // Set active game objects on floor 2 while keeping floor 1 active
+                break;
+            case "Malioboro":
+                // Add code for Malioboro
+                break;
+            // Add other cases as needed
+            default:
+                // Default case if _level is not as expected
+                break;
+        }
+
+        Debug.Log(_gamemode);
+        Debug.Log(_level);
+    }
+
+    void InitializeSession()
     {
         _app = App.FindInstance();
         SessionProps props = _app.Session.Props;
@@ -22,31 +53,22 @@ public class Levels : MonoBehaviour
 
         _level = $"{s.Props.RoomPertemuan}";
         _gamemode = $"{s.Props.PlayMode}";
+    }
 
-        switch (_gamemode)
+    void DisplayIntroVideo()
+    {
+        int levelIndex = int.Parse(_level.Replace("Pertemuan ", "")) - 1;
+
+        if (levelIndex < introVideos.Count)
         {
-            case "LabFisika":
-                // Setactive game objects pada lantai 1
-                
-                break;
-            case "Candi":
-                // Setactive game objects pada lantai 2 dan lantai 1 tetap aktif
-                SetActiveGameObjects();
-                break;
-            case "Museum":
-                // Setactive game objects pada lantai 2 dan lantai 1 tetap aktif
-                
-                break;
-            case "Malioboro":
-                
-                break;
-            // Tambahkan case-case lain sesuai kebutuhan
-            default:
-                // Default case jika _level tidak sesuai dengan yang diharapkan
-                break;
+            introVideoPlayer.clip = introVideos[levelIndex];
+            introVideoPlayer.Play();
+            Debug.Log($"Introductory video for {_level} is playing.");
         }
-        Debug.LogError(_gamemode);
-        Debug.LogError(_level);
+        else
+        {
+            Debug.LogError($"No intro video found for {_level}.");
+        }
     }
 
     void SetActiveGameObjects()
@@ -54,34 +76,50 @@ public class Levels : MonoBehaviour
         switch (_level)
         {
             case "Pertemuan 2":
-                // Setactive game objects pada lantai 1
-                SetLantai2Active();
+                SetFloor2Active();
                 break;
             case "Pertemuan 3":
-                // Setactive game objects pada lantai 2 dan lantai 1 tetap aktif
-                SetLantai3Active();
+                SetFloor3Active();
                 break;
             case "Pertemuan 4":
-                // Setactive game objects pada lantai 2 dan lantai 1 tetap aktif
-                SetLantai4Active();
+                SetFloor4Active();
                 break;
             case "Pertemuan 5":
-                SetLantai5Active();
+                SetFloor5Active();
                 break;
-            // Tambahkan case-case lain sesuai kebutuhan
+            // Add other cases as needed
             default:
-                // Default case jika _level tidak sesuai dengan yang diharapkan
+                // Default case if _level is not as expected
                 break;
         }
     }
 
-    void SetLantai2Active()
+    void SetFloor2Active()
     {
-        // Setactive game objects pada lantai 1
+        SetFloorActive(4);
+    }
+
+    void SetFloor3Active()
+    {
+        SetFloorActive(8);
+    }
+
+    void SetFloor4Active()
+    {
+        SetFloorActive(12);
+    }
+
+    void SetFloor5Active()
+    {
+        SetFloorActive(16);
+    }
+
+    void SetFloorActive(int objectCount)
+    {
         int cnt = 0;
         foreach (GameObject obj in gameObjects)
         {
-            if (cnt < 4)
+            if (cnt < objectCount)
             {
                 obj.SetActive(false);
             }
@@ -92,64 +130,4 @@ public class Levels : MonoBehaviour
             cnt++;
         }
     }
-
-    void SetLantai3Active()
-    {
-        // Setactive game objects pada lantai 2
-        // Untuk setactive lantai 1, pastikan mereka sudah aktif sebelum memanggil method ini
-        int cnt = 0;
-        foreach (GameObject obj in gameObjects)
-        {
-            if (cnt < 8)
-            {
-            obj.SetActive(false);
-            }
-            else
-            {
-                break;
-            }
-            cnt++;
-        }
-    }
-
-    void SetLantai4Active()
-    {
-        // Setactive game objects pada lantai 2
-        // Untuk setactive lantai 1, pastikan mereka sudah aktif sebelum memanggil method ini
-        int cnt = 0;
-        foreach (GameObject obj in gameObjects)
-        {
-            if (cnt < 12)
-            {
-            obj.SetActive(false);
-            }
-            else
-            {
-                break;
-            }
-            cnt++;
-        }
-    }
-
-    void SetLantai5Active()
-    {
-        // Setactive game objects pada lantai 2
-        // Untuk setactive lantai 1, pastikan mereka sudah aktif sebelum memanggil method ini
-        int cnt = 0;
-        foreach (GameObject obj in gameObjects)
-        {
-            if (cnt < 16)
-            {
-            obj.SetActive(false);
-            }
-            else
-            {
-                break;
-            }
-            cnt++;
-        }
-    }
-
-
-    // Update is called once per frame
 }
