@@ -12,6 +12,7 @@ public class PlayerStateManager : MonoBehaviour
 
 
     public GameState CurrentGameState { get; private set; } = GameState.Play;
+    public bool IsVideoPlaying { get; internal set; }
 
     // Method to change the game state
     public void SetGameState(GameState newState)
