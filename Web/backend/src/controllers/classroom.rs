@@ -3,7 +3,7 @@ use crate::helpers::errors::auth::AuthError;
 use crate::helpers::errors::classroom::ClassroomControllerError;
 use crate::helpers::extractor::AuthenticatedUserWithRole;
 use crate::model::classroom::{
-    Classroom, CreateClassroomParams, CreatedClassroom, DeleteClassroomParams,
+    CreateClassroomParams, CreatedClassroom, DeleteClassroomParams,
     UpdateClassroomParams,
 };
 use crate::model::subject::Subject;
@@ -133,7 +133,7 @@ pub async fn create_classes(
         )));
     }
 
-    if let Some(subject_name) = payload.subject_name {
+    if let Some(subject_name) = &payload.subject_name {
         subject_classroom = Some(
             subject_service
                 .get_subject_by_name(&mut transaction, subject_name.as_str())
@@ -147,7 +147,7 @@ pub async fn create_classes(
         );
     }
 
-    if let Some(subject_id) = payload.subject_id {
+    if let Some(subject_id) = &payload.subject_id {
         subject_classroom = Some(
             subject_service
                 .get_subject_by_id(&mut transaction, subject_id.as_str())
@@ -174,11 +174,7 @@ pub async fn create_classes(
             &mut transaction,
             &auth_user.user_role,
             &auth_user.university_role,
-            subject_classroom.subject_id.as_str(),
-            payload.students,
-            payload.teachers,
-            payload.name.as_str(),
-            payload.description.as_str(),
+            &payload,
         )
         .await
         .map_err(|err| {
@@ -385,13 +381,13 @@ pub async fn enroll_classroom(
 
     // Check if the students exists
     let student = student_service
-        .get_student_by_id(&mut transaction, &auth_user.user_id.as_str())
+        .get_student_by_id(&mut transaction, auth_user.user_id.as_str())
         .await
         .map_err(|_| ClassroomControllerError::StudentIsNotExists)?;
 
     // Check if the class exists
     let class = classroom_service
-        .get_classroom_by_id(&mut transaction, &classroom_id.as_str())
+        .get_classroom_by_id(&mut transaction, classroom_id.as_str())
         .await
         .map_err(|_| ClassroomControllerError::ClassroomIsNotExists)?;
 
@@ -399,8 +395,8 @@ pub async fn enroll_classroom(
     if classroom_service
         .get_student_classroom_by_id(
             &mut transaction,
-            &class.class_id.as_str(),
-            &student.student_id.as_str(),
+            class.class_id.as_str(),
+            student.student_id.as_str(),
         )
         .await
         .is_ok()
@@ -410,7 +406,7 @@ pub async fn enroll_classroom(
 
     // Check whether there are available seats
     if !classroom_service
-        .is_seat_classroom_available(&mut transaction, &class.class_id.as_str())
+        .is_seat_classroom_available(&mut transaction, class.class_id.as_str())
         .await?
     {
         return Err(ClassroomControllerError::ClassroomFull);
@@ -420,8 +416,8 @@ pub async fn enroll_classroom(
     if !classroom_service
         .is_student_schedule_conflict(
             &mut transaction,
-            &student.student_id.as_str(),
-            &class.class_id.as_str(),
+            student.student_id.as_str(),
+            class.class_id.as_str(),
         )
         .await?
     {
@@ -432,8 +428,8 @@ pub async fn enroll_classroom(
     classroom_service
         .insert_student_classroom_by_id(
             &mut transaction,
-            &class.class_id.as_str(),
-            &student.student_id.as_str(),
+            class.class_id.as_str(),
+            student.student_id.as_str(),
         )
         .await?;
 

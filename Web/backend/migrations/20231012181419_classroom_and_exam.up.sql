@@ -1,284 +1,230 @@
+create type question_types as enum ('choice', 'descriptive', 'table');
+create table public.questions (
+                                  question_id uuid primary key not null default gen_random_uuid(),
+                                  question_text text not null,
+                                  question_type question_types not null,
+                                  table_question jsonb
+);
+
+create table public.question_choices (
+                                         choice_id uuid primary key not null default gen_random_uuid(),
+                                         question_id uuid not null,
+                                         choice_text text not null,
+                                         is_correct boolean not null,
+                                         foreign key (question_id) references public.questions (question_id)
+                                             match simple on update cascade on delete cascade
+);
+
+create table public.students (
+                                 student_id uuid primary key not null default gen_random_uuid(),
+                                 user_id uuid not null,
+                                 foreign key (user_id) references public.users (user_id)
+                                     match simple on update cascade on delete cascade
+);
+create unique index students_pk2 on students using btree (student_id);
+create unique index students_unique_student_id_user_id on students using btree (student_id, user_id);
 
 
--- CREATE TABLE public.teachers (
---      teacher_id uuid DEFAULT gen_random_uuid() NOT NULL,
---      name text NOT NULL,
---      user_id uuid NOT NULL
--- );
---
--- ALTER TABLE public.teachers OWNER TO admin;
---
--- ALTER TABLE ONLY public.teachers
---     ADD CONSTRAINT teachers_pk PRIMARY KEY (teacher_id);
---
--- ALTER TABLE ONLY public.teachers
---     ADD CONSTRAINT teachers_pk2 UNIQUE (teacher_id);
---
--- ALTER TABLE ONLY public.teachers
---     ADD CONSTRAINT teachers_users_identity_full_name_fk FOREIGN KEY (name) REFERENCES public.users_identity(full_name);
---
--- ALTER TABLE ONLY public.teachers
---     ADD CONSTRAINT teachers_users_user_id_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id);
---
--- CREATE TABLE public.subjects (
---                                  subject_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                  name text NOT NULL
--- );
---
--- ALTER TABLE public.subjects OWNER TO admin;
---
--- ALTER TABLE ONLY public.subjects
---     ADD CONSTRAINT subjects_pk PRIMARY KEY (subject_id);
---
--- ALTER TABLE ONLY public.subjects
---     ADD CONSTRAINT subjects_pk2 UNIQUE (subject_id);
---
--- CREATE TABLE public.students (
---                                  student_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                  name text NOT NULL,
---                                  user_id uuid NOT NULL
--- );
---
--- ALTER TABLE public.students OWNER TO admin;
---
--- ALTER TABLE ONLY public.students
---     ADD CONSTRAINT students_pk PRIMARY KEY (student_id);
---
--- ALTER TABLE ONLY public.students
---     ADD CONSTRAINT students_pk2 UNIQUE (student_id);
---
--- CREATE TABLE public.classes (
---                                 class_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                 subject_id uuid NOT NULL,
---                                 is_active boolean NOT NULL
--- );
---
--- ALTER TABLE public.classes OWNER TO admin;
---
--- ALTER TABLE ONLY public.classes
---     ADD CONSTRAINT classes_pk PRIMARY KEY (class_id);
---
--- ALTER TABLE ONLY public.classes
---     ADD CONSTRAINT classes_pk3 UNIQUE (class_id);
---
--- CREATE TABLE public.class_teachers (
---                                        class_id uuid NOT NULL,
---                                        teacher_id uuid NOT NULL
--- );
---
--- ALTER TABLE public.class_teachers OWNER TO admin;
---
--- ALTER TABLE ONLY public.class_teachers
---     ADD CONSTRAINT class_teachers_pk UNIQUE (class_id);
---
--- ALTER TABLE ONLY public.class_teachers
---     ADD CONSTRAINT class_teachers_pk2 UNIQUE (teacher_id);
---
--- ALTER TABLE ONLY public.class_teachers
---     ADD CONSTRAINT class_teachers_classes_class_id_fk FOREIGN KEY (class_id) REFERENCES public.classes(class_id);
---
--- ALTER TABLE ONLY public.class_teachers
---     ADD CONSTRAINT class_teachers_teachers_teacher_id_fk FOREIGN KEY (teacher_id) REFERENCES public.teachers(teacher_id);
---
---
--- CREATE TABLE public.class_students (
---    class_id uuid NOT NULL,
---    student_id uuid NOT NULL
--- );
---
--- ALTER TABLE public.class_students OWNER TO admin;
--- ALTER TABLE ONLY public.class_students
---     ADD CONSTRAINT class_students_pk UNIQUE (student_id);
--- ALTER TABLE ONLY public.class_students
---     ADD CONSTRAINT class_students_classes_class_id_fk FOREIGN KEY (class_id) REFERENCES public.classes(class_id);
---
--- ALTER TABLE ONLY public.class_students
---     ADD CONSTRAINT class_students_students_student_id_fk FOREIGN KEY (student_id) REFERENCES public.students(student_id);
---
---
--- CREATE TABLE public.exams (
---                               exam_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                               class_id uuid NOT NULL,
---                               subject_id uuid NOT NULL,
---                               name text NOT NULL,
---                               description text,
---                               created_by uuid NOT NULL,
---                               created_at timestamp with time zone DEFAULT now() NOT NULL,
---                               updated_at timestamp with time zone DEFAULT now() NOT NULL
--- );
---
---
--- ALTER TABLE public.exams OWNER TO admin;
--- ALTER TABLE ONLY public.exams
---     ADD CONSTRAINT exams_pk PRIMARY KEY (exam_id);
---
--- ALTER TABLE ONLY public.exams
---     ADD CONSTRAINT exams_pk3 UNIQUE (class_id);
---
--- ALTER TABLE ONLY public.exams
---     ADD CONSTRAINT exams_pk4 UNIQUE (subject_id);
---
---
--- ALTER TABLE ONLY public.exams
---     ADD CONSTRAINT exams_classes_class_id_fk FOREIGN KEY (class_id) REFERENCES public.classes(class_id);
---
--- ALTER TABLE ONLY public.exams
---     ADD CONSTRAINT exams_subjects_subject_id_fk FOREIGN KEY (subject_id) REFERENCES public.subjects(subject_id);
---
--- ALTER TABLE ONLY public.exams
---     ADD CONSTRAINT exams_users_user_id_fk FOREIGN KEY (created_by) REFERENCES public.users(user_id);
---
---
--- CREATE TABLE public.questions (
---                                   question_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                   question_text text NOT NULL,
---                                   question_type public.question_types NOT NULL,
---                                   exam_id uuid NOT NULL,
---                                   question_level public.question_levels
--- );
---
---
--- ALTER TABLE public.questions OWNER TO admin;
--- ALTER TABLE ONLY public.questions
---     ADD CONSTRAINT questions_pk PRIMARY KEY (question_id);
--- ALTER TABLE ONLY public.questions
---     ADD CONSTRAINT questions_exams_exam_id_fk FOREIGN KEY (exam_id) REFERENCES public.exams(exam_id);
---
--- CREATE TABLE public.choices (
---                                 choice_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                 question_id uuid NOT NULL,
---                                 choice_text text NOT NULL,
---                                 is_correct boolean NOT NULL
--- );
---
--- ALTER TABLE public.choices OWNER TO admin;
--- ALTER TABLE ONLY public.choices
---     ADD CONSTRAINT choices_pk PRIMARY KEY (choice_id);
--- ALTER TABLE ONLY public.choices
---     ADD CONSTRAINT choices_questions_question_id_fk FOREIGN KEY (question_id) REFERENCES public.questions(question_id);
---
---
--- CREATE TABLE public.answers (
---                                 answer_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                 user_id uuid NOT NULL,
---                                 question_id uuid NOT NULL,
---                                 choice_answer_id uuid,
---                                 text_answer text,
---                                 table_answer_id uuid
--- );
---
--- ALTER TABLE public.answers OWNER TO admin;
--- ALTER TABLE ONLY public.answers
---     ADD CONSTRAINT answers_pk PRIMARY KEY (answer_id);
---
--- ALTER TABLE ONLY public.answers
---     ADD CONSTRAINT answers_answered_tables_answered_table_id_fk FOREIGN KEY (table_answer_id) REFERENCES public.answered_tables(answered_table_id);
---
--- ALTER TABLE ONLY public.answers
---     ADD CONSTRAINT answers_choices_choice_id_fk FOREIGN KEY (choice_answer_id) REFERENCES public.choices(choice_id);
---
--- ALTER TABLE ONLY public.answers
---     ADD CONSTRAINT answers_questions_question_id_fk FOREIGN KEY (question_id) REFERENCES public.questions(question_id);
---
--- ALTER TABLE ONLY public.answers
---     ADD CONSTRAINT answers_users_user_id_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id);
---
--- CREATE TABLE public.answered_tables (
---                                         answered_table_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                         answer_id uuid DEFAULT gen_random_uuid() NOT NULL
--- );
---
---
--- ALTER TABLE public.answered_tables OWNER TO admin;
---
--- ALTER TABLE ONLY public.answered_tables
---     ADD CONSTRAINT answered_tables_pk PRIMARY KEY (answered_table_id);
--- ALTER TABLE ONLY public.answered_tables
---     ADD CONSTRAINT answered_tables_answers_answer_id_fk FOREIGN KEY (answer_id) REFERENCES public.answers(answer_id);
---
---
--- CREATE TABLE public.answered_tables_rows (
---                                              answered_table_row_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                              answered_table_id uuid NOT NULL
--- );
---
---
--- ALTER TABLE public.answered_tables_rows OWNER TO admin;
--- ALTER TABLE ONLY public.answered_tables_rows
---     ADD CONSTRAINT answered_tables_rows_pk PRIMARY KEY (answered_table_row_id);
--- ALTER TABLE ONLY public.answered_tables_rows
---     ADD CONSTRAINT answered_tables_rows_answered_tables_answered_table_id_fk FOREIGN KEY (answered_table_id) REFERENCES public.answered_tables(answered_table_id);
---
---
--- CREATE TABLE public.answered_tables_cells (
---                                               cell_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                               table_row_id uuid NOT NULL,
---                                               column_name text NOT NULL,
---                                               value text NOT NULL
--- );
---
---
--- ALTER TABLE public.answered_tables_cells OWNER TO admin;
--- ALTER TABLE ONLY public.answered_tables_cells
---     ADD CONSTRAINT answered_tables_cells_pk PRIMARY KEY (cell_id);
--- ALTER TABLE ONLY public.answered_tables_cells
---     ADD CONSTRAINT table_row_id_constraint FOREIGN KEY (table_row_id) REFERENCES public.answered_tables_rows(answered_table_row_id);
---
---
--- CREATE TABLE public.exams_categories (
---                                          category_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                          name text NOT NULL
--- );
---
---
--- ALTER TABLE public.exams_categories OWNER TO admin;
--- ALTER TABLE ONLY public.exams_categories
---     ADD CONSTRAINT exams_categories_pk PRIMARY KEY (category_id);
---
--- CREATE TABLE public.exams_users_score (
---                                           user_id uuid NOT NULL,
---                                           exam_id uuid NOT NULL,
---                                           score numeric(5,2) NOT NULL
--- );
---
---
--- ALTER TABLE public.exams_users_score OWNER TO admin;
--- ALTER TABLE ONLY public.exams_users_score
---     ADD CONSTRAINT exams_users_score_exams_exam_id_fk FOREIGN KEY (exam_id) REFERENCES public.exams(exam_id);
--- ALTER TABLE ONLY public.exams_users_score
---     ADD CONSTRAINT exams_users_score_users_user_id_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id);
---
---
--- CREATE TABLE public.exam_sessions (
---                                       session_id uuid DEFAULT gen_random_uuid() NOT NULL,
---                                       exam_id uuid NOT NULL,
---                                       user_id uuid NOT NULL,
---                                       start_time timestamp with time zone NOT NULL,
---                                       end_time timestamp with time zone NOT NULL
--- );
---
---
--- ALTER TABLE public.exam_sessions OWNER TO admin;
--- ALTER TABLE ONLY public.exam_sessions
---     ADD CONSTRAINT exam_sessions_pk PRIMARY KEY (session_id);
--- ALTER TABLE ONLY public.exam_sessions
---     ADD CONSTRAINT exam_sessions_exams_exam_id_fk FOREIGN KEY (exam_id) REFERENCES public.exams(exam_id);
--- ALTER TABLE ONLY public.exam_sessions
---     ADD CONSTRAINT exam_sessions_users_user_id_fk FOREIGN KEY (user_id) REFERENCES public.users(user_id);
---
---
--- CREATE TABLE public.exam_settings (
---                                       exam_id uuid NOT NULL,
---                                       passing_score numeric(5,2) NOT NULL,
---                                       multiple_attempts_allowed boolean DEFAULT false NOT NULL,
---                                       randomize_question boolean DEFAULT false NOT NULL,
---                                       time_limit integer NOT NULL
--- );
---
---
--- ALTER TABLE public.exam_settings OWNER TO admin;
--- COMMENT ON COLUMN public.exam_settings.time_limit IS 'in seconds';
--- ALTER TABLE ONLY public.exam_settings
---     ADD CONSTRAINT exam_settings_pk PRIMARY KEY (exam_id);
--- ALTER TABLE ONLY public.exam_settings
---     ADD CONSTRAINT exam_settings_exams_exam_id_fk FOREIGN KEY (exam_id) REFERENCES public.exams(exam_id);
+create table public.student_answers (
+                                        answer_id uuid primary key not null default gen_random_uuid(),
+                                        user_id uuid not null,
+                                        question_id uuid not null,
+                                        choice_answer_id uuid,
+                                        text_answer text,
+                                        table_answer jsonb,
+                                        foreign key (choice_answer_id) references public.question_choices (choice_id)
+                                            match simple on update cascade on delete cascade,
+                                        foreign key (question_id) references public.questions (question_id)
+                                            match simple on update cascade on delete cascade,
+                                        foreign key (user_id) references public.users (user_id)
+                                            match simple on update cascade on delete cascade
+);
+
+create table public.student_schedule (
+                                         schedule_id uuid not null default gen_random_uuid(),
+                                         student_id uuid not null,
+                                         start_time timestamp with time zone not null,
+                                         end_time timestamp with time zone,
+                                         primary key (schedule_id, student_id),
+                                         foreign key (student_id) references public.students (student_id)
+                                             match simple on update cascade on delete cascade
+);
+
+create table public.teachers (
+                                 teacher_id uuid primary key not null default gen_random_uuid(),
+                                 user_id uuid not null,
+                                 foreign key (user_id) references public.users (user_id)
+                                     match simple on update cascade on delete cascade
+);
+create unique index teachers_pk2 on teachers using btree (teacher_id);
+create unique index teachers_unique_teacher_id_user_id on teachers using btree (teacher_id, user_id);
+
+create table public.teacher_schedule (
+                                         schedule_id uuid not null default gen_random_uuid(),
+                                         teacher_id uuid not null,
+                                         start_time timestamp with time zone not null,
+                                         end_time timestamp with time zone,
+                                         primary key (schedule_id, teacher_id),
+                                         foreign key (teacher_id) references public.teachers (teacher_id)
+                                             match simple on update cascade on delete cascade
+);
+
+create table public.subjects (
+                                 subject_id uuid primary key not null default gen_random_uuid(),
+                                 name text not null
+);
+create unique index subjects_pk2 on subjects using btree (subject_id);
+
+create table public.classes (
+                                class_id uuid primary key not null default gen_random_uuid(),
+                                is_active boolean not null,
+                                name text not null,
+                                description text not null,
+                                capacity integer not null
+);
+
+create table public.class_grades (
+                                     grade_id uuid not null,
+                                     student_id uuid not null,
+                                     class_id uuid not null,
+                                     grade_value numeric(5,2) not null,
+                                     primary key (grade_id, student_id, class_id),
+                                     foreign key (class_id) references public.classes (class_id)
+                                         match simple on update cascade on delete cascade,
+                                     foreign key (student_id) references public.students (student_id)
+                                         match simple on update cascade on delete cascade
+);
+
+create table public.class_phase (
+                                    phase_id uuid not null default gen_random_uuid(),
+                                    class_id uuid not null,
+                                    class_phase integer not null,
+                                    primary key (phase_id, class_id),
+                                    foreign key (class_id) references public.classes (class_id)
+                                        match simple on update cascade on delete cascade
+);
+
+create table public.class_schedule (
+                                       schedule_id uuid not null default gen_random_uuid(),
+                                       class_id uuid not null,
+                                       start_time timestamp with time zone not null,
+                                       end_time timestamp with time zone,
+                                       primary key (schedule_id, class_id),
+                                       foreign key (class_id) references public.classes (class_id)
+                                           match simple on update cascade on delete cascade
+);
+
+create table public.class_students (
+                                       class_id uuid not null,
+                                       student_id uuid not null,
+                                       primary key (class_id, student_id),
+                                       foreign key (class_id) references public.classes (class_id)
+                                           match simple on update no action on delete no action,
+                                       foreign key (student_id) references public.students (student_id)
+                                           match simple on update no action on delete no action
+);
+
+create table public.class_subjects (
+                                       class_id uuid not null,
+                                       subject_id uuid not null,
+                                       primary key (class_id, subject_id),
+                                       foreign key (class_id) references public.classes (class_id)
+                                           match simple on update cascade on delete cascade,
+                                       foreign key (subject_id) references public.subjects (subject_id)
+                                           match simple on update cascade on delete cascade
+);
+
+create table public.class_teachers (
+                                       class_id uuid not null,
+                                       teacher_id uuid not null,
+                                       primary key (class_id, teacher_id),
+                                       foreign key (class_id) references public.classes (class_id)
+                                           match simple on update no action on delete no action,
+                                       foreign key (teacher_id) references public.teachers (teacher_id)
+                                           match simple on update no action on delete no action
+);
+
+create table public.exams (
+                              exam_id uuid primary key not null default gen_random_uuid(),
+                              name text not null,
+                              description text,
+                              created_by uuid not null,
+                              created_at timestamp with time zone not null default now(),
+                              updated_at timestamp with time zone not null default now(),
+                              foreign key (created_by) references public.users (user_id)
+                                  match simple on update cascade on delete cascade
+);
+
+create table public.exam_classes (
+                                     exam_id uuid not null,
+                                     class_id uuid not null,
+                                     primary key (exam_id, class_id),
+                                     foreign key (class_id) references public.classes (class_id)
+                                         match simple on update cascade on delete cascade,
+                                     foreign key (exam_id) references public.exams (exam_id)
+                                         match simple on update cascade on delete cascade
+);
+
+create table public.exam_sessions (
+                                      session_id uuid not null default gen_random_uuid(),
+                                      exam_id uuid not null,
+                                      user_id uuid not null,
+                                      start_time timestamp with time zone not null,
+                                      end_time timestamp with time zone not null,
+                                      primary key (session_id, exam_id, user_id),
+                                      foreign key (exam_id) references public.exams (exam_id)
+                                          match simple on update no action on delete no action,
+                                      foreign key (user_id) references public.users (user_id)
+                                          match simple on update no action on delete no action
+);
+
+create table public.exam_settings (
+                                      exam_id uuid primary key not null,
+                                      passing_score numeric(5,2) not null,
+                                      multiple_attempts_allowed boolean not null default false,
+                                      randomize_question boolean not null default false,
+                                      time_limit integer not null, -- in seconds
+                                      foreign key (exam_id) references public.exams (exam_id)
+                                          match simple on update no action on delete no action
+);
+comment on column public.exam_settings.time_limit is 'in seconds';
+
+create table public.exams_score (
+                                    user_id uuid not null,
+                                    exam_id uuid not null,
+                                    score numeric(5,2) not null,
+                                    primary key (user_id, exam_id),
+                                    foreign key (exam_id) references public.exams (exam_id)
+                                        match simple on update cascade on delete cascade,
+                                    foreign key (user_id) references public.users (user_id)
+                                        match simple on update cascade on delete cascade
+);
+
+create table public.notification (
+                                     notification_id uuid not null,
+                                     user_id uuid not null,
+                                     message text not null,
+                                     date_sent timestamp with time zone not null,
+                                     primary key (notification_id, user_id),
+                                     foreign key (user_id) references public.users (user_id)
+                                         match simple on update cascade on delete cascade
+);
+
+create table public.question_exams (
+                                       question_id uuid not null,
+                                       exam_id uuid not null,
+                                       primary key (question_id, exam_id),
+                                       foreign key (exam_id) references public.exams (exam_id)
+                                           match simple on update no action on delete no action
+);
+
+create table public.question_key_answers (
+                                             answer_id uuid not null default gen_random_uuid(),
+                                             question_id uuid not null,
+                                             choice_answer uuid,
+                                             text_answer text,
+                                             table_answer jsonb,
+                                             primary key (answer_id, question_id),
+                                             foreign key (question_id) references public.questions (question_id)
+                                                 match simple on update cascade on delete cascade
+);

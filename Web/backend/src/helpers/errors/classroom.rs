@@ -1,7 +1,6 @@
 use crate::helpers::errors::auth::AuthError;
 use crate::helpers::errors::subject::SubjectServiceError;
 use crate::helpers::errors::teacher::TeacherServiceError;
-use anyhow::anyhow;
 use axum::extract::rejection::JsonRejection;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;

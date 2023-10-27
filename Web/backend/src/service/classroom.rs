@@ -1,13 +1,10 @@
 use crate::backend::AppState;
 use crate::helpers::errors::classroom::ClassroomServiceError;
-use crate::model::classroom::{
-    Action, ActionType, Classroom, StudentClassroom, TeacherClassroom, UpdateClassroomParams,
-};
+use crate::model::classroom::{Action, ActionType, Classroom, CreateClassroomParams, StudentClassroom, TeacherClassroom, UpdateClassroomParams};
 use crate::model::user::{UserRole, UserUniversityRole};
 use crate::r#const::PgTransaction;
 use crate::service::subject::SubjectService;
 use anyhow::anyhow;
-use redis::{AsyncCommands, JsonAsyncCommands};
 use std::str::FromStr;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -17,7 +14,7 @@ pub struct ClassroomService {
     subject_service: Arc<SubjectService>,
 }
 
-const DEFAULT_CACHE_TIME_EXIST: time::Duration = time::Duration::hours(1);
+// const DEFAULT_CACHE_TIME_EXIST: time::Duration = time::Duration::hours(1);
 
 impl ClassroomService {
     pub fn new(app_state: Arc<AppState>, subject_service: Arc<SubjectService>) -> Self {
@@ -145,11 +142,7 @@ impl ClassroomService {
         transaction: &mut PgTransaction,
         user_role: &UserRole,
         university_role: &UserUniversityRole,
-        subject_id: &str,
-        students: Option<Vec<String>>,
-        teachers: Option<Vec<String>>,
-        name: &str,
-        description: &str,
+        params: &CreateClassroomParams,
     ) -> Result<String, ClassroomServiceError> {
         //TODO: Admin access or support access.
         if matches!(user_role, UserRole::Administrator) || matches!(user_role, UserRole::Staff) {
@@ -161,13 +154,10 @@ impl ClassroomService {
         }
 
         let query = sqlx::query!(
-            r#"insert into classes (subject_id, is_active, name, description) values ($1, $2, $3, $4) returning class_id::text as "class_id!""#,
-            Uuid::from_str(subject_id).map_err(|_|
-                ClassroomServiceError::UnexpectedError(anyhow!("Unable to parse subject_id into uuid"))
-            )?,
+            r#"insert into classes (is_active, name, description) values ($1, $2, $3) returning class_id::text as "class_id!""#,
             true,
-            name,
-            description
+            params.name,
+            params.description
         )
             .fetch_one(&mut **transaction)
             .await
@@ -177,8 +167,8 @@ impl ClassroomService {
 
         let class_id = query.class_id;
 
-        if students.is_some() || teachers.is_some() {
-            if let Some(students) = students {
+        if params.students.is_some() || params.teachers.is_some() {
+            if let Some(students) = &params.students {
                 for student in students {
                     sqlx::query!(
                         "insert into class_students (class_id, student_id) values ($1, $2)",
@@ -204,7 +194,7 @@ impl ClassroomService {
                 }
             }
 
-            if let Some(teachers) = teachers {
+            if let Some(teachers) = &params.teachers {
                 for teacher in teachers {
                     sqlx::query!(
                         "insert into class_teachers (class_id, teacher_id) values ($1, $2)",
@@ -614,31 +604,33 @@ impl ClassroomService {
     ) -> Result<Classroom, ClassroomServiceError> {
         let query = sqlx::query!(
             r#"
-       select
-        classes.is_active,
-        classes.class_id,
-        classes.subject_id,
-        classes.name,
-        classes.description,
-        subjects.name as subject_name,
-        class_schedule.start_time,
-        class_schedule.end_time
-       from classes
-       inner join subjects on classes.subject_id = subjects.subject_id
-       inner join class_schedule on classes.class_id = class_schedule.class_id
-       where classes.class_id = $1;
+           select
+            classes.is_active,
+            classes.class_id,
+            classes.name,
+            classes.description,
+            subjects.name as subject_name,
+            subjects.subject_id,
+            class_schedule.start_time,
+            class_schedule.end_time
+        from classes
+            inner join class_subjects on classes.class_id = class_subjects.class_id
+            inner join subjects on class_subjects.subject_id = subjects.subject_id
+            inner join class_schedule on classes.class_id = class_schedule.class_id
+        where classes.class_id::text = $1;
        "#,
-            Uuid::from_str(class_id).map_err(|err| {
-                tracing::error!("Unable to parse class_id with error: {}", err.to_string());
-                anyhow!("Unable to parse class_id with error: {}", err.to_string())
-            })?
+            class_id,
+            // Uuid::from_str(class_id).map_err(|err| {
+            //     tracing::error!("Unable to parse class_id with error: {}", err.to_string());
+            //     anyhow!("Unable to parse class_id with error: {}", err.to_string())
+            // })?
         )
-        .fetch_one(&mut **transaction)
+        .fetch_optional(&mut **transaction)
         .await
         .map_err(|err| {
-            tracing::error!("Got an error from database: {}", err.to_string());
-            anyhow!("Got an error from database: {}", err.to_string())
-        })?;
+            ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string()))
+        })?
+            .ok_or(ClassroomServiceError::UnexpectedError(anyhow!("Not found a classroom with class_id: {}", class_id)))?;
 
         let classroom = Classroom {
             is_active: query.is_active,
@@ -657,203 +649,80 @@ impl ClassroomService {
         &self,
         user_id: &str,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let classroom_key = format!("classroom:{user_id}");
-        let mut redis_conn = self
-            .app_state
-            .redis
-            .get_async_connection()
-            .await
-            .map_err(|_| {
-                ClassroomServiceError::UnexpectedError(anyhow!(
-                    "Unable to get connection from redis"
-                ))
-            })?;
-        let is_exists = redis_conn
-            .exists::<String, usize>(classroom_key.to_owned())
-            .await
-            .map_err(|_| {
-                ClassroomServiceError::UnexpectedError(anyhow!("Unable to set exists key in redis"))
-            })?;
-
-        if is_exists == 0 {
-            let query = sqlx::query!("
+        let query = sqlx::query!("
             select
                 classes.is_active,
                 classes.class_id,
-                classes.subject_id,
                 classes.name,
                 classes.description,
+                class_subjects.subject_id,
                 subjects.name as subject_name,
                 class_schedule.start_time,
                 class_schedule.end_time
             from students
-            inner join class_students on students.student_id = class_students.student_id
-            inner join classes on class_students.class_id = classes.class_id and classes.is_active = true
-            inner join subjects on classes.subject_id = subjects.subject_id
-            inner join class_schedule on classes.class_id = class_schedule.class_id
+                     inner join class_students on students.student_id = class_students.student_id
+                     inner join classes on class_students.class_id = classes.class_id and classes.is_active = true
+                     inner join class_subjects on classes.class_id = class_subjects.class_id
+                     inner join subjects on class_subjects.subject_id = subjects.subject_id
+                     inner join class_schedule on classes.class_id = class_schedule.class_id
             where user_id::text = $1;
             ", &user_id)
-                .fetch_all(&self.app_state.database)
-                .await
+            .fetch_all(&self.app_state.database)
+            .await
             .map_err(|err| { ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string())) })?;
 
-            let mut list_classroom: Vec<Classroom> = Vec::with_capacity(query.len());
-            for tmp_classroom in query {
-                let classroom = Classroom {
-                    is_active: tmp_classroom.is_active,
-                    name: tmp_classroom.name,
-                    description: tmp_classroom.description,
-                    class_id: tmp_classroom.class_id.to_string(),
-                    subject_id: tmp_classroom.subject_id.to_string(),
-                    subject_name: tmp_classroom.subject_name.to_string(),
-                    start_time: tmp_classroom.start_time.to_rfc3339(),
-                    end_time: tmp_classroom.end_time.map(|time| time.to_rfc3339()),
-                };
-                list_classroom.push(classroom)
-            }
-
-            let timestamp_expire =
-                (time::OffsetDateTime::now_utc() + DEFAULT_CACHE_TIME_EXIST).unix_timestamp();
-
-            redis_conn
-                .json_set::<String, &str, Vec<Classroom>, ()>(
-                    classroom_key.to_owned(),
-                    "$",
-                    &list_classroom,
-                )
-                .await
-                .map_err(|_| {
-                    ClassroomServiceError::UnexpectedError(anyhow!("Unable to json set on redis"))
-                })?;
-            redis_conn
-                .expire_at::<String, ()>(classroom_key.to_owned(), timestamp_expire as usize)
-                .await
-                .map_err(|_| {
-                    ClassroomServiceError::UnexpectedError(anyhow!(
-                        "Unable to set an expire on redis"
-                    ))
-                })?;
-
-            Ok(list_classroom)
-        } else if is_exists == 1 {
-            let query_from_redis = redis_conn
-                .json_get::<String, &str, String>(classroom_key.to_owned(), "$")
-                .await
-                .map_err(|_| {
-                    ClassroomServiceError::UnexpectedError(anyhow!(
-                        "Unable to get a json data from redis"
-                    ))
-                })?;
-            let classrooms = &serde_json::from_str::<Vec<Vec<Classroom>>>(
-                query_from_redis.as_str(),
-            )
-            .map_err(|_| {
-                ClassroomServiceError::UnexpectedError(anyhow!("Got an unvalid data from redis"))
-            })?[0];
-            Ok(classrooms.to_vec())
-        } else {
-            Err(ClassroomServiceError::UnexpectedError(anyhow!(
-                "not a wanted response from redis"
-            )))
+        let mut list_classroom: Vec<Classroom> = Vec::with_capacity(query.len());
+        for tmp_classroom in query {
+            let classroom = Classroom {
+                is_active: tmp_classroom.is_active,
+                name: tmp_classroom.name,
+                description: tmp_classroom.description,
+                class_id: tmp_classroom.class_id.to_string(),
+                subject_id: tmp_classroom.subject_id.to_string(),
+                subject_name: tmp_classroom.subject_name.to_string(),
+                start_time: tmp_classroom.start_time.to_rfc3339(),
+                end_time: tmp_classroom.end_time.map(|time| time.to_rfc3339()),
+            };
+            list_classroom.push(classroom)
         }
+        Ok(list_classroom)
     }
 
     async fn get_lecturer_classroom(
         &self,
         user_id: &str,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let classroom_key = format!("classroom:{user_id}");
-        let mut redis_conn = self
-            .app_state
-            .redis
-            .get_async_connection()
+        let query = sqlx::query!(r#"
+        select
+            subjects.name as subject_name,
+            classes.class_id, subjects.subject_id, is_active, classes.name, description,
+            cs.start_time, cs.end_time
+        from teachers
+                 inner join class_teachers on teachers.teacher_id = class_teachers.teacher_id
+                 inner join classes on class_teachers.class_id = classes.class_id and classes.is_active = true
+                 inner join class_subjects on classes.class_id = class_subjects.class_id
+                 inner join subjects on class_subjects.subject_id = subjects.subject_id
+                 inner join class_schedule cs on classes.class_id = cs.class_id
+        where user_id::text = $1;
+            "#, &user_id)
+            .fetch_all(&self.app_state.database)
             .await
-            .map_err(|_| {
-                ClassroomServiceError::UnexpectedError(anyhow!("Unable to get a redis connection"))
-            })?;
-        let is_exists = redis_conn
-            .exists::<String, usize>(classroom_key.to_owned())
-            .await
-            .map_err(|_| {
-                ClassroomServiceError::UnexpectedError(anyhow!(
-                    "Unable to get exists status from redis"
-                ))
-            })?;
-
-        if is_exists == 0 {
-            let query = sqlx::query!(r#"
-            select
-                subjects.name as subject_name,
-                classes.class_id, subjects.subject_id, is_active, classes.name, description,
-                cs.start_time, cs.end_time
-            from teachers
-            inner join class_teachers on teachers.teacher_id = class_teachers.teacher_id
-            inner join classes on class_teachers.class_id = classes.class_id and classes.is_active = true
-            inner join subjects on classes.subject_id = subjects.subject_id
-            inner join class_schedule cs on classes.class_id = cs.class_id
-            where user_id::text = $1;"#, &user_id)
-                .fetch_all(&self.app_state.database)
-                .await
             .map_err(|err| ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string())))?;
 
-            let mut classrooms: Vec<Classroom> = Vec::with_capacity(query.len());
-            for tmp_classroom in query {
-                let classroom = Classroom {
-                    is_active: tmp_classroom.is_active,
-                    name: tmp_classroom.name,
-                    description: tmp_classroom.description,
-                    class_id: tmp_classroom.class_id.to_string(),
-                    subject_id: tmp_classroom.subject_id.to_string(),
-                    subject_name: tmp_classroom.subject_name.to_string(),
-                    start_time: tmp_classroom.start_time.to_rfc3339(),
-                    end_time: tmp_classroom.end_time.map(|time| time.to_rfc3339()),
-                };
-                classrooms.push(classroom);
-            }
-            let timestamp_expire =
-                (time::OffsetDateTime::now_utc() + DEFAULT_CACHE_TIME_EXIST).unix_timestamp();
-
-            redis_conn
-                .json_set::<String, &str, Vec<Classroom>, ()>(
-                    classroom_key.to_owned(),
-                    "$",
-                    &classrooms,
-                )
-                .await
-                .map_err(|_| {
-                    ClassroomServiceError::UnexpectedError(anyhow!(
-                        "Unable to do json_set on redis"
-                    ))
-                })?;
-            redis_conn
-                .expire_at::<String, ()>(classroom_key.to_owned(), timestamp_expire as usize)
-                .await
-                .map_err(|_| {
-                    ClassroomServiceError::UnexpectedError(anyhow!(
-                        "Unable to do expire_at on redis"
-                    ))
-                })?;
-            Ok(classrooms)
-        } else if is_exists == 1 {
-            let query_from_redis = redis_conn
-                .json_get::<String, &str, String>(classroom_key.to_owned(), "$")
-                .await
-                .map_err(|_| {
-                    ClassroomServiceError::UnexpectedError(anyhow!(
-                        "Unable to do json_get on redis"
-                    ))
-                })?;
-            let classrooms = &serde_json::from_str::<Vec<Vec<Classroom>>>(
-                query_from_redis.as_str(),
-            )
-            .map_err(|_| {
-                ClassroomServiceError::UnexpectedError(anyhow!("Got an unexpected data from redis"))
-            })?[0];
-            Ok(classrooms.to_vec())
-        } else {
-            Err(ClassroomServiceError::UnexpectedError(anyhow!(
-                "not a wanted response from redis"
-            )))
+        let mut classrooms: Vec<Classroom> = Vec::with_capacity(query.len());
+        for tmp_classroom in query {
+            let classroom = Classroom {
+                is_active: tmp_classroom.is_active,
+                name: tmp_classroom.name,
+                description: tmp_classroom.description,
+                class_id: tmp_classroom.class_id.to_string(),
+                subject_id: tmp_classroom.subject_id.to_string(),
+                subject_name: tmp_classroom.subject_name.to_string(),
+                start_time: tmp_classroom.start_time.to_rfc3339(),
+                end_time: tmp_classroom.end_time.map(|time| time.to_rfc3339()),
+            };
+            classrooms.push(classroom);
         }
+        Ok(classrooms)
     }
 }

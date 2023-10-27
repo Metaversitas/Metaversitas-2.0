@@ -1,19 +1,15 @@
-use crate::backend::AppState;
 use crate::helpers::errors::teacher::TeacherServiceError;
 use crate::model::teacher::Teacher;
 use crate::r#const::PgTransaction;
 use anyhow::anyhow;
 use std::str::FromStr;
-use std::sync::Arc;
 use uuid::Uuid;
 
-pub struct TeacherService {
-    app_state: Arc<AppState>,
-}
+pub struct TeacherService;
 
 impl TeacherService {
-    pub fn new(app_state: Arc<AppState>) -> Self {
-        Self { app_state }
+    pub fn new() -> Self {
+        Self
     }
 
     pub async fn delete_teacher_by_id(
@@ -99,5 +95,11 @@ impl TeacherService {
             teacher_id: query.teacher_id.to_string(),
             user_id: query.user_id.to_string(),
         })
+    }
+}
+
+impl Default for TeacherService {
+    fn default() -> Self {
+        Self::new()
     }
 }

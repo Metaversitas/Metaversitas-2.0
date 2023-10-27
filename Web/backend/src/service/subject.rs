@@ -1,19 +1,15 @@
-use crate::backend::AppState;
 use crate::helpers::errors::subject::SubjectServiceError;
 use crate::model::subject::Subject;
 use crate::r#const::PgTransaction;
 use anyhow::anyhow;
 use std::str::FromStr;
-use std::sync::Arc;
 use uuid::Uuid;
 
-pub struct SubjectService {
-    app_state: Arc<AppState>,
-}
+pub struct SubjectService;
 
 impl SubjectService {
-    pub fn new(app_state: Arc<AppState>) -> Self {
-        Self { app_state }
+    pub fn new() -> Self {
+        Self
     }
 
     pub async fn get_subject_by_id(
@@ -208,5 +204,11 @@ impl SubjectService {
         };
 
         Ok(subject)
+    }
+}
+
+impl Default for SubjectService {
+    fn default() -> Self {
+        Self::new()
     }
 }
