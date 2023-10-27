@@ -1,36 +1,36 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                select *\n                    from public.game\n                where version::text = $1;",
+  "query": "\n        select\n            *\n        from exams\n        where exam_id::text = $1;\n        ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "version",
-        "type_info": "Int8"
+        "name": "exam_id",
+        "type_info": "Uuid"
       },
       {
         "ordinal": 1,
-        "name": "description",
+        "name": "name",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "installed_on",
-        "type_info": "Timestamptz"
+        "name": "description",
+        "type_info": "Text"
       },
       {
         "ordinal": 3,
-        "name": "is_live",
-        "type_info": "Bool"
+        "name": "created_by",
+        "type_info": "Uuid"
       },
       {
         "ordinal": 4,
-        "name": "updated_at",
+        "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
         "ordinal": 5,
-        "name": "created_at",
+        "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
@@ -41,12 +41,12 @@
     },
     "nullable": [
       false,
-      true,
       false,
+      true,
       false,
       false,
       false
     ]
   },
-  "hash": "701435c13c4092a4aa3d051be357b9360706f045c96e7527dd3b71c20f23f58e"
+  "hash": "18b803896eb1c49fa7cf3087ab904c089cd584b7d8fdb5f816324d37a62a5cf5"
 }

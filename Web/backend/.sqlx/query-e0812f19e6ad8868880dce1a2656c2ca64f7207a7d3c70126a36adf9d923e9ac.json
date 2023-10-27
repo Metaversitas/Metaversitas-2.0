@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            select users.role as \"role!: UserRole\"\n            from users\n            where users.user_id::text = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "role!: UserRole",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e0812f19e6ad8868880dce1a2656c2ca64f7207a7d3c70126a36adf9d923e9ac"
+}

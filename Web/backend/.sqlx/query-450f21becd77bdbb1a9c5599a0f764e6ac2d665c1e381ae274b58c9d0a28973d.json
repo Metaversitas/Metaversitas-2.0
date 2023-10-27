@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            qc.choice_id,\n            qc.choice_text,\n            qc.is_correct\n        from questions\n        inner join question_choices qc on questions.question_id = qc.question_id\n        where questions.question_id = $1;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "choice_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "choice_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "is_correct",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "450f21becd77bdbb1a9c5599a0f764e6ac2d665c1e381ae274b58c9d0a28973d"
+}
