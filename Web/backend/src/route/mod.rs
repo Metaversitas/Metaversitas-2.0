@@ -1,12 +1,16 @@
 use crate::backend::AppState;
 use crate::controllers::auth::{auth_router, AUTH_PATH_CONTROLLER};
 use crate::controllers::classroom::{classroom_router, CLASSROOM_PATH_CONTROLLER};
+use crate::controllers::exam::{exam_router, EXAM_CONTROLLER_PATH};
 use crate::controllers::health::{health_checker, HEALTH_PATH_CONTROLLER};
 use crate::controllers::homepage::{homepage, HOMEPAGE_PATH_CONTROLLER};
+use crate::controllers::question::{question_router, QUESTION_ROUTER_PATH};
 use crate::controllers::user::{user_router, USER_PATH_CONTROLLER};
 use crate::r#const::{ENV_ENVIRONMENT, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 use crate::service::classroom::ClassroomService;
+use crate::service::exam::ExamService;
 use crate::service::game::GameService;
+use crate::service::question::QuestionService;
 use crate::service::student::StudentService;
 use crate::service::subject::SubjectService;
 use crate::service::teacher::TeacherService;
@@ -59,13 +63,15 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
 
     let game_service = Arc::new(GameService::new(Arc::clone(&app_state)));
     let user_service = Arc::new(UserService::new(Arc::clone(&app_state)));
-    let subject_service = Arc::new(SubjectService::new(Arc::clone(&app_state)));
+    let subject_service = Arc::new(SubjectService::new());
     let classroom_service = Arc::new(ClassroomService::new(
         Arc::clone(&app_state),
         Arc::clone(&subject_service),
     ));
-    let teacher_service = Arc::new(TeacherService::new(Arc::clone(&app_state)));
-    let student_service = Arc::new(StudentService::new(Arc::clone(&app_state)));
+    let teacher_service = Arc::new(TeacherService::new());
+    let student_service = Arc::new(StudentService::new());
+    let question_service = Arc::new(QuestionService::new());
+    let exam_service = Arc::new(ExamService::new());
 
     let auth_router = auth_router(
         Arc::clone(&app_state),
@@ -83,11 +89,25 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
         Arc::clone(&student_service),
     )
     .await;
+    let question_router = question_router(
+        Arc::clone(&app_state),
+        Arc::clone(&user_service),
+        Arc::clone(&question_service),
+    )
+    .await;
+    let exam_router = exam_router(
+        Arc::clone(&app_state),
+        Arc::clone(&user_service),
+        Arc::clone(&exam_service),
+    )
+    .await;
 
     Router::new()
         .nest(AUTH_PATH_CONTROLLER, auth_router)
         .nest(USER_PATH_CONTROLLER, user_router)
         .nest(CLASSROOM_PATH_CONTROLLER, classroom_router)
+        .nest(QUESTION_ROUTER_PATH, question_router)
+        .nest(EXAM_CONTROLLER_PATH, exam_router)
         .route(HEALTH_PATH_CONTROLLER, get(health_checker))
         .route(HOMEPAGE_PATH_CONTROLLER, get(homepage))
         .layer(service_builder)

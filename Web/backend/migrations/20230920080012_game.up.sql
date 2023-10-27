@@ -1,12 +1,11 @@
 -- Add up migration script here
-create table public.game
-(
-    version      bigint                    not null
-        constraint game_pk
-            primary key,
-    description  text,
-    installed_on timestamptz default now() not null,
-    is_live      boolean                   not null
+create table public.game (
+                             version bigint primary key not null,
+                             description text,
+                             installed_on timestamp with time zone not null default now(),
+                             is_live boolean not null,
+                             updated_at timestamp with time zone not null default now(),
+                             created_at timestamp with time zone not null default now()
 );
 
 alter table public.game

@@ -1,19 +1,15 @@
-use crate::backend::AppState;
 use crate::helpers::errors::student::StudentServiceError;
 use crate::model::student::Student;
 use crate::r#const::PgTransaction;
 use anyhow::anyhow;
 use std::str::FromStr;
-use std::sync::Arc;
 use uuid::Uuid;
 
-pub struct StudentService {
-    app_state: Arc<AppState>,
-}
+pub struct StudentService;
 
 impl StudentService {
-    pub fn new(app_state: Arc<AppState>) -> Self {
-        Self { app_state }
+    pub fn new() -> Self {
+        Self
     }
 
     pub async fn delete_student_by_id(
@@ -98,5 +94,11 @@ impl StudentService {
             student_id: query.student_id.to_string(),
             user_id: query.user_id.to_string(),
         })
+    }
+}
+
+impl Default for StudentService {
+    fn default() -> Self {
+        Self::new()
     }
 }

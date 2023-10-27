@@ -2,6 +2,7 @@
 	"info": {
 		"_postman_id": "d9b32f22-e95b-4f04-94e2-50ef78f618d4",
 		"name": "Metaversitas Collections",
+		"description": "If your feature doesn't available through all of these endpoint, @RWeebz to hit up.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "12717348",
 		"_collection_link": "https://warped-zodiac-784315.postman.co/workspace/Metaversitas-API~a6ff04da-d877-4f16-aed9-7ed91b3887fc/collection/12717348-d9b32f22-e95b-4f04-94e2-50ef78f618d4?action=share&source=collection_link&creator=12717348"
@@ -494,6 +495,269 @@
 			]
 		},
 		{
+			"name": "Question",
+			"item": [
+				{
+					"name": "Get a question by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host}}/question/{{Question ID}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question",
+								"{{Question ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Choice Question",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"question_text\": \"Test??\",\r\n    \"question_type\": \"Choice\",\r\n    \"choice_answers\": [\r\n        {\r\n            \"text\": \"asdasd #1\",\r\n            \"is_correct\": true\r\n        },\r\n        {\r\n            \"text\": \"asdasd #2\",\r\n            \"is_correct\": false\r\n        },\r\n        {\r\n            \"text\": \"asdasd #3\",\r\n            \"is_correct\": false\r\n        },\r\n        {\r\n            \"text\": \"asdasd #4\",\r\n            \"is_correct\": false\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/question",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Table Question (WIP)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"question_text\": \"Test??\",\r\n    \"question_type\": \"Table\",\r\n    \"table_question\":  {}, // Optional\r\n    \"table_answer\": {} // Optional\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/question",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Descriptive Question",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"question_text\": \"Test??\",\r\n    \"question_type\": \"Descriptive\",\r\n    \"text_answer\": \"asdasd\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/question",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a Question",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"question_type\": \"Choice\", // Optional\r\n    \"question_text\": \"This is an optional\", // Optional\r\n    \"table_question\": {}, // Optional\r\n    \"key_answer\": {\r\n        \"choice_answer_id\": \"e2f11fc9-28a6-49ab-8c53-c8b6a3b71a3c\", // Optional\r\n        \"text_answer\": \"asdasd\", // Optional\r\n        \"table_answer\": {} // Optional\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/question/{{Question ID}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question",
+								"{{Question ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a Question",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/question/{{Question ID}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question",
+								"{{Question ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Exam",
+			"item": [
+				{
+					"name": "Get an exam by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host}}/exam/{{exam_id}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"exam",
+								"{{exam_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete an exam",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{host}}/exam/{{exam_id}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"exam",
+								"{{exam_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create an exam",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"class_id\": \"06e5c7ac-801e-457d-a576-94e34c3b12cd\",\r\n    \"name\": \"Test name exam\",\r\n    \"description\": \"Lorem ipsum dolor sit amet, assalamualaikum jamet.\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/exam",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"exam"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update an exam",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    //Optional \r\n    \"name\": \"Test name exam\",\r\n\r\n    //Optional\r\n    \"description\": \"asdasdasd\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/exam/{{exam_id}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"exam",
+								"{{exam_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Health Check",
 			"request": {
 				"method": "GET",
@@ -535,17 +799,25 @@
 	"variable": [
 		{
 			"key": "host",
-			"value": "metaversitas.rweebz.xyz",
+			"value": "",
 			"type": "string"
 		},
 		{
 			"key": "port",
-			"value": "443",
+			"value": "",
 			"type": "string"
 		},
 		{
 			"key": "class_id",
-			"value": "5b099ac5-5b17-4614-b7dd-4dfb26734eec"
+			"value": ""
+		},
+		{
+			"key": "Question ID",
+			"value": ""
+		},
+		{
+			"key": "exam_id",
+			"value": ""
 		}
 	]
 }
