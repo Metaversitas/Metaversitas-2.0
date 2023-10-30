@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into\n        questions\n        (question_text, question_type, table_question)\n        values\n        ($1, $2, $3)\n        returning\n        question_id, question_text, question_type as \"question_type!: QuestionType\", table_question;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "question_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "question_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "question_type!: QuestionType",
+        "type_info": {
+          "Custom": {
+            "name": "question_types",
+            "kind": {
+              "Enum": [
+                "choice",
+                "descriptive",
+                "table"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "table_question",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        {
+          "Custom": {
+            "name": "question_types",
+            "kind": {
+              "Enum": [
+                "choice",
+                "descriptive",
+                "table"
+              ]
+            }
+          }
+        },
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "6451ea1486c2543d3ea7fc3fc0de4a65008ef27cf97efe38860f40755b3ec5f0"
+}

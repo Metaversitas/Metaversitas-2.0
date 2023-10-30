@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use crate::r#const::{
     ENV_DATABASE_URL, ENV_JWT_EXPIRED_IN, ENV_JWT_MAX_AGE, ENV_JWT_SECRET, ENV_REDIS_HOSTNAME,
     ENV_REDIS_IS_TLS, ENV_REDIS_PORT, ENV_WEB_APP_HOST, ENV_WEB_APP_MODE_TLS, ENV_WEB_APP_PORT,

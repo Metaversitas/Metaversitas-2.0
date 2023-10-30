@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COUNT(*) as \"count!\"\n        FROM class_schedule AS new_class\n        JOIN student_schedule AS existing_student ON\n            (\n                (new_class.start_time BETWEEN existing_student.start_time AND existing_student.end_time) OR\n                (new_class.end_time BETWEEN existing_student.start_time AND existing_student.end_time) OR\n                (existing_student.start_time BETWEEN new_class.start_time AND new_class.end_time) OR\n                (existing_student.end_time BETWEEN new_class.start_time AND new_class.end_time)\n            )\n        WHERE existing_student.student_id = $1 AND new_Class.class_id = $2;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f8a06dbe37d4829205dfd7ca18e37a9fb20fd2172125632a25639597ccd0cba4"
+}

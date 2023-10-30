@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            select\n                qa.text_answer,\n                qa.table_answer\n            from questions\n            inner join question_key_answers qa on questions.question_id = qa.question_id\n            where questions.question_id = $1;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "text_answer",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "table_answer",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "83b9bc22bda316b245546c1d577c1481b4c5788362488ae7c1fa4ab7881b5ce7"
+}

@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into question_key_answers\n            (question_id, table_answer)\n        values\n            ($1::text::uuid, $2::jsonb)\n        returning *;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "answer_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "question_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "choice_answer",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "text_answer",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "table_answer",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "2ce5785ccd1afac46d509673210517f7b43be78cf5ce31778df604a04f64765e"
+}

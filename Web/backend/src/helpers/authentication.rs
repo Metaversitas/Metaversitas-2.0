@@ -1,6 +1,8 @@
 use crate::backend::AppState;
-use crate::helpers::errors::AuthError;
+use crate::helpers::errors::auth::AuthError;
+use crate::helpers::extractor::AuthenticatedUser;
 use crate::model::user::{SessionTokenClaims, User};
+use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::header::SET_COOKIE;
 use axum::http::{HeaderValue, Request};
@@ -12,7 +14,6 @@ use rand::Rng;
 use redis::{AsyncCommands, Value};
 use serde::Serialize;
 use std::sync::Arc;
-use crate::helpers::extractor::AuthenticatedUser;
 
 pub const COOKIE_SESSION_TOKEN_NAME: &str = "session_token";
 pub const COOKIE_AUTH_NAME: &str = "Authorization";
@@ -84,9 +85,11 @@ pub async fn must_authorized<B>(
     if is_changed {
         let (mut parts, body) = req.into_parts();
         for cookie in cookie_jar.iter() {
-            parts
-                .headers
-                .append(SET_COOKIE, HeaderValue::try_from(cookie.value()).unwrap());
+            parts.headers.append(
+                SET_COOKIE,
+                HeaderValue::try_from(cookie.value())
+                    .map_err(|_| AuthError::Other(anyhow!("Unable to parse header value")))?,
+            );
         }
         let req = Request::from_parts(parts, body);
         return Ok(next.run(req).await);
@@ -132,7 +135,6 @@ pub async fn new_session(
                 .secure(true)
                 .finish(),
         );
-
     let mut redis_conn = state.redis.get_async_connection().await?;
     let set_redis = redis_conn
         .set_nx::<String, String, usize>(session_id.to_owned(), user_id.to_owned())

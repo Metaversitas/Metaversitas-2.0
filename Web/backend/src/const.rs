@@ -1,3 +1,5 @@
+use sqlx::{Postgres, Transaction};
+
 pub const ENV_ENVIRONMENT: &str = "ENVIRONMENT";
 pub const ENV_ENVIRONMENT_PRODUCTION: &str = "PROD";
 pub const ENV_ENVIRONMENT_DEVELOPMENT: &str = "DEV";
@@ -13,3 +15,5 @@ pub const ENV_WEB_APP_PORT: &str = "WEB_APP_PORT";
 pub const ENV_WEB_APP_PORT_SSL: &str = "WEB_APP_PORT_SSL";
 pub const ENV_WEB_APP_HOST: &str = "WEB_APP_HOST";
 pub const ENV_WEB_APP_MODE_TLS: &str = "WEB_APP_TLS_MODE";
+
+pub type PgTransaction = Transaction<'static, Postgres>;
