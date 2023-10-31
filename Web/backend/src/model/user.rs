@@ -15,7 +15,7 @@ pub enum UserRole {
     User,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, FromRedisValue)]
 pub struct User {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -62,6 +62,7 @@ fn validate_password(password: &str, _ctx: &()) -> Result<(), garde::Error> {
     Ok(())
 }
 
+#[allow(clippy::unwrap_used)]
 static REGEX_NICKNAME: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z]\w{3,12}$").unwrap());
 
 fn validate_nickname(nickname: &str, _ctx: &()) -> Result<(), garde::Error> {

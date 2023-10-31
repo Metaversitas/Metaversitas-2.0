@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            classes.capacity,\n            count(class_students.class_id) as \"count!\"\n        from classes\n        left join class_students on classes.class_id = class_students.class_id\n        where classes.class_id = $1\n        group by classes.capacity;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "capacity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "968c36360afe1bb35861a21dc51c9b09f1f6b4080c21571517e317e33823fff7"
+}

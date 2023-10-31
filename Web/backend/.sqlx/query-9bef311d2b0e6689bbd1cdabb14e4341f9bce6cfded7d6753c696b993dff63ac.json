@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        delete from subjects\n        where subject_id = $1;\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9bef311d2b0e6689bbd1cdabb14e4341f9bce6cfded7d6753c696b993dff63ac"
+}

@@ -1,7 +1,9 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{COOKIE_AUTH_NAME, COOKIE_SESSION_TOKEN_NAME};
-use crate::helpers::errors::AuthError;
-use crate::model::user::SessionTokenClaims;
+use crate::helpers::errors::auth::AuthError;
+use crate::model::user::{SessionTokenClaims, UserRole, UserUniversityRole};
+use crate::service::user::UserService;
+use anyhow::anyhow;
 use axum::async_trait;
 use axum::extract::{FromRef, FromRequestParts};
 use axum::http::request::Parts;
@@ -70,5 +72,40 @@ where
         };
 
         Ok(auth_user)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AuthenticatedUserWithRole {
+    pub user_id: String,
+    pub session_id: String,
+    pub user_role: UserRole,
+    pub university_role: UserUniversityRole,
+}
+
+#[async_trait]
+impl<S> FromRequestParts<S> for AuthenticatedUserWithRole
+where
+    Arc<AppState>: FromRef<S>,
+    Arc<UserService>: FromRef<S>,
+    S: Send + Sync,
+{
+    type Rejection = AuthError;
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let auth_user = AuthenticatedUser::from_request_parts(parts, state).await?;
+        let user_service = Arc::<UserService>::from_ref(state);
+        let profile = user_service.get_profile(auth_user.user_id.as_str()).await?;
+        let user = user_service
+            .get_user_data(auth_user.user_id.as_str())
+            .await?;
+        Ok(Self {
+            user_id: auth_user.user_id.to_owned(),
+            session_id: auth_user.session_id.to_owned(),
+            university_role: profile.user_univ_role,
+            user_role: user
+                .role
+                .ok_or(AuthError::Other(anyhow!("Got an empty role")))?,
+        })
     }
 }

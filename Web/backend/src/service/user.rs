@@ -1,8 +1,9 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{new_session, AuthToken, COOKIE_AUTH_NAME};
-use crate::helpers::errors::{UserServiceError};
+use crate::helpers::errors::user::UserServiceError;
 use crate::model::user::{ProfileUserData, RegisteredUser, User, UserGender, UserRole};
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
+use anyhow::anyhow;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash};
 use axum_extra::extract::cookie::{Cookie, SameSite};
@@ -11,7 +12,7 @@ use redis::{AsyncCommands, JsonAsyncCommands};
 use std::sync::Arc;
 
 pub struct UserService {
-    pub app_state: Arc<AppState>,
+    app_state: Arc<AppState>,
 }
 
 const DEFAULT_TIME_CACHE_EXIST: time::Duration = time::Duration::minutes(30);
@@ -21,28 +22,13 @@ impl UserService {
         Self { app_state }
     }
 
-    pub async fn login(
-        &self,
-        email: &str,
-        password: &str,
-    ) -> Result<(ProfileUserData, CookieJar), UserServiceError> {
-        let query = sqlx::query!(r#"
+    pub async fn login(&self, email: &str, password: &str) -> Result<CookieJar, UserServiceError> {
+        let query = sqlx::query!(
+            r#"
         select
             users.user_id as user_id,
-            users.password_hash as password_hash,
-            users.nickname as in_game_nickname,
-            identity.full_name as full_name,
-            identity.gender as "gender!: UserGender",
-            university.name as university_name,
-            university_faculty.faculty_name as faculty_name,
-            university_faculty.faculty_id as faculty_id,
-            university_identity.users_university_id as user_university_id,
-            university_identity.users_university_role as "user_univ_role!: UserUniversityRole"
+            users.password_hash as password_hash
         from users
-        inner join users_identity as identity on users.user_id = identity.users_id
-        inner join users_university_identity as university_identity on identity.users_identity_id = university_identity.users_identity_id
-        inner join university on university_identity.university_id = university.university_id
-        inner join university_faculty on university.university_id = university_faculty.university_id
         where users.email::text = $1"#,
             email
         )
@@ -69,23 +55,11 @@ impl UserService {
             updated_at: None,
         };
 
-        let user_data: ProfileUserData = ProfileUserData {
-            user_id: query.user_id.to_string(),
-            in_game_nickname: query.in_game_nickname.to_owned(),
-            full_name: query.full_name.to_owned(),
-            university_name: query.university_name.to_owned(),
-            faculty_name: query.faculty_name.to_owned(),
-            faculty_id: query.faculty_id as u64,
-            user_university_id: query.user_university_id as u64,
-            user_univ_role: query.user_univ_role,
-            gender: query.gender,
-        };
-
         let cookie_jar = CookieJar::default();
         let cookie_jar = new_session(Arc::clone(&self.app_state), user, cookie_jar)
             .await
             .map_err(|_| UserServiceError::UnableCreateSession)?;
-        Ok((user_data, cookie_jar))
+        Ok(cookie_jar)
     }
 
     pub async fn register(
@@ -190,18 +164,88 @@ impl UserService {
         Ok(cookie_jar)
     }
 
+    pub async fn get_user_data(&self, user_id: &str) -> Result<User, UserServiceError> {
+        let user_data_key = format!("user_data:{}", &user_id);
+        let mut redis_conn = self
+            .app_state
+            .redis
+            .get_async_connection()
+            .await
+            .map_err(|_| UserServiceError::RedisConnectionError)?;
+        let is_exists = redis_conn
+            .exists::<String, usize>(user_data_key.to_owned())
+            .await
+            .map_err(|_| {
+                UserServiceError::UnexpectedError(anyhow!("Unable to do exists on redis"))
+            })?;
+
+        if is_exists == 0 {
+            let query = sqlx::query!(
+                r#"
+            select users.role as "role!: UserRole"
+            from users
+            where users.user_id::text = $1
+            "#,
+                &user_id
+            )
+            .fetch_one(&self.app_state.database)
+            .await
+            .map_err(|_| UserServiceError::DatabaseConnectionError)?;
+
+            let data = User {
+                id: None,
+                role: Some(query.role),
+                email: None,
+                password_hash: None,
+                nickname: None,
+                verified: None,
+                created_at: None,
+                updated_at: None,
+            };
+
+            let _ = redis_conn
+                .json_set::<String, String, User, redis::Value>(
+                    user_data_key.to_owned(),
+                    "$".to_string(),
+                    &data,
+                )
+                .await
+                .map_err(|_| {
+                    UserServiceError::UnexpectedError(anyhow!("Unable to do json_set on redis"))
+                })?;
+            Ok(data)
+        } else {
+            let query_from_redis = redis_conn
+                .json_get::<String, &str, User>(user_data_key.to_owned(), "$")
+                .await
+                .map_err(|_| {
+                    UserServiceError::UnexpectedError(anyhow!("Unable to do json_get on redis"))
+                })?;
+            Ok(query_from_redis)
+        }
+    }
+
     pub async fn get_profile(&self, user_id: &str) -> Result<ProfileUserData, UserServiceError> {
-        let mut redis_conn = self.app_state.redis.get_async_connection().await.unwrap();
+        let mut redis_conn = self
+            .app_state
+            .redis
+            .get_async_connection()
+            .await
+            .map_err(|_| UserServiceError::RedisConnectionError)?;
         let is_exists = redis_conn
             .exists::<String, usize>(format!("profile:{}", &user_id))
             .await
-            .unwrap();
+            .map_err(|_| {
+                UserServiceError::UnexpectedError(anyhow!("Unable to do exists on redis"))
+            })?;
 
         if is_exists == 1 {
             let query_from_redis = redis_conn
                 .json_get::<String, &str, ProfileUserData>(format!("profile:{}", &user_id), "$")
                 .await
-                .unwrap();
+                .map_err(|_| {
+                    UserServiceError::UnexpectedError(anyhow!("Unable to do json_get on redis"))
+                })?;
 
             Ok(query_from_redis)
         } else if is_exists == 0 {
@@ -248,11 +292,15 @@ impl UserService {
                     &data,
                 )
                 .await
-                .unwrap();
+                .map_err(|_| {
+                    UserServiceError::UnexpectedError(anyhow!("Unable to do json_set on redis"))
+                })?;
             let _ = redis_conn
                 .expire_at::<String, redis::Value>(profile_user_id.to_owned(), timestamp_expire)
                 .await
-                .unwrap();
+                .map_err(|_| {
+                    UserServiceError::UnexpectedError(anyhow!("Unable to do expire_at on redis"))
+                })?;
 
             Ok(data)
         } else {
@@ -261,6 +309,7 @@ impl UserService {
     }
 }
 
+#[allow(clippy::expect_used)]
 pub async fn hash_password(password: String) -> Result<String, ()> {
     tokio::task::spawn_blocking(move || -> Result<String, ()> {
         let salt = SaltString::generate(rand::thread_rng());
@@ -278,6 +327,7 @@ pub async fn hash_password(password: String) -> Result<String, ()> {
     .expect("can't join the result from tokio")
 }
 
+#[allow(clippy::expect_used)]
 pub async fn verify_password(password: String, password_hash: String) -> Result<(), ()> {
     tokio::task::spawn_blocking(move || -> Result<(), ()> {
         let hash = PasswordHash::new(&password_hash).map_err(|_| {

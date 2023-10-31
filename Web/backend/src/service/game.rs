@@ -1,8 +1,8 @@
 use crate::backend::AppState;
+use crate::helpers::errors::auth::AuthError;
 use redis::{AsyncCommands, Value};
 use std::sync::Arc;
 use thiserror::Error;
-use crate::helpers::errors::AuthError;
 
 const REDIS_GAME_VERSION_KEY: &str = "game_version:";
 pub struct GameService {
@@ -88,4 +88,3 @@ impl From<GameServiceError> for AuthError {
         }
     }
 }
-

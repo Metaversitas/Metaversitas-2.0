@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use crate::config::Config;
 use crate::route::create_router;
 use axum::extract::Host;

@@ -2,6 +2,7 @@
 	"info": {
 		"_postman_id": "d9b32f22-e95b-4f04-94e2-50ef78f618d4",
 		"name": "Metaversitas Collections",
+		"description": "If your feature doesn't available through all of these endpoint, @RWeebz to hit up.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "12717348",
 		"_collection_link": "https://warped-zodiac-784315.postman.co/workspace/Metaversitas-API~a6ff04da-d877-4f16-aed9-7ed91b3887fc/collection/12717348-d9b32f22-e95b-4f04-94e2-50ef78f618d4?action=share&source=collection_link&creator=12717348"
@@ -45,7 +46,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user\": {\r\n        \"email\": \"mahasiswa@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
+							"raw": "{\r\n    \"user\": {\r\n        \"email\": \"dosen@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -106,7 +107,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"cookie_auth\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2NTkwNzRhMC0yMmE4LTQ3YmEtOWFjYy02ZDU1YTlkZjg0ZmIiLCJpYXQiOjE2OTY5OTk3NTIsImV4cCI6MTY5NzAwMDM1Miwic2lkIjoiY3Jtc2NnN091cU13RlRORjhIa3E3eUplM2ZnbWxJRXNFY3R2SjltVEFxaHVjbUx2Q0NDNDJxOHdxdjJwIn0.jwDZkVRs9ylYnOz6AJ3YRcW1o1g7EehfKCD7js19iYY\",\n    \"cookie_session\": \"crmscg7OuqMwFTNF8Hkq7yJe3fgmlIEsEctvJ9mTAqhucmLvCCC42q8wqv2p\"\n}",
+							"raw": "{\n    \"auth_data\": {\n        \"cookie_auth\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjM2YwNGEzMC0zOGFjLTQ3NGQtYjdkYS04ZmI4ODk0OTVkNzUiLCJpYXQiOjE2OTcxNzc4OTQsImV4cCI6MTY5NzE3ODQ5NCwic2lkIjoiS3VuempSTWhnTnl5MHdzbHVYRzhPeHVNMDdSTmxFRUdMQzNFdm45bllIV2hwdkJlekxndTRUbGlPNm1MIn0.s9SbmoEhHjjYZYdjxQRGGla4DMWk_QTxuquccEkDJB0\",\n        \"cookie_session\": \"KunzjRMhgNyy0wsluXG8OxuM07RNlEEGLC3Evn9nYHWhpvBezLgu4TliO6mL\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -146,6 +147,609 @@
 							"path": [
 								"user",
 								"profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Classroom",
+			"item": [
+				{
+					"name": "Create Classroom",
+					"item": [
+						{
+							"name": "Create Classroom (Empty Teacher and Student) (By name)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"subject_name\": \"Math\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Classroom (Empty Teacher and Student) (By id)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"subject_id\": \"d24a4a07-9576-48dd-ad6b-daad5fe05058\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Classroom (Only Teacher)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"subject_name\": \"Math\",\r\n    \"teachers\": [\"ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Classroom (Only Students)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"subject_name\": \"Math\",\r\n    \"students\": [\"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\", \"2852ed68-c7e6-4655-9f1a-7baede899f06\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Update Classroom",
+					"item": [
+						{
+							"name": "Update Classroom (Teacher) (Replace current all of teachers)",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"teachers\": {\n        \"type\": \"All\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom",
+										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Classroom (Teacher) (Replace only given id)",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"teachers\": {\n        \"type\": \"Single\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom",
+										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Classroom (Students) (Replace only given id)",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"students\": {\n        \"type\": \"Single\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            },\n            {\n                \"type\": \"Add\",\n                \"id\": \"2852ed68-c7e6-4655-9f1a-7baede899f06\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom",
+										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Classroom (Students) (Replace current all of students)",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"students\": {\n        \"type\": \"All\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            },\n            {\n                \"type\": \"Add\",\n                \"id\": \"2852ed68-c7e6-4655-9f1a-7baede899f06\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
+									"protocol": "https",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"classroom",
+										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get Available Classroom",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host}}/classroom",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"classroom"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Classroom Data",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/classroom/{{class_id}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"classroom",
+								"{{class_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Enroll Classroom",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd/enroll",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"classroom",
+								"06e5c7ac-801e-457d-a576-94e34c3b12cd",
+								"enroll"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete classroom",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"class_ids\": [\n        \"06e5c7ac-801e-457d-a576-94e34c3b12cd\",\n        \"5b099ac5-5b17-4614-b7dd-4dfb26734eec\"\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/classroom",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"classroom"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Question",
+			"item": [
+				{
+					"name": "Get a question by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host}}/question/{{Question ID}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question",
+								"{{Question ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Choice Question",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"question_text\": \"Test??\",\r\n    \"question_type\": \"Choice\",\r\n    \"choice_answers\": [\r\n        {\r\n            \"text\": \"asdasd #1\",\r\n            \"is_correct\": true\r\n        },\r\n        {\r\n            \"text\": \"asdasd #2\",\r\n            \"is_correct\": false\r\n        },\r\n        {\r\n            \"text\": \"asdasd #3\",\r\n            \"is_correct\": false\r\n        },\r\n        {\r\n            \"text\": \"asdasd #4\",\r\n            \"is_correct\": false\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/question",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Table Question (WIP)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"question_text\": \"Test??\",\r\n    \"question_type\": \"Table\",\r\n    \"table_question\":  {}, // Optional\r\n    \"table_answer\": {} // Optional\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/question",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Descriptive Question",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"question_text\": \"Test??\",\r\n    \"question_type\": \"Descriptive\",\r\n    \"text_answer\": \"asdasd\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/question",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a Question",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"question_type\": \"Choice\", // Optional\r\n    \"question_text\": \"This is an optional\", // Optional\r\n    \"table_question\": {}, // Optional\r\n    \"key_answer\": {\r\n        \"choice_answer_id\": \"e2f11fc9-28a6-49ab-8c53-c8b6a3b71a3c\", // Optional\r\n        \"text_answer\": \"asdasd\", // Optional\r\n        \"table_answer\": {} // Optional\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/question/{{Question ID}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question",
+								"{{Question ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a Question",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/question/{{Question ID}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"question",
+								"{{Question ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Exam",
+			"item": [
+				{
+					"name": "Get an exam by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host}}/exam/{{exam_id}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"exam",
+								"{{exam_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete an exam",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{host}}/exam/{{exam_id}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"exam",
+								"{{exam_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create an exam",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"class_id\": \"06e5c7ac-801e-457d-a576-94e34c3b12cd\",\r\n    \"name\": \"Test name exam\",\r\n    \"description\": \"Lorem ipsum dolor sit amet, assalamualaikum jamet.\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/exam",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"exam"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update an exam",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    //Optional \r\n    \"name\": \"Test name exam\",\r\n\r\n    //Optional\r\n    \"description\": \"asdasdasd\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/exam/{{exam_id}}",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"exam",
+								"{{exam_id}}"
 							]
 						}
 					},
@@ -195,13 +799,25 @@
 	"variable": [
 		{
 			"key": "host",
-			"value": "metaversitas.rweebz.xyz",
+			"value": "",
 			"type": "string"
 		},
 		{
 			"key": "port",
-			"value": "443",
+			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "class_id",
+			"value": ""
+		},
+		{
+			"key": "Question ID",
+			"value": ""
+		},
+		{
+			"key": "exam_id",
+			"value": ""
 		}
 	]
 }

@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n           select\n            classes.is_active,\n            classes.class_id,\n            classes.name,\n            classes.description,\n            subjects.name as subject_name,\n            subjects.subject_id,\n            class_schedule.start_time,\n            class_schedule.end_time\n        from classes\n            inner join class_subjects on classes.class_id = class_subjects.class_id\n            inner join subjects on class_subjects.subject_id = subjects.subject_id\n            inner join class_schedule on classes.class_id = class_schedule.class_id\n        where classes.class_id::text = $1;\n       ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "class_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "subject_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "subject_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "start_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "end_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "1a3eb86b4f2e82d553635466de04388b42ccaf1d2d306fc12a3a1ac87331835d"
+}
