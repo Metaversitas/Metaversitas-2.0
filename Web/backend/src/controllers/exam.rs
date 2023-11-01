@@ -11,7 +11,7 @@ use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get};
+use axum::routing::get;
 use axum::{Json, Router};
 use serde_json::json;
 use std::sync::Arc;
@@ -148,7 +148,10 @@ pub async fn create_exam(
         .create_exam(&mut transaction, auth_user.user_id.as_str(), &payload)
         .await
         .map_err(|err| {
-            tracing::error!("Unable to create an exam, with an error: {}", err.to_string());
+            tracing::error!(
+                "Unable to create an exam, with an error: {}",
+                err.to_string()
+            );
             ExamControllerError::Unknown
         })?;
 
@@ -196,7 +199,11 @@ pub async fn delete_exam(
         .get_exam_by_id(&mut transaction, exam_id.to_string().as_str())
         .await
         .map_err(|err| {
-            tracing::error!("not able to get an exam by id: {}, with an error: {}", exam_id.to_string(), err.to_string());
+            tracing::error!(
+                "not able to get an exam by id: {}, with an error: {}",
+                exam_id.to_string(),
+                err.to_string()
+            );
             ExamControllerError::Unknown
         })?;
 
@@ -210,7 +217,11 @@ pub async fn delete_exam(
         .delete_exam_by_id(&mut transaction, exam.exam_id.as_str())
         .await
         .map_err(|err| {
-            tracing::error!("not able to delete an exam by id: {}, with an error: {}", exam_id.to_string(), err.to_string());
+            tracing::error!(
+                "not able to delete an exam by id: {}, with an error: {}",
+                exam_id.to_string(),
+                err.to_string()
+            );
             ExamControllerError::Unknown
         })?;
 
@@ -256,7 +267,11 @@ pub async fn update_exam(
         .get_exam_by_id(&mut transaction, exam_id.to_string().as_str())
         .await
         .map_err(|err| {
-            tracing::error!("Not able to get an exam by id: {}, with an error: {}", exam_id.to_string(), err.to_string());
+            tracing::error!(
+                "Not able to get an exam by id: {}, with an error: {}",
+                exam_id.to_string(),
+                err.to_string()
+            );
             ExamControllerError::Unknown
         })?;
 
