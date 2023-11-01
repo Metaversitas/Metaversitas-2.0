@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            class_teachers.class_id::text as \"class_id!\",\n            teachers.teacher_id::text as \"teacher_id!\",\n            users_identity.full_name as teacher_name\n        from class_teachers\n        inner join teachers on class_teachers.teacher_id = teachers.teacher_id\n        inner join users_identity on users_identity.users_id = teachers.user_id\n        where class_id::text = $1;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "class_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "teacher_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "teacher_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "516531cf6bb73d5ae595292eab07172b402cf60f667e62079570fccbb6326f3e"
+}

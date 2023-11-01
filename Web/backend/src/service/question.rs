@@ -1,7 +1,7 @@
 use crate::helpers::errors::question::QuestionServiceError;
 use crate::model::question::{
-    ChoiceAnswerBody, CreateQuestion, KeyAnswerOfQuestion, Question,
-    QuestionType, UpdateQuestionParams,
+    ChoiceAnswerBody, CreateQuestion, KeyAnswerOfQuestion, Question, QuestionType,
+    UpdateQuestionParams,
 };
 use crate::r#const::PgTransaction;
 use anyhow::anyhow;

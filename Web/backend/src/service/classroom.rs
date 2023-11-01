@@ -1,10 +1,22 @@
 use crate::backend::AppState;
 use crate::helpers::errors::classroom::ClassroomServiceError;
-use crate::model::classroom::{Action, ActionType, Classroom, CreateClassroomParams, StudentClassroom, TeacherClassroom, UpdateClassroomParams};
+use crate::helpers::extractor::AuthenticatedUserWithRole;
+use crate::model::classroom::{
+    Action, ActionType, ActionTypeUpdateClassMeeting, ActionTypeUpdateExam, BaseAction,
+    ClassMeeting, ClassSemester, Classroom, CreateClassMeetingParams, CreateClassroomParams,
+    ParamsActionUpdateClassMeeting, ParamsActionUpdateExam, StudentClassroom, TeacherClassroom,
+    UpdateClassMeetingParams, UpdateClassSubjectParams, UpdateClassroomParams,
+};
+use crate::model::exam::Exam;
+use crate::model::subject::{SecondarySubject, Subject, SubjectWithSecondary};
 use crate::model::user::{UserRole, UserUniversityRole};
 use crate::r#const::PgTransaction;
+use crate::service::exam::ExamService;
 use crate::service::subject::SubjectService;
+use crate::service::teacher::TeacherService;
 use anyhow::anyhow;
+use chrono::Datelike;
+use sqlx::{Execute, Postgres, QueryBuilder, Row};
 use std::str::FromStr;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -12,15 +24,24 @@ use uuid::Uuid;
 pub struct ClassroomService {
     app_state: Arc<AppState>,
     subject_service: Arc<SubjectService>,
+    exam_service: Arc<ExamService>,
+    teacher_service: Arc<TeacherService>,
 }
 
 // const DEFAULT_CACHE_TIME_EXIST: time::Duration = time::Duration::hours(1);
 
 impl ClassroomService {
-    pub fn new(app_state: Arc<AppState>, subject_service: Arc<SubjectService>) -> Self {
+    pub fn new(
+        app_state: Arc<AppState>,
+        subject_service: Arc<SubjectService>,
+        exam_service: Arc<ExamService>,
+        teacher_service: Arc<TeacherService>,
+    ) -> Self {
         Self {
             app_state,
             subject_service,
+            exam_service,
+            teacher_service,
         }
     }
 
@@ -32,7 +53,7 @@ impl ClassroomService {
     ) -> Result<bool, ClassroomServiceError> {
         let query = sqlx::query!(r#"
         SELECT COUNT(*) as "count!"
-        FROM class_schedule AS new_class
+        FROM classes AS new_class
         JOIN student_schedule AS existing_student ON
             (
                 (new_class.start_time BETWEEN existing_student.start_time AND existing_student.end_time) OR
@@ -47,8 +68,8 @@ impl ClassroomService {
             Uuid::from_str(class_id).map_err(|err| {
                 ClassroomServiceError::UnexpectedError(anyhow!("Unable to parse class_id with error: {}", err.to_string()))
             })?).fetch_one(&mut **transaction).await.map_err(|err| {
-                ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string()))
-            })?;
+            ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string()))
+        })?;
 
         if query.count > 0 {
             return Ok(false);
@@ -94,6 +115,7 @@ impl ClassroomService {
 
     pub async fn get_available_classroom(
         &self,
+        transaction: &mut PgTransaction,
         user_id: &str,
         user_role: &UserRole,
         university_role: &UserUniversityRole,
@@ -104,8 +126,12 @@ impl ClassroomService {
                 todo!()
             }
             UserRole::User => match university_role {
-                UserUniversityRole::Dosen => Ok(self.get_lecturer_classroom(user_id).await?),
-                UserUniversityRole::Mahasiswa => Ok(self.get_student_classroom(user_id).await?),
+                UserUniversityRole::Dosen => {
+                    Ok(self.get_lecturer_classroom(transaction, user_id).await?)
+                }
+                UserUniversityRole::Mahasiswa => {
+                    Ok(self.get_student_classroom(transaction, user_id).await?)
+                }
             },
         }
     }
@@ -117,8 +143,8 @@ impl ClassroomService {
     ) -> Result<(), ClassroomServiceError> {
         // Check if exists
         let _ = self
-            .get_classroom_by_id(&mut *transaction, class_id)
-            .await?;
+        .get_classroom_by_id(&mut *transaction, class_id)
+        .await?;
 
         sqlx::query!(
             r#"
@@ -140,85 +166,251 @@ impl ClassroomService {
     pub async fn create_classroom(
         &self,
         transaction: &mut PgTransaction,
-        user_role: &UserRole,
-        university_role: &UserUniversityRole,
+        auth_user: &AuthenticatedUserWithRole,
         params: &CreateClassroomParams,
+        subject: &Subject,
+        secondary_subject: Option<&SecondarySubject>,
     ) -> Result<String, ClassroomServiceError> {
-        //TODO: Admin access or support access.
-        if matches!(user_role, UserRole::Administrator) || matches!(user_role, UserRole::Staff) {
-            todo!()
-        }
-
-        if matches!(university_role, UserUniversityRole::Mahasiswa) {
+        if matches!(auth_user.university_role, UserUniversityRole::Mahasiswa) {
             return Err(ClassroomServiceError::UnauthorizedStudent);
         }
 
-        let query = sqlx::query!(
-            r#"insert into classes (is_active, name, description) values ($1, $2, $3) returning class_id::text as "class_id!""#,
-            true,
-            params.name,
-            params.description
+        let mut query_builder = QueryBuilder::<Postgres>::new("insert into classes (");
+        let mut separated = query_builder.separated(", ");
+
+        separated.push_unseparated(
+            "name, is_active, semester, year_start, year_end, created_by, have_multiple_meeting, capacity",
+        );
+
+        if params.description.is_some() {
+            separated.push_unseparated(", description");
+        }
+        if params.start_time.is_some() {
+            separated.push_unseparated(", start_time");
+        }
+        if params.end_time.is_some() {
+            separated.push_unseparated(", end_time");
+        }
+
+        separated.push_unseparated(")");
+        separated.push_unseparated(" values (");
+        separated.push_bind(&params.class_name);
+        separated.push_bind(true);
+        separated.push_bind(&params.semester);
+        let year_start =
+        chrono::NaiveDate::from_str(&params.year_start.as_str()).map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                    "Unable to parse year_start into date, with an error: {}",
+                    err.to_string()
+                ))
+        })?;
+        let year_end = chrono::NaiveDate::from_str(&params.year_end.as_str()).map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to parse year_end into date, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+        separated.push_bind(year_start);
+        separated.push_bind(year_end);
+        separated.push_bind(&auth_user.user_id);
+        separated.push_unseparated("::uuid");
+
+        if let Some(meetings) = &params.meetings {
+            if meetings.len() == 0 {
+                return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                    "Got a meetings params but the length is 0"
+                )));
+            }
+
+            if meetings.len() > 0 {
+                separated.push_bind(true); // have_multiple_meeting
+            };
+        } else {
+            separated.push_bind(false); // have_multiple_meeting
+        }
+
+        if let Some(capacity) = &params.capacity {
+            separated.push_bind(capacity);
+        } else {
+            separated.push_bind(40);
+        }
+
+        if let Some(description) = &params.description {
+            separated.push_bind(description);
+        }
+        if let Some(start_time) = &params.start_time {
+            separated.push_bind(start_time);
+        }
+        if let Some(end_time) = &params.end_time {
+            separated.push_bind(end_time);
+        }
+        separated.push_unseparated(r#") returning class_id::text;"#);
+
+        let query = query_builder.build();
+        let query = query.fetch_one(&mut **transaction).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to execute create class, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+        let class_id = query.try_get::<String, &str>("class_id").map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to get class_id from fetched query, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+
+        let secondary_subject_id = {
+            if let Some(secondary_subject) = secondary_subject {
+                Some(secondary_subject.secondary_subject_id.as_str())
+            } else {
+                None
+            }
+        };
+
+        self.create_class_subject(
+            transaction,
+            class_id.as_str(),
+            subject.subject_id.as_str(),
+            secondary_subject_id,
         )
-            .fetch_one(&mut **transaction)
+        .await?;
+
+        if let Some(meetings) = &params.meetings {
+            let mut curr_meeting_number = 1;
+            for meeting in meetings {
+                let meeting_id = self
+                .create_class_meeting(transaction, class_id.as_str(), meeting)
+                .await?;
+                let class_meeting = self
+                .get_class_meeting_by_id(transaction, meeting_id.as_str())
+                .await?;
+                if let Some(exams) = &meeting.exams {
+                    for exam in exams {
+                        self.exam_service
+                        .insert_class_on_exam_by_id(
+                            transaction,
+                            exam.exam_id.as_str(),
+                            class_id.as_str(),
+                            Some(class_meeting.meeting_id.as_str()),
+                        )
+                        .await
+                        .map_err(|err| {
+                            ClassroomServiceError::UnexpectedError(anyhow!(
+                                    "Unable to insert class_exam, with an error: {}",
+                                    err.to_string()
+                                ))
+                        })?;
+                    }
+                }
+                curr_meeting_number += 1;
+            }
+        }
+
+        if params.meetings.is_none() {
+            if let Some(exams) = &params.exams {
+                for exam in exams {
+                    self.exam_service
+                    .insert_class_on_exam_by_id(
+                        transaction,
+                        exam.exam_id.as_str(),
+                        class_id.as_str(),
+                        None,
+                    )
+                    .await
+                    .map_err(|err| {
+                        ClassroomServiceError::UnexpectedError(anyhow!(
+                                "Unable to insert class_exam, with an error: {}",
+                                err.to_string()
+                            ))
+                    })?;
+                }
+            }
+        } else if params.meetings.is_some() {
+            if !params.exams.is_none() {
+                return Err(ClassroomServiceError::UnexpectedError(anyhow!("Parameter do have multiple meeting therefore exams on the class is not allowed")));
+            }
+        }
+
+        if let Some(students) = &params.students {
+            for student in students {
+                self.insert_student_classroom_by_id(
+                    &mut *transaction,
+                    class_id.as_str(),
+                    student.student_id.as_str(),
+                )
+                .await
+                .map_err(|err| {
+                    ClassroomServiceError::UnexpectedError(anyhow!(
+                        "Unable to insert student={} into classroom={}, with an error: {}",
+                        student.student_id,
+                        class_id,
+                        err.to_string()
+                    ))
+                })?;
+            }
+        }
+
+        if let Some(teachers) = &params.teachers {
+            let current_teacher = self
+            .teacher_service
+            .get_teacher_by_id(transaction, auth_user.user_id.as_str())
             .await
             .map_err(|err| {
-                ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database, {}", err.to_string()))
+                ClassroomServiceError::UnexpectedError(anyhow!(
+                        "Unable to get teacher_id, with an error: {}",
+                        err.to_string()
+                    ))
             })?;
-
-        let class_id = query.class_id;
-
-        if params.students.is_some() || params.teachers.is_some() {
-            if let Some(students) = &params.students {
-                for student in students {
-                    sqlx::query!(
-                        "insert into class_students (class_id, student_id) values ($1, $2)",
-                        Uuid::from_str(class_id.as_str()).map_err(|_| {
-                            ClassroomServiceError::UnexpectedError(anyhow!(
-                                "Unable to parse class_id into uuid"
-                            ))
-                        })?,
-                        Uuid::from_str(student.as_str()).map_err(|_| {
-                            ClassroomServiceError::UnexpectedError(anyhow!(
-                                "Unable to parse student into uuid"
-                            ))
-                        })?
-                    )
-                    .execute(&mut **transaction)
-                    .await
-                    .map_err(|err| {
-                        ClassroomServiceError::UnexpectedError(anyhow!(
-                            "Got an error from database: {}",
-                            err.to_string()
-                        ))
-                    })?;
+            self.insert_teacher_classroom_by_id(
+                transaction,
+                class_id.as_str(),
+                current_teacher.teacher_id.as_str(),
+            )
+            .await
+            .map_err(|err| {
+                ClassroomServiceError::UnexpectedError(anyhow!(
+                    "Unable to insert teacher into classroom, with an error: {}",
+                    err.to_string()
+                ))
+            })?;
+            for teacher in teachers {
+                if *teacher.teacher_id == current_teacher.teacher_id {
+                    continue;
                 }
-            }
 
-            if let Some(teachers) = &params.teachers {
-                for teacher in teachers {
-                    sqlx::query!(
-                        "insert into class_teachers (class_id, teacher_id) values ($1, $2)",
-                        Uuid::from_str(class_id.as_str()).map_err(|_| {
-                            ClassroomServiceError::UnexpectedError(anyhow!(
-                                "Unable to parse class_id into uuid"
-                            ))
-                        })?,
-                        Uuid::from_str(teacher.as_str()).map_err(|_| {
-                            ClassroomServiceError::UnexpectedError(anyhow!(
-                                "Unable to parse teacher_id into uuid"
-                            ))
-                        })?
-                    )
-                    .execute(&mut **transaction)
-                    .await
-                    .map_err(|err| {
-                        ClassroomServiceError::UnexpectedError(anyhow!(
-                            "Got an error from database: {}",
-                            err.to_string()
-                        ))
-                    })?;
-                }
+                self.insert_teacher_classroom_by_id(
+                    &mut *transaction,
+                    class_id.as_str(),
+                    teacher.teacher_id.as_str(),
+                )
+                .await
+                .map_err(|err| {
+                    ClassroomServiceError::UnexpectedError(anyhow!(
+                        "Unable to insert teacher={} into classroom={}, with an error: {}",
+                        teacher.teacher_id,
+                        class_id,
+                        err.to_string()
+                    ))
+                })?;
             }
+        } else {
+            let current_teacher = self
+            .teacher_service
+            .get_teacher_by_id(transaction, auth_user.user_id.as_str())
+            .await
+            .map_err(|err| {
+                ClassroomServiceError::UnexpectedError(anyhow!(
+                        "Unable to get teacher_id, with an error: {}",
+                        err.to_string()
+                    ))
+            })?;
+            self.insert_teacher_classroom_by_id(
+                &mut *transaction,
+                class_id.as_str(),
+                current_teacher.teacher_id.as_str(),
+            )
+            .await?;
         }
 
         Ok(class_id)
@@ -227,39 +419,38 @@ impl ClassroomService {
     pub async fn update_classroom(
         &self,
         transaction: &mut PgTransaction,
-        class_id: String,
-        params: UpdateClassroomParams,
+        class_id: &str,
+        params: &UpdateClassroomParams,
     ) -> Result<(), ClassroomServiceError> {
         //Check if classroom exists
-        let _ = self
-            .get_classroom_by_id(&mut *transaction, class_id.as_str())
-            .await?;
+        let _current_classroom = self
+        .get_classroom_by_id(&mut *transaction, class_id)
+        .await?;
 
-        if let (Some(subject_id), Some(subject_name)) = (&params.subject_id, &params.subject_name) {
-            self.subject_service
-                .update_subject_by_id(
-                    &mut *transaction,
-                    subject_id.as_str(),
-                    subject_name.as_str(),
-                )
-                .await
-                .map_err(|_| {
-                    ClassroomServiceError::UnexpectedError(anyhow!("Not found a subject"))
-                })?;
+        if let Some(subjects) = &params.subjects {
+            if let Err(err) = self
+            .update_class_subject_by_id(transaction, class_id, subjects)
+            .await
+            {
+                let err_msg = err.to_string();
+                if !err_msg.contains("No value") {
+                    return Err(err);
+                }
+            }
         }
 
-        if let Some(students) = params.students {
+        if let Some(students) = &params.students {
             match students {
                 ActionType::All(list_students) => {
-                    self.delete_student_classroom(&mut *transaction, class_id.as_str())
-                        .await?;
+                    self.delete_student_classroom(&mut *transaction, class_id)
+                    .await?;
 
                     for student in list_students {
                         match student {
                             Action::Add(student_id) => {
                                 self.insert_student_classroom_by_id(
                                     &mut *transaction,
-                                    class_id.as_str(),
+                                    class_id,
                                     student_id.as_str(),
                                 )
                                 .await?;
@@ -278,7 +469,7 @@ impl ClassroomService {
                             Action::Add(student_id) => {
                                 self.insert_student_classroom_by_id(
                                     &mut *transaction,
-                                    class_id.as_str(),
+                                    class_id,
                                     student_id.as_str(),
                                 )
                                 .await?;
@@ -286,7 +477,7 @@ impl ClassroomService {
                             Action::Delete(student_id) => {
                                 self.delete_student_classroom_by_id(
                                     &mut *transaction,
-                                    class_id.as_str(),
+                                    class_id,
                                     student_id.as_str(),
                                 )
                                 .await?;
@@ -297,18 +488,18 @@ impl ClassroomService {
             }
         }
 
-        if let Some(teachers) = params.teachers {
+        if let Some(teachers) = &params.teachers {
             match teachers {
                 ActionType::All(teachers) => {
-                    self.delete_teacher_classroom(&mut *transaction, class_id.as_str())
-                        .await?;
+                    self.delete_teacher_classroom(&mut *transaction, class_id)
+                    .await?;
 
                     for teacher in teachers {
                         match teacher {
                             Action::Add(teacher_id) => {
                                 self.insert_teacher_classroom_by_id(
                                     &mut *transaction,
-                                    class_id.as_str(),
+                                    class_id,
                                     teacher_id.as_str(),
                                 )
                                 .await?;
@@ -327,7 +518,7 @@ impl ClassroomService {
                             Action::Add(teacher_id) => {
                                 self.insert_teacher_classroom_by_id(
                                     &mut *transaction,
-                                    class_id.as_str(),
+                                    class_id,
                                     teacher_id.as_str(),
                                 )
                                 .await?;
@@ -335,7 +526,7 @@ impl ClassroomService {
                             Action::Delete(teacher_id) => {
                                 self.delete_teacher_classroom_by_id(
                                     &mut *transaction,
-                                    class_id.as_str(),
+                                    class_id,
                                     teacher_id.as_str(),
                                 )
                                 .await?;
@@ -345,6 +536,506 @@ impl ClassroomService {
                 }
             }
         }
+
+        if let Err(err) = self.update_classes(transaction, class_id, &params).await {
+            let err_msg = err.to_string();
+            if !err_msg.contains("No value") {
+                return Err(err);
+            }
+        };
+
+        let class_meetings = self.get_class_meetings(transaction, class_id).await?;
+
+        if let Some(exams) = &params.exams {
+            if class_meetings.len() > 0 {
+                return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                    "Not able to update exams because of meetings is available."
+                )));
+            }
+
+            self.update_exam_on_class(transaction, class_id, None, exams)
+            .await
+            .map_err(|err| {
+                ClassroomServiceError::UnexpectedError(anyhow!(
+                        "Unable to update exam on class={}, meeting_id={}, with an error={}",
+                        class_id,
+                        "NULL",
+                        err.to_string()
+                    ))
+            })?;
+        }
+
+        if let Some(meetings) = &params.meetings {
+            self.update_meeting_on_class(transaction, class_id, meetings)
+            .await
+            .map_err(|err| {
+                ClassroomServiceError::UnexpectedError(anyhow!(
+                        "Unable to update meeting on class={} and err={}",
+                        class_id,
+                        err.to_string()
+                    ))
+            })?;
+        }
+
+        Ok(())
+    }
+
+    async fn update_meeting_on_class(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+        params: &ActionTypeUpdateClassMeeting,
+    ) -> Result<(), ClassroomServiceError> {
+        match params {
+            ActionTypeUpdateClassMeeting::All(action_meetings) => {
+                self.delete_class_meeting_all(transaction, class_id).await?;
+                let mut meeting_number = 1;
+                for action_meeting in action_meetings {
+                    match action_meeting.action {
+                        BaseAction::Add => {
+                            match &action_meeting.params {
+                                ParamsActionUpdateClassMeeting::Create {
+                                    create_meeting_name, create_meeting_number, create_topic_description, create_description, create_start_time, create_end_time, create_exams
+                                } => {
+                                    let create_meeting_params = CreateClassMeetingParams {
+                                        meeting_name: create_meeting_name.to_owned(),
+                                        meeting_number: create_meeting_number.to_owned(),
+                                        topic_description: create_topic_description.to_owned(),
+                                        description: create_description.to_owned(),
+                                        start_time: create_start_time.to_owned(),
+                                        end_time: create_end_time.to_owned(),
+                                        exams: create_exams.to_owned(),
+                                    };
+                                    let class_meeting_id = self.create_class_meeting(transaction, class_id, &create_meeting_params)
+                                    .await
+                                    .map_err(|err| {
+                                        ClassroomServiceError::UnexpectedError(anyhow!(
+                                                "Unable to create class_meeting on class={}, with an error: {}", class_id, err.to_string()))
+                                    })?;
+
+                                    if let Some(exams) = &create_meeting_params.exams {
+                                        self.exam_service.delete_exam_on_class(transaction, class_id, None)
+                                        .await
+                                        .map_err(|err| {
+                                            ClassroomServiceError::UnexpectedError(anyhow!(
+                                                    "Unable to delete exam on class={} with error={}", class_id, err.to_string()))
+                                        })?;
+
+                                        for exam in exams {
+                                            self.exam_service.insert_class_on_exam_by_id(transaction, exam.exam_id.as_str(), class_id, Some(class_meeting_id.as_str()))
+                                            .await
+                                            .map_err(|err| {
+                                                ClassroomServiceError::UnexpectedError(anyhow!(
+                                                        "Unable to insert exam on class={}, meeting_id={}, with error={}", class_id, class_meeting_id.as_str(), err.to_string()))
+                                            })?;
+                                        }
+                                    }
+                                }
+                                ParamsActionUpdateClassMeeting::Update { .. } => {
+                                    return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                            "Update class_meeting is on All therefore params is on mode Update isn't available"
+                                        )))
+                                }
+                            }
+                        }
+                        BaseAction::Delete => {
+                            return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                "Update class_meeting is on All therefore Delete isn't available"
+                            )))
+                        }
+                        BaseAction::Edit => {
+                            return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                "Update class_meeting is on All therefore Edit isn't available"
+                            )))
+                        }
+                    }
+                    meeting_number += 1;
+                }
+            }
+            ActionTypeUpdateClassMeeting::Single(action_meetings) => {
+                for action_meeting in action_meetings {
+                    match action_meeting.action {
+                        BaseAction::Add => match &action_meeting.params {
+                            ParamsActionUpdateClassMeeting::Create {
+                                create_meeting_name, create_meeting_number, create_topic_description, create_description, create_start_time, create_end_time, create_exams
+                            } => {
+                                let create_meeting_params = CreateClassMeetingParams {
+                                    meeting_name: create_meeting_name.to_owned(),
+                                    meeting_number: create_meeting_number.to_owned(),
+                                    topic_description: create_topic_description.to_owned(),
+                                    description: create_description.to_owned(),
+                                    start_time: create_start_time.to_owned(),
+                                    end_time: create_end_time.to_owned(),
+                                    exams: create_exams.to_owned(),
+                                };
+                                self.create_class_meeting(transaction, class_id, &create_meeting_params)
+                                .await
+                                .map_err(|err| {
+                                    ClassroomServiceError::UnexpectedError(anyhow!(
+                                                "Unable to create class_meeting with class_id={} and error={}", class_id, err.to_string()))
+                                })?;
+                            }
+                            ParamsActionUpdateClassMeeting::Update { update_meeting_id, update_meeting_number, update_meeting_name, update_topic_description, update_description, update_start_time, update_end_time, update_exams } => {
+                                let update_meeting_params = UpdateClassMeetingParams {
+                                    meeting_id: update_meeting_id.to_owned(),
+                                    meeting_number: update_meeting_number.to_owned(),
+                                    meeting_name: update_meeting_name.to_owned(),
+                                    topic_description: update_topic_description.to_owned(),
+                                    description: update_description.to_owned(),
+                                    start_time: update_start_time.to_owned(),
+                                    end_time: update_end_time.to_owned(),
+                                    exams: update_exams.to_owned(),
+                                };
+                                self.update_class_meeting_by_id(transaction, class_id, &update_meeting_params)
+                                .await
+                                .map_err(|err| {
+                                    ClassroomServiceError::UnexpectedError(anyhow!(
+                                                "Unable to update class_meeting with class_id={} and error={}", class_id, err.to_string()))
+                                })?;
+                            }
+                        },
+                        BaseAction::Delete => {
+                            match &action_meeting.params {
+                                ParamsActionUpdateClassMeeting::Create { .. } => {
+                                    return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                            "Params is on create mode with action of delete therefore it isn't available"
+                                        )))
+                                }
+                                ParamsActionUpdateClassMeeting::Update { update_meeting_id, update_meeting_number, update_meeting_name, update_topic_description, update_description, update_start_time, update_end_time, update_exams } => {
+                                    let update_meeting_params = UpdateClassMeetingParams {
+                                        meeting_id: update_meeting_id.to_owned(),
+                                        meeting_number: update_meeting_number.to_owned(),
+                                        meeting_name: update_meeting_name.to_owned(),
+                                        topic_description: update_topic_description.to_owned(),
+                                        description: update_description.to_owned(),
+                                        start_time: update_start_time.to_owned(),
+                                        end_time: update_end_time.to_owned(),
+                                        exams: update_exams.to_owned(),
+                                    };
+                                    self.delete_class_meeting_by_id(transaction, update_meeting_params.meeting_id.as_str(), class_id)
+                                    .await
+                                    .map_err(|err| {
+                                        ClassroomServiceError::UnexpectedError(anyhow!(
+                                                "Unable to delete class_meeting with meeting_id={}, class_id={}, and error={}",
+                                                update_meeting_params.meeting_id,
+                                                class_id,
+                                                err.to_string()
+                                            ))
+                                    })?;
+                                }
+                            }
+                        }
+                        BaseAction::Edit => {
+                            match &action_meeting.params {
+                                ParamsActionUpdateClassMeeting::Create { .. } => {
+                                    return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                            "Params is on create mode with action of edit therefore it isn't available"
+                                        )))
+                                }
+                                ParamsActionUpdateClassMeeting::Update { update_meeting_id, update_meeting_number, update_meeting_name, update_topic_description, update_description, update_start_time, update_end_time, update_exams  } => {
+                                    let update_meeting_params = UpdateClassMeetingParams {
+                                        meeting_id: update_meeting_id.to_owned(),
+                                        meeting_number: update_meeting_number.to_owned(),
+                                        meeting_name: update_meeting_name.to_owned(),
+                                        topic_description: update_topic_description.to_owned(),
+                                        description: update_description.to_owned(),
+                                        start_time: update_start_time.to_owned(),
+                                        end_time: update_end_time.to_owned(),
+                                        exams: update_exams.to_owned(),
+                                    };
+                                    self.update_class_meeting_by_id(transaction, class_id, &update_meeting_params)
+                                    .await
+                                    .map_err(|err| {
+                                        ClassroomServiceError::UnexpectedError(anyhow!(
+                                                "Unable to update class_meeting with meeting_id={}, class_id={}, and error={}",
+                                                update_meeting_params.meeting_id,
+                                                class_id,
+                                                err.to_string(),
+                                            ))
+                                    })?;
+
+                                    if let Some(exams) = &update_meeting_params.exams {
+                                        self.update_exam_on_class(transaction, class_id, Some(update_meeting_params.meeting_id.as_str()), exams)
+                                        .await
+                                        .map_err(|err| {
+                                            ClassroomServiceError::UnexpectedError(anyhow!("Unable to update exam on class={}, meeting_id={}, and error={}", class_id, update_meeting_params.meeting_id, err.to_string()))
+                                        })?;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn update_exam_on_class(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+        meeting_id: Option<&str>,
+        params: &ActionTypeUpdateExam,
+    ) -> Result<(), ClassroomServiceError> {
+        match params {
+            ActionTypeUpdateExam::All(action_exams) => {
+                self.exam_service
+                .delete_exam_on_class(transaction, class_id, meeting_id)
+                .await
+                .map_err(|err| {
+                    ClassroomServiceError::UnexpectedError(anyhow!(
+                            "Unable to delete exam on class={}, with an error: {}",
+                            class_id,
+                            err.to_string()
+                        ))
+                })?;
+                for action_exam in action_exams {
+                    match action_exam.action {
+                        BaseAction::Add => match &action_exam.params {
+                            ParamsActionUpdateExam::Create(_) => {
+                                return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                            "Params is on create mode with action of add therefore it isn't available"
+                                        )));
+                            }
+                            ParamsActionUpdateExam::Update(update_exam_params) => {
+                                self.exam_service
+                                .insert_class_on_exam_by_id(
+                                    transaction,
+                                    update_exam_params.exam_id.as_str(),
+                                    class_id,
+                                    meeting_id,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    ClassroomServiceError::UnexpectedError(anyhow!(
+                                            "Unable to insert exam on class={}, with an error: {}",
+                                            class_id,
+                                            err.to_string()
+                                        ))
+                                })?;
+                            }
+                        },
+                        BaseAction::Delete => {
+                            return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                "Update exam is on All therefore Delete isn't available"
+                            )));
+                        }
+                        BaseAction::Edit => {
+                            return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                "Update exam is on All therefore Edit isn't available"
+                            )));
+                        }
+                    }
+                }
+            }
+            ActionTypeUpdateExam::Single(action_exams) => {
+                for action_exam in action_exams {
+                    match action_exam.action {
+                        BaseAction::Add => match &action_exam.params {
+                            ParamsActionUpdateExam::Create(_) => {
+                                return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                            "Params is on create mode with action of add therefore it isn't available"
+                                        )));
+                            }
+                            ParamsActionUpdateExam::Update(update_exam_params) => {
+                                self.exam_service
+                                .insert_class_on_exam_by_id(
+                                    transaction,
+                                    update_exam_params.exam_id.as_str(),
+                                    class_id,
+                                    meeting_id,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    ClassroomServiceError::UnexpectedError(anyhow!(
+                                            "Unable to insert exam on class={}, with an error: {}",
+                                            class_id,
+                                            err.to_string()
+                                        ))
+                                })?;
+                            }
+                        },
+                        BaseAction::Delete => match &action_exam.params {
+                            ParamsActionUpdateExam::Create(_) => {
+                                return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                            "Params is on create mode with action of delete therefore it isn't available"
+                                        )));
+                            }
+                            ParamsActionUpdateExam::Update(update_exam_params) => {
+                                self.exam_service.delete_exam_on_class_by_id(transaction, update_exam_params.exam_id.as_str(), class_id, meeting_id).await.map_err(|err| {
+                                    ClassroomServiceError::UnexpectedError(anyhow!("Unable to delete class={} on exam={}, with an error: {}", class_id, update_exam_params.exam_id, err.to_string()))
+                                })?;
+                            }
+                        },
+                        BaseAction::Edit => match &action_exam.params {
+                            ParamsActionUpdateExam::Create(_) => {
+                                return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                                            "Params is on create mode with action of edit therefore it isn't available"
+                                        )));
+                            }
+                            ParamsActionUpdateExam::Update(update_exam_params) => {
+                                self.exam_service
+                                .update_exam_on_class_by_id(
+                                    transaction,
+                                    update_exam_params.exam_id.as_str(),
+                                    class_id,
+                                    meeting_id,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    ClassroomServiceError::UnexpectedError(anyhow!(
+                                            "Unable to edit exam={}, with an error: {}",
+                                            update_exam_params.exam_id,
+                                            err.to_string()
+                                        ))
+                                })?;
+                            }
+                        },
+                    }
+                }
+            }
+        };
+        Ok(())
+    }
+
+    async fn update_classes(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+        params: &UpdateClassroomParams,
+    ) -> Result<(), ClassroomServiceError> {
+        let mut count = 0;
+        let mut curr_count = 0;
+        let mut count_changed = 0;
+
+        if params.class_name.is_some() {
+            count += 1;
+        }
+        if params.semester.is_some() {
+            count += 1;
+        }
+        if params.description.is_some() {
+            count += 1;
+        }
+        if params.capacity.is_some() {
+            count += 1;
+        }
+        if params.year_start.is_some() {
+            count += 1;
+        }
+        if params.year_end.is_some() {
+            count += 1;
+        }
+        if params.start_time.is_some() {
+            count += 1;
+        }
+        if params.end_time.is_some() {
+            count += 1;
+        }
+
+        if count == 0 {
+            return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                "No value to be updated"
+            )));
+        }
+
+        let mut query_builder = QueryBuilder::<Postgres>::new("update classes set ");
+
+        if let Some(class_name) = &params.class_name {
+            query_builder.push("name = ");
+            query_builder.push_bind(class_name);
+            if count > 1 && curr_count != count - 1 {
+                curr_count += 1;
+                query_builder.push(", ");
+            }
+            count_changed += 1;
+        }
+
+        if let Some(semester) = &params.semester {
+            query_builder.push("semester = ");
+            query_builder.push_bind(semester);
+            if count > 1 && curr_count != count - 1 {
+                curr_count += 1;
+                query_builder.push(", ");
+            }
+            count_changed += 1;
+        }
+
+        if let Some(year_start) = &params.year_start {
+            query_builder.push("year_start = ");
+            query_builder.push_bind(year_start);
+            query_builder.push("::date");
+            if count > 1 && curr_count != count - 1 {
+                curr_count += 1;
+                query_builder.push(", ");
+            }
+            count_changed += 1;
+        }
+
+        if let Some(year_end) = &params.year_end {
+            query_builder.push("year_end = ");
+            query_builder.push_bind(year_end);
+            query_builder.push("::date");
+            if count > 1 && curr_count != count - 1 {
+                curr_count += 1;
+                query_builder.push(", ");
+            }
+            count_changed += 1;
+        }
+
+        if let Some(capacity) = &params.capacity {
+            query_builder.push("capacity = ");
+            query_builder.push_bind(capacity);
+            if count > 1 && curr_count != count - 1 {
+                curr_count += 1;
+                query_builder.push(", ");
+            }
+            count_changed += 1;
+        }
+
+        if let Some(description) = &params.description {
+            query_builder.push("description = ");
+            query_builder.push_bind(description);
+            if count > 1 && curr_count != count - 1 {
+                curr_count += 1;
+                query_builder.push(", ");
+            }
+            count_changed += 1;
+        }
+
+        if let Some(start_time) = &params.start_time {
+            query_builder.push("start_time = ");
+            query_builder.push_bind(start_time);
+            if count > 1 && curr_count != count - 1 {
+                curr_count += 1;
+                query_builder.push(", ");
+            }
+            count_changed += 1;
+        }
+
+        if let Some(end_time) = &params.end_time {
+            query_builder.push("end_time = ");
+            query_builder.push_bind(end_time);
+            if count > 1 && curr_count != count - 1 {
+                curr_count += 1;
+                query_builder.push(", ");
+            }
+            count_changed += 1;
+        }
+
+        query_builder.push(" where class_id::text = ");
+        query_builder.push_bind(class_id);
+
+        let query = query_builder.build();
+
+        query.execute(&mut **transaction).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Got an error while updating classroom, with an error: {}",
+                err.to_string()
+            ))
+        })?;
 
         Ok(())
     }
@@ -403,12 +1094,11 @@ impl ClassroomService {
         transaction: &mut PgTransaction,
         class_id: &str,
         teacher_id: &str,
-    ) -> Result<TeacherClassroom, ClassroomServiceError> {
+    ) -> Result<(), ClassroomServiceError> {
         let query = sqlx::query!(
             r#"
         insert into class_teachers (class_id, teacher_id)
-        values ($1, $2)
-        returning class_id, teacher_id;
+        values ($1, $2);
         "#,
             Uuid::from_str(class_id).map_err(|err| anyhow!(
                 "Unable to parse class_id with error: {}",
@@ -419,14 +1109,16 @@ impl ClassroomService {
                 err.to_string()
             ))?
         )
-        .fetch_one(&mut **transaction)
+        .execute(&mut **transaction)
         .await
-        .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
+        .map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to insert class_teachers, with an error from database: {}",
+                err.to_string()
+            ))
+        })?;
 
-        Ok(TeacherClassroom {
-            class_id: query.class_id.to_string(),
-            teacher_id: query.teacher_id.to_string(),
-        })
+        Ok(())
     }
 
     pub async fn delete_student_classroom(
@@ -508,6 +1200,37 @@ impl ClassroomService {
         Ok(())
     }
 
+    pub async fn get_list_teacher_by_classroom(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+    ) -> Result<Vec<TeacherClassroom>, ClassroomServiceError> {
+        let query = sqlx::query_as!(
+            TeacherClassroom,
+            r#"
+        select
+            class_teachers.class_id::text as "class_id!",
+            teachers.teacher_id::text as "teacher_id!",
+            users_identity.full_name as teacher_name
+        from class_teachers
+        inner join teachers on class_teachers.teacher_id = teachers.teacher_id
+        inner join users_identity on users_identity.users_id = teachers.user_id
+        where class_id::text = $1;
+        "#,
+            class_id
+        )
+        .fetch_all(&mut **transaction)
+        .await
+        .map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to fetch teachers on classroom, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+
+        Ok(query)
+    }
+
     pub async fn get_teacher_classroom_by_id(
         &self,
         transaction: &mut PgTransaction,
@@ -515,27 +1238,18 @@ impl ClassroomService {
         teacher_id: &str,
     ) -> Result<TeacherClassroom, ClassroomServiceError> {
         let query = sqlx::query!(
-            "
-            select
-                class_id,
-                teacher_id
-            from class_teachers
-            where class_id = $1 and teacher_id = $2;
-        ",
-            Uuid::from_str(class_id).map_err(|err| {
-                anyhow!(
-                    "Unable to parse class_id into uuid, with class_id: {}; err: {}",
-                    class_id,
-                    err.to_string()
-                )
-            })?,
-            Uuid::from_str(teacher_id).map_err(|err| {
-                anyhow!(
-                    "Unable to parse teacher_id into uuid, with teacher_id: {}; err: {}",
-                    teacher_id,
-                    err.to_string()
-                )
-            })?
+            r#"
+        select
+            class_teachers.class_id,
+            class_teachers.teacher_id,
+            users_identity.full_name
+        from class_teachers
+        inner join teachers on class_teachers.teacher_id = teachers.teacher_id
+        inner join users_identity on users_identity.users_id = teachers.user_id
+        where class_teachers.class_id::text = $1 and class_teachers.teacher_id::text = $2;
+        "#,
+            class_id,
+            teacher_id
         )
         .fetch_optional(&mut **transaction)
         .await
@@ -549,6 +1263,7 @@ impl ClassroomService {
         Ok(TeacherClassroom {
             class_id: query.class_id.to_string(),
             teacher_id: query.teacher_id.to_string(),
+            teacher_name: query.full_name,
         })
     }
 
@@ -597,6 +1312,459 @@ impl ClassroomService {
         Ok(student_classroom)
     }
 
+    pub async fn create_class_subject(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+        subject_id: &str,
+        secondary_subject_id: Option<&str>,
+    ) -> Result<(), ClassroomServiceError> {
+        let mut query_builder =
+        QueryBuilder::<Postgres>::new("insert into class_subjects (class_id, subject_id");
+        let mut separated = query_builder.separated(", ");
+
+        if secondary_subject_id.is_some() {
+            separated.push_unseparated(", secondary_subject_id");
+        }
+        separated.push_unseparated(") ");
+        separated.push_unseparated("values (");
+
+        separated.push_bind(class_id);
+        separated.push_unseparated("::uuid");
+        separated.push_bind(subject_id);
+        separated.push_unseparated("::uuid");
+        if let Some(secondary_subject_id) = secondary_subject_id {
+            separated.push_bind(secondary_subject_id);
+            separated.push_unseparated("::uuid");
+        }
+        separated.push_unseparated(")");
+        let query = query_builder.build();
+        query.execute(&mut **transaction).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to create class_subject; \
+            class_id={}; subject_id={}; secondary_subject_id={}, \
+            with an error: {}",
+                class_id,
+                subject_id,
+                secondary_subject_id.unwrap_or("NULL"),
+                err.to_string()
+            ))
+        })?;
+        Ok(())
+    }
+
+    pub async fn delete_class_subject_by_id(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+        subject_id: &str,
+        secondary_subject_id: Option<&str>,
+    ) -> Result<(), ClassroomServiceError> {
+        let mut query_builder = QueryBuilder::<Postgres>::new("delete from class_subjects where ");
+        query_builder.push("class_id::text = ");
+        query_builder.push_bind(class_id);
+        query_builder.push(" and ");
+        query_builder.push("subject_id::text = ");
+        query_builder.push_bind(subject_id);
+
+        if let Some(secondary_subject_id) = secondary_subject_id {
+            query_builder.push(" and ");
+            query_builder.push("secondary_subject_id::text = ");
+            query_builder.push_bind(secondary_subject_id);
+        }
+
+        let query = query_builder.build();
+        dbg!(&query.sql());
+        query.execute(&mut **transaction).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!("Unalbe to delete class_subject with class_id={}, subject_id={}, secondary_subject_id={}, and err={}", class_id, subject_id, secondary_subject_id.unwrap_or("NULL"), err.to_string()))
+        })?;
+
+        Ok(())
+    }
+
+    pub async fn update_class_subject_by_id(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+        params: &UpdateClassSubjectParams,
+    ) -> Result<(), ClassroomServiceError> {
+        let mut count = 0;
+        let mut curr_count = 0;
+
+        if params.subject_id.is_some() {
+            count += 1;
+        }
+        if params.secondary_subject_id.is_some() {
+            count += 1;
+        }
+
+        if count == 0 {
+            return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                "No value to be updated"
+            )));
+        }
+
+        let mut query_builder = QueryBuilder::<Postgres>::new("update class_subjects set ");
+
+        if let Some(subject_id) = &params.subject_id {
+            query_builder.push("subject_id = ");
+            query_builder.push_bind(subject_id);
+            query_builder.push("::uuid");
+
+            if count > 0 && curr_count != count - 1 {
+                query_builder.push(", ");
+                curr_count += 1;
+            }
+        }
+
+        if let Some(secondary_subject_id) = &params.secondary_subject_id {
+            query_builder.push("secondary_subject_id = ");
+            query_builder.push_bind(secondary_subject_id);
+            query_builder.push("::uuid");
+
+            if count > 0 && curr_count != count - 1 {
+                query_builder.push(", ");
+                curr_count += 1;
+            }
+        }
+
+        query_builder.push(" where class_id::text = ");
+        query_builder.push_bind(class_id);
+
+        let query = query_builder.build();
+        query.execute(&mut **transaction).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to update class_subject with class_id={} and error={}",
+                class_id,
+                err.to_string()
+            ))
+        })?;
+
+        Ok(())
+    }
+
+    pub async fn delete_class_meeting_all(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+    ) -> Result<(), ClassroomServiceError> {
+        sqlx::query!(
+            "delete from class_meeting where class_id::text = $1",
+            class_id
+        )
+        .execute(&mut **transaction)
+        .await
+        .map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to delete class_meeting on class={}, with an error from database: {}",
+                class_id,
+                err.to_string()
+            ))
+        })?;
+
+        Ok(())
+    }
+
+    pub async fn delete_class_meeting_by_id(
+        &self,
+        transaction: &mut PgTransaction,
+        meeting_id: &str,
+        class_id: &str,
+    ) -> Result<(), ClassroomServiceError> {
+        sqlx::query!("delete from class_meeting where meeting_id::text = $1 and class_id::text = $2", meeting_id, class_id).execute(&mut **transaction).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to delete class_meeting on class={} | meeting={}, with an error from database: {}",
+                class_id,
+                meeting_id,
+                err.to_string()
+            ))
+        })?;
+        Ok(())
+    }
+
+    pub async fn create_class_meeting(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+        params: &CreateClassMeetingParams,
+    ) -> Result<String, ClassroomServiceError> {
+        let mut query_builder = QueryBuilder::<Postgres>::new(
+            "insert into class_meeting (class_id, name, topic_description, meeting_number",
+        );
+
+        let mut count = 0;
+        let mut curr_count = 0;
+
+        if params.description.is_some() {
+            query_builder.push(", description");
+            count += 1;
+        }
+        if params.start_time.is_some() {
+            query_builder.push(", start_time");
+            count += 1;
+        }
+        if params.end_time.is_some() {
+            query_builder.push(", end_time");
+            count += 1;
+        }
+        query_builder.push(")");
+        query_builder.push(" values (");
+
+        query_builder.push_bind(class_id);
+        query_builder.push("::uuid");
+        query_builder.push(", ");
+        query_builder.push_bind(&params.meeting_name);
+        query_builder.push(", ");
+        query_builder.push_bind(&params.topic_description);
+        query_builder.push(", ");
+        query_builder.push_bind(&params.meeting_number);
+        if count > 0 && curr_count != count - 1 {
+            query_builder.push(", ");
+        }
+
+        if let Some(description) = &params.description {
+            query_builder.push_bind(description);
+            if count > 0 && curr_count != count - 1 {
+                query_builder.push(", ");
+            }
+            curr_count += 1;
+        }
+        if let Some(start_time) = &params.start_time {
+            query_builder.push_bind(start_time);
+            if count > 0 && curr_count != count - 1 {
+                query_builder.push(", ");
+            }
+            curr_count += 1;
+        }
+        if let Some(end_time) = &params.end_time {
+            query_builder.push_bind(end_time);
+            if count > 0 && curr_count != count - 1 {
+                query_builder.push(", ");
+            }
+            curr_count += 1;
+        }
+        query_builder.push(")");
+        query_builder.push(r#" returning meeting_id::text"#);
+        let query = query_builder.build();
+        let query = query.fetch_one(&mut **transaction).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to create class_meeting, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+        let meeting_id = query.try_get::<String, &str>("meeting_id").map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!("Not found meeting_id"))
+        })?;
+        Ok(meeting_id)
+    }
+
+    pub async fn update_class_meeting_by_id(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+        params: &UpdateClassMeetingParams,
+    ) -> Result<(), ClassroomServiceError> {
+        let mut query_builder = QueryBuilder::<Postgres>::new("update class_meeting set ");
+        let mut count = 0;
+        let mut curr_count = 0;
+        let mut count_changed = 0;
+
+        if params.meeting_name.is_some() {
+            count += 1;
+        }
+        if params.topic_description.is_some() {
+            count += 1;
+        }
+        if params.description.is_some() {
+            count += 1;
+        }
+        if params.start_time.is_some() {
+            count += 1;
+        }
+        if params.end_time.is_some() {
+            count += 1;
+        }
+
+        if let Some(meeting_name) = &params.meeting_name {
+            query_builder.push("name = ");
+            query_builder.push_bind(meeting_name);
+
+            if count > 1 && curr_count != count - 1 {
+                query_builder.push(", ");
+                curr_count += 1;
+            }
+
+            count_changed += 1;
+        }
+
+        if let Some(topic_description) = &params.topic_description {
+            query_builder.push("topic_description = ");
+            query_builder.push_bind(topic_description);
+
+            if count > 1 && curr_count != count - 1 {
+                query_builder.push(", ");
+                curr_count += 1;
+            }
+
+            count_changed += 1;
+        }
+
+        if let Some(description) = &params.description {
+            query_builder.push("description = ");
+            query_builder.push_bind(description);
+
+            if count > 1 && curr_count != count - 1 {
+                query_builder.push(", ");
+                curr_count += 1;
+            }
+
+            count_changed += 1;
+        }
+
+        if let Some(start_time) = &params.start_time {
+            query_builder.push("start_time = ");
+            query_builder.push_bind(start_time);
+
+            if count > 1 && curr_count != count - 1 {
+                query_builder.push(", ");
+                curr_count += 1;
+            }
+
+            count_changed += 1;
+        }
+
+        if let Some(end_time) = &params.end_time {
+            query_builder.push("end_time = ");
+            query_builder.push_bind(end_time);
+
+            if count > 1 && curr_count != count - 1 {
+                query_builder.push(", ");
+                curr_count += 1;
+            }
+
+            count_changed += 1;
+        }
+
+        query_builder.push(" where class_id::text = ");
+        query_builder.push_bind(class_id);
+        query_builder.push(" and meeting_id::text = ");
+        query_builder.push_bind(&params.meeting_id);
+
+        if count_changed == 0 {
+            return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                "No value to be updated"
+            )));
+        }
+
+        let query = query_builder.build();
+
+        query.execute(&mut **transaction).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to update class_meeting id={}, with an error: {}",
+                params.meeting_id,
+                err.to_string()
+            ))
+        })?;
+        Ok(())
+    }
+
+    pub async fn get_class_meetings(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+    ) -> Result<Vec<ClassMeeting>, ClassroomServiceError> {
+        let query = sqlx::query!(
+            r#"
+        select
+            meeting_id::text as "meeting_id!",
+            class_id::text as "class_id!",
+            meeting_number,
+            name as meeting_name,
+            topic_description,
+            description,
+            created_at,
+            updated_at,
+            start_time,
+            end_time
+        from class_meeting
+        where class_id::text = $1;
+        "#,
+            class_id
+        )
+        .fetch_all(&mut **transaction)
+        .await
+        .map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to fetch all the class_meeting from database, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+
+        let mut class_meetings = vec![];
+        for class_meeting in query {
+            class_meetings.push(ClassMeeting {
+                meeting_id: class_meeting.meeting_id,
+                class_id: class_meeting.class_id,
+                meeting_number: class_meeting.meeting_number as i64,
+                meeting_name: class_meeting.meeting_name,
+                topic_description: class_meeting.topic_description,
+                description: class_meeting.description,
+                start_time: class_meeting.start_time,
+                end_time: class_meeting.end_time,
+                created_at: class_meeting.created_at,
+                updated_at: class_meeting.updated_at,
+            });
+        }
+
+        Ok(class_meetings)
+    }
+
+    pub async fn get_class_meeting_by_id(
+        &self,
+        transaction: &mut PgTransaction,
+        meeting_id: &str,
+    ) -> Result<ClassMeeting, ClassroomServiceError> {
+        let query = sqlx::query!(
+            r#"
+        select
+            meeting_id::text as "meeting_id!",
+            class_id::text as "class_id!",
+            name,
+            meeting_number,
+            topic_description,
+            description,
+            created_at,
+            updated_at,
+            start_time,
+            end_time
+        from class_meeting
+        where meeting_id::text = $1
+        "#,
+            meeting_id
+        )
+        .fetch_one(&mut **transaction)
+        .await
+        .map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to fetch data from database, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+
+        Ok(ClassMeeting {
+            meeting_id: query.meeting_id,
+            class_id: query.class_id,
+            meeting_number: query.meeting_number as i64,
+            meeting_name: query.name,
+            topic_description: query.topic_description,
+            description: query.description,
+            start_time: query.start_time,
+            end_time: query.end_time,
+            created_at: query.created_at,
+            updated_at: query.updated_at,
+        })
+    }
+
     pub async fn get_classroom_by_id(
         &self,
         transaction: &mut PgTransaction,
@@ -609,79 +1777,173 @@ impl ClassroomService {
             classes.class_id,
             classes.name,
             classes.description,
+            classes.capacity,
+            classes.semester as "semester!: ClassSemester",
+            classes.year_start,
+            classes.year_end,
+            classes.have_multiple_meeting,
+            classes.current_meeting_id,
+            classes.start_time,
+            classes.end_time,
             subjects.name as subject_name,
             subjects.subject_id,
-            class_schedule.start_time,
-            class_schedule.end_time
+            class_subjects.secondary_subject_id
         from classes
             inner join class_subjects on classes.class_id = class_subjects.class_id
             inner join subjects on class_subjects.subject_id = subjects.subject_id
-            inner join class_schedule on classes.class_id = class_schedule.class_id
         where classes.class_id::text = $1;
        "#,
-            class_id,
-            // Uuid::from_str(class_id).map_err(|err| {
-            //     tracing::error!("Unable to parse class_id with error: {}", err.to_string());
-            //     anyhow!("Unable to parse class_id with error: {}", err.to_string())
-            // })?
+            class_id
         )
         .fetch_optional(&mut **transaction)
         .await
         .map_err(|err| {
-            ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string()))
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Got an error from database: {}",
+                err.to_string()
+            ))
         })?
-            .ok_or(ClassroomServiceError::UnexpectedError(anyhow!("Not found a classroom with class_id: {}", class_id)))?;
+        .ok_or(ClassroomServiceError::UnexpectedError(anyhow!(
+            "Not found a classroom with class_id: {}",
+            class_id
+        )))?;
 
-        let classroom = Classroom {
-            is_active: query.is_active,
-            name: query.name,
-            description: query.description,
-            class_id: query.class_id.to_string(),
+        let secondary_subject = {
+            if let Some(secondary_subject_id) = query.secondary_subject_id {
+                Some(
+                    self.subject_service
+                    .get_secondary_subject_by_id(
+                        transaction,
+                        secondary_subject_id.to_string().as_str(),
+                    )
+                    .await
+                    .map_err(|err| {
+                        ClassroomServiceError::UnexpectedError(anyhow!(
+                                "Unable to fetch secondary_subject, with an error: {}",
+                                err.to_string()
+                            ))
+                    })?,
+                )
+            } else {
+                None
+            }
+        };
+        let subject = SubjectWithSecondary {
             subject_id: query.subject_id.to_string(),
             subject_name: query.subject_name,
-            start_time: query.start_time.to_rfc3339(),
-            end_time: query.end_time.map(|time| time.to_rfc3339()),
+            secondary_subject,
+        };
+        let teachers = self
+        .get_list_teacher_by_classroom(transaction, class_id)
+        .await?;
+        let class_meeting = self
+        .get_class_meetings(transaction, class_id.to_string().as_str())
+        .await?;
+        let classroom = Classroom {
+            is_active: query.is_active,
+            capacity: query.capacity as i64,
+            have_multiple_meeting: query.have_multiple_meeting,
+            subject,
+            meetings: {
+                if class_meeting.len() > 0 {
+                    Some(class_meeting)
+                } else {
+                    None
+                }
+            },
+            semester: query.semester,
+            class_name: query.name,
+            class_id: query.class_id.to_string(),
+            description: query.description,
+            year_start: query.year_start.year().to_string(),
+            year_end: query.year_end.year().to_string(),
+            current_meeting_id: query.current_meeting_id.map(|val| val.to_string()),
+            start_time: query.start_time,
+            end_time: query.end_time,
+            teachers: Some(teachers),
         };
         Ok(classroom)
     }
 
     async fn get_student_classroom(
         &self,
+        transaction: &mut PgTransaction,
         user_id: &str,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let query = sqlx::query!("
+        let query = sqlx::query!(r#"
             select
                 classes.is_active,
                 classes.class_id,
                 classes.name,
                 classes.description,
+                classes.capacity,
+                classes.semester as "semester!: ClassSemester",
+                classes.year_start,
+                classes.year_end,
+                classes.have_multiple_meeting,
+                classes.current_meeting_id,
+                classes.start_time,
+                classes.end_time,
                 class_subjects.subject_id,
-                subjects.name as subject_name,
-                class_schedule.start_time,
-                class_schedule.end_time
+                class_subjects.secondary_subject_id,
+                subjects.name as subject_name
             from students
                      inner join class_students on students.student_id = class_students.student_id
                      inner join classes on class_students.class_id = classes.class_id and classes.is_active = true
                      inner join class_subjects on classes.class_id = class_subjects.class_id
                      inner join subjects on class_subjects.subject_id = subjects.subject_id
-                     inner join class_schedule on classes.class_id = class_schedule.class_id
             where user_id::text = $1;
-            ", &user_id)
-            .fetch_all(&self.app_state.database)
-            .await
-            .map_err(|err| { ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string())) })?;
+            "#, &user_id)
+        .fetch_all(&self.app_state.database)
+        .await
+        .map_err(|err| { ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string())) })?;
 
         let mut list_classroom: Vec<Classroom> = Vec::with_capacity(query.len());
         for tmp_classroom in query {
+            let secondary_subject = {
+                if let Some(secondary_subject_id) = tmp_classroom.secondary_subject_id {
+                    Some(
+                        self.subject_service
+                        .get_secondary_subject_by_id(
+                            transaction,
+                            secondary_subject_id.to_string().as_str(),
+                        )
+                        .await
+                        .map_err(|err| {
+                            ClassroomServiceError::UnexpectedError(anyhow!(
+                                    "Unable to fetch secondary_subject, with an error: {}",
+                                    err.to_string()
+                                ))
+                        })?,
+                    )
+                } else {
+                    None
+                }
+            };
+            let subject = SubjectWithSecondary {
+                subject_id: tmp_classroom.subject_id.to_string(),
+                subject_name: tmp_classroom.subject_name,
+                secondary_subject,
+            };
+            let class_meeting = self
+            .get_class_meetings(transaction, tmp_classroom.class_id.to_string().as_str())
+            .await?;
             let classroom = Classroom {
                 is_active: tmp_classroom.is_active,
-                name: tmp_classroom.name,
+                capacity: tmp_classroom.capacity as i64,
+                current_meeting_id: tmp_classroom.current_meeting_id.map(|val| val.to_string()),
+                class_name: tmp_classroom.name,
                 description: tmp_classroom.description,
                 class_id: tmp_classroom.class_id.to_string(),
-                subject_id: tmp_classroom.subject_id.to_string(),
-                subject_name: tmp_classroom.subject_name.to_string(),
-                start_time: tmp_classroom.start_time.to_rfc3339(),
-                end_time: tmp_classroom.end_time.map(|time| time.to_rfc3339()),
+                subject,
+                meetings: Some(class_meeting),
+                semester: tmp_classroom.semester,
+                year_start: tmp_classroom.year_start.year().to_string(),
+                have_multiple_meeting: tmp_classroom.have_multiple_meeting,
+                year_end: tmp_classroom.year_end.year().to_string(),
+                start_time: tmp_classroom.start_time,
+                end_time: tmp_classroom.end_time,
+                teachers: None,
             };
             list_classroom.push(classroom)
         }
@@ -690,36 +1952,83 @@ impl ClassroomService {
 
     async fn get_lecturer_classroom(
         &self,
+        transaction: &mut PgTransaction,
         user_id: &str,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
         let query = sqlx::query!(r#"
         select
-            subjects.name as subject_name,
-            classes.class_id, subjects.subject_id, is_active, classes.name, description,
-            cs.start_time, cs.end_time
+                classes.is_active,
+                classes.class_id,
+                classes.name,
+                classes.description,
+                classes.capacity,
+                classes.semester as "semester!: ClassSemester",
+                classes.year_start,
+                classes.year_end,
+                classes.have_multiple_meeting,
+                classes.current_meeting_id,
+                classes.start_time,
+                classes.end_time,
+                class_subjects.subject_id,
+                class_subjects.secondary_subject_id,
+                subjects.name as subject_name
         from teachers
                  inner join class_teachers on teachers.teacher_id = class_teachers.teacher_id
                  inner join classes on class_teachers.class_id = classes.class_id and classes.is_active = true
                  inner join class_subjects on classes.class_id = class_subjects.class_id
                  inner join subjects on class_subjects.subject_id = subjects.subject_id
-                 inner join class_schedule cs on classes.class_id = cs.class_id
         where user_id::text = $1;
             "#, &user_id)
-            .fetch_all(&self.app_state.database)
-            .await
-            .map_err(|err| ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string())))?;
+        .fetch_all(&self.app_state.database)
+        .await
+        .map_err(|err| ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string())))?;
 
         let mut classrooms: Vec<Classroom> = Vec::with_capacity(query.len());
         for tmp_classroom in query {
+            let secondary_subject = {
+                if let Some(secondary_subject_id) = tmp_classroom.secondary_subject_id {
+                    Some(
+                        self.subject_service
+                        .get_secondary_subject_by_id(
+                            transaction,
+                            secondary_subject_id.to_string().as_str(),
+                        )
+                        .await
+                        .map_err(|err| {
+                            ClassroomServiceError::UnexpectedError(anyhow!(
+                                    "Unable to fetch secondary_subject, with an error: {}",
+                                    err.to_string()
+                                ))
+                        })?,
+                    )
+                } else {
+                    None
+                }
+            };
+            let subject = SubjectWithSecondary {
+                subject_id: tmp_classroom.subject_id.to_string(),
+                subject_name: tmp_classroom.subject_name,
+                secondary_subject,
+            };
+            let class_meeting = self
+            .get_class_meetings(transaction, tmp_classroom.class_id.to_string().as_str())
+            .await?;
             let classroom = Classroom {
                 is_active: tmp_classroom.is_active,
-                name: tmp_classroom.name,
+                capacity: tmp_classroom.capacity as i64,
+                class_name: tmp_classroom.name,
                 description: tmp_classroom.description,
                 class_id: tmp_classroom.class_id.to_string(),
-                subject_id: tmp_classroom.subject_id.to_string(),
-                subject_name: tmp_classroom.subject_name.to_string(),
-                start_time: tmp_classroom.start_time.to_rfc3339(),
-                end_time: tmp_classroom.end_time.map(|time| time.to_rfc3339()),
+                subject,
+                meetings: Some(class_meeting),
+                semester: tmp_classroom.semester,
+                year_start: tmp_classroom.year_start.year().to_string(),
+                have_multiple_meeting: tmp_classroom.have_multiple_meeting,
+                year_end: tmp_classroom.year_end.year().to_string(),
+                current_meeting_id: tmp_classroom.current_meeting_id.map(|val| val.to_string()),
+                start_time: tmp_classroom.start_time,
+                end_time: tmp_classroom.end_time,
+                teachers: None,
             };
             classrooms.push(classroom);
         }

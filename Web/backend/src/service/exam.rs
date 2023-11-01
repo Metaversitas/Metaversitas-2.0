@@ -1,8 +1,8 @@
 use crate::helpers::errors::exam::ExamServiceError;
-use crate::model::exam::{CreateExamParams, Exam, UpdateExamParams};
+use crate::model::exam::{CreateExamParams, Exam, ExamType, UpdateExamParams};
 use crate::r#const::PgTransaction;
 use anyhow::anyhow;
-use sqlx::{Postgres, QueryBuilder};
+use sqlx::{Execute, Postgres, QueryBuilder};
 
 pub struct ExamService;
 
@@ -18,7 +18,12 @@ impl ExamService {
         let query = sqlx::query!(
             r#"
         select
-            *
+            type as "type!: ExamType",
+            name,
+            exam_id,
+            description,
+            created_by,
+            updated_at
         from exams
         limit 10;
         "#
@@ -36,11 +41,12 @@ impl ExamService {
         for exam in query {
             exams.push(Exam {
                 exam_id: exam.exam_id.to_string(),
-                name: exam.name,
+                r#type: exam.r#type,
+                exam_name: exam.name,
                 description: exam.description,
                 created_by: exam.created_by.to_string(),
                 created_at: None,
-                updated_at: None,
+                updated_at: Some(exam.updated_at),
             });
         }
 
@@ -55,7 +61,12 @@ impl ExamService {
         let query = sqlx::query!(
             r#"
         select
-            *
+            name,
+            description,
+            type as "type!: ExamType",
+            exam_id,
+            created_by,
+            updated_at
         from exams
         where exam_id::text = $1;
         "#,
@@ -75,11 +86,12 @@ impl ExamService {
         )))?;
         Ok(Exam {
             exam_id: query.exam_id.to_string(),
-            name: query.name,
+            r#type: ExamType::Default,
+            exam_name: query.name,
             description: query.description,
             created_by: query.created_by.to_string(),
             created_at: None,
-            updated_at: None,
+            updated_at: Some(query.updated_at),
         })
     }
 
@@ -98,7 +110,7 @@ impl ExamService {
         separated.push("created_by");
         separated.push_unseparated(")");
         separated.push_unseparated(" values (");
-        separated.push_bind(&params.name);
+        separated.push_bind(&params.exam_name);
         if params.description.is_some() {
             separated.push_bind(&params.description);
         }
@@ -147,7 +159,7 @@ impl ExamService {
         exam_id: &str,
         params: &UpdateExamParams,
     ) -> Result<(), ExamServiceError> {
-        if params.description.is_none() && params.name.is_none() {
+        if params.description.is_none() && params.exam_name.is_none() {
             return Err(ExamServiceError::UnexpectedError(anyhow!(
                 "No value to be updated"
             )));
@@ -160,14 +172,14 @@ impl ExamService {
         let mut curr_count = 0;
         let mut count_changed = 0;
 
-        if params.name.is_some() {
+        if params.exam_name.is_some() {
             count += 1;
         }
         if params.description.is_some() {
             count += 1;
         }
 
-        if let Some(name) = &params.name {
+        if let Some(name) = &params.exam_name {
             separated.push_unseparated("name = ");
             separated.push_bind_unseparated(name);
 
@@ -204,6 +216,139 @@ impl ExamService {
         query.execute(&mut **transaction).await.map_err(|err| {
             ExamServiceError::UnexpectedError(anyhow!(
                 "Got an error from database, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+
+        Ok(())
+    }
+
+    pub async fn insert_class_on_exam_by_id(
+        &self,
+        transaction: &mut PgTransaction,
+        exam_id: &str,
+        class_id: &str,
+        meeting_id: Option<&str>,
+    ) -> Result<(), ExamServiceError> {
+        let mut query_builder =
+            QueryBuilder::<Postgres>::new("insert into exam_classes (exam_id, class_id");
+
+        if meeting_id.is_some() {
+            query_builder.push(", meeting_id");
+        }
+        query_builder.push(")");
+        query_builder.push(" values (");
+
+        query_builder.push_bind(exam_id);
+        query_builder.push("::uuid");
+        query_builder.push(", ");
+        query_builder.push_bind(class_id);
+        query_builder.push("::uuid");
+        if meeting_id.is_some() {
+            query_builder.push(", ");
+        }
+
+        if let Some(meeting_id) = meeting_id {
+            query_builder.push_bind(meeting_id);
+            query_builder.push("::uuid");
+        }
+        query_builder.push(")");
+
+        let query = query_builder.build();
+        query.execute(&mut **transaction)
+        .await
+        .map_err(|err| {
+            ExamServiceError::UnexpectedError(anyhow!("Unable to add exam_id={}; class_id={}; meeting_id={} into databases, with an error: {}", exam_id, class_id, meeting_id.unwrap_or("NULL"),err.to_string()))
+        })?;
+
+        Ok(())
+    }
+
+    pub async fn delete_exam_on_class_by_id(
+        &self,
+        transaction: &mut PgTransaction,
+        exam_id: &str,
+        class_id: &str,
+        meeting_id: Option<&str>,
+    ) -> Result<(), ExamServiceError> {
+        let mut query_builder = QueryBuilder::<Postgres>::new("delete from exam_classes where ");
+        query_builder.push("exam_id::uuid = ");
+        query_builder.push_bind(exam_id);
+        query_builder.push(" and ");
+        query_builder.push("class_id::uuid = ");
+        query_builder.push_bind(class_id);
+
+        if let Some(meeting_id) = meeting_id {
+            query_builder.push(" and ");
+            query_builder.push_bind(meeting_id);
+        }
+
+        let query = query_builder.build();
+        dbg!(&query.sql());
+
+        query.execute(&mut **transaction).await.map_err(|err| {
+            ExamServiceError::UnexpectedError(anyhow!(
+                "Unable to delete exam={} on class={}, with an error from database: {}",
+                exam_id,
+                class_id,
+                err.to_string()
+            ))
+        })?;
+        Ok(())
+    }
+
+    pub async fn delete_exam_on_class(
+        &self,
+        transaction: &mut PgTransaction,
+        class_id: &str,
+        meeting_id: Option<&str>,
+    ) -> Result<(), ExamServiceError> {
+        let mut query_builder = QueryBuilder::<Postgres>::new("delete from exam_classes where ");
+        query_builder.push("class_id::text = ");
+        query_builder.push_bind(class_id);
+
+        if let Some(meeting_id) = meeting_id {
+            query_builder.push(" and ");
+            query_builder.push_bind(meeting_id);
+        }
+
+        let query = query_builder.build();
+
+        query.execute(&mut **transaction).await.map_err(|err| {
+            ExamServiceError::UnexpectedError(anyhow!(
+                "Unable to delete exam on class={}, with an error from database: {}",
+                class_id,
+                err.to_string()
+            ))
+        })?;
+
+        Ok(())
+    }
+
+    pub async fn update_exam_on_class_by_id(
+        &self,
+        transaction: &mut PgTransaction,
+        exam_id: &str,
+        class_id: &str,
+        meeting_id: Option<&str>,
+    ) -> Result<(), ExamServiceError> {
+        let mut query_builder = QueryBuilder::<Postgres>::new("update exam_classes set exam_id = ");
+        query_builder.push_bind(exam_id);
+        query_builder.push("::uuid");
+        query_builder.push(" where class_id::text = ");
+        query_builder.push_bind(class_id);
+
+        if let Some(meeting_id) = meeting_id {
+            query_builder.push(" and meeting_id::text = ");
+            query_builder.push_bind(meeting_id);
+        }
+
+        let query = query_builder.build();
+
+        query.execute(&mut **transaction).await.map_err(|err| {
+            ExamServiceError::UnexpectedError(anyhow!(
+                "Unable to update exam on class={}, with an error from database: {}",
+                class_id,
                 err.to_string()
             ))
         })?;

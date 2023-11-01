@@ -1,0 +1,116 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n                classes.is_active,\n                classes.class_id,\n                classes.name,\n                classes.description,\n                classes.capacity,\n                classes.semester as \"semester!: ClassSemester\",\n                classes.year_start,\n                classes.year_end,\n                classes.have_multiple_meeting,\n                classes.current_meeting_id,\n                classes.start_time,\n                classes.end_time,\n                class_subjects.subject_id,\n                class_subjects.secondary_subject_id,\n                subjects.name as subject_name\n        from teachers\n                 inner join class_teachers on teachers.teacher_id = class_teachers.teacher_id\n                 inner join classes on class_teachers.class_id = classes.class_id and classes.is_active = true\n                 inner join class_subjects on classes.class_id = class_subjects.class_id\n                 inner join subjects on class_subjects.subject_id = subjects.subject_id\n        where user_id::text = $1;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "class_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "capacity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "semester!: ClassSemester",
+        "type_info": {
+          "Custom": {
+            "name": "semester",
+            "kind": {
+              "Enum": [
+                "odd",
+                "even"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "year_start",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 7,
+        "name": "year_end",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 8,
+        "name": "have_multiple_meeting",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "current_meeting_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 10,
+        "name": "start_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "end_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "subject_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 13,
+        "name": "secondary_subject_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 14,
+        "name": "subject_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "2dd1648bd590c19fb8481a308e5d6970eea15bc3a06bab63053070764a36904c"
+}

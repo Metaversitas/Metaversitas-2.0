@@ -3,6 +3,7 @@ use serde_json::Value;
 use sqlx::{FromRow, Type};
 
 #[derive(Clone, Debug, Type, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
 #[sqlx(rename_all = "lowercase")]
 #[sqlx(type_name = "question_types")]
 pub enum QuestionType {

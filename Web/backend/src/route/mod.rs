@@ -64,14 +64,16 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
     let game_service = Arc::new(GameService::new(Arc::clone(&app_state)));
     let user_service = Arc::new(UserService::new(Arc::clone(&app_state)));
     let subject_service = Arc::new(SubjectService::new());
+    let exam_service = Arc::new(ExamService::new());
+    let teacher_service = Arc::new(TeacherService::new());
     let classroom_service = Arc::new(ClassroomService::new(
         Arc::clone(&app_state),
         Arc::clone(&subject_service),
+        Arc::clone(&exam_service),
+        Arc::clone(&teacher_service),
     ));
-    let teacher_service = Arc::new(TeacherService::new());
     let student_service = Arc::new(StudentService::new());
     let question_service = Arc::new(QuestionService::new());
-    let exam_service = Arc::new(ExamService::new());
 
     let auth_router = auth_router(
         Arc::clone(&app_state),
