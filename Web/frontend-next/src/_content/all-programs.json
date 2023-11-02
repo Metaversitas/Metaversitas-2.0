@@ -1,0 +1,20 @@
+{
+  "programs": [
+    {
+      "title": "Fisika",
+      "description": "Kelas praktikum fisika merupakan suatu ruangan pembelajaran yang menggambarkan implementasi praktikum virtual secara 3D dari setiap modul-modul fisika seperti ayunan otomatis, Hukum Ohm, Archimedes, Katrol, dan masih banyak lagi."
+    },
+    {
+      "title": "Borobudur",
+      "description": "Kelas praktikum candi merupakan media pembelajaran yang menggambarkan warisan budaya keajaiban dunia Candi Borobudur yang bisa diekplorasi baik candi maupun stupa secara virtual."
+    },
+    {
+      "title": "Museum",
+      "description": "Kelas praktikum museum merupakan gabungan dari a museum seperti artefak dari peninggalan sejarah Indonesia yang menggambarkan warisan budaya Indonesia dan juga kumpulan komputer dari perkembangan evolusi teknologi  komputer di Indonesia."
+    },
+    {
+      "title": "Malioboro",
+      "description": "Kelas Praktikum Malioboro adalah sebuah fasilitas pembelajaran yang mengeksplorasi keunikan dan kekayaan kultural yang terkandung dalam Malioboro, salah satu jalanan paling ikonik di Yogyakarta, Indonesia. Kelas ini bertujuan untuk memberikan wawasan mendalam mengenai sejarah, seni, dan budaya yang melekat pada Malioboro."
+    }
+  ]
+}
