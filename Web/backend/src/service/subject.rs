@@ -1,5 +1,5 @@
 use crate::helpers::errors::subject::SubjectServiceError;
-use crate::model::subject::Subject;
+use crate::model::subject::{SecondarySubject, Subject};
 use crate::r#const::PgTransaction;
 use anyhow::anyhow;
 use std::str::FromStr;
@@ -39,7 +39,7 @@ impl SubjectService {
 
         Ok(Subject {
             subject_id: query.subject_id.to_string(),
-            name: query.name,
+            subject_name: query.name,
         })
     }
 
@@ -106,7 +106,7 @@ impl SubjectService {
 
         let subject = Subject {
             subject_id: query.subject_id,
-            name: query.name,
+            subject_name: query.name,
         };
 
         Ok(subject)
@@ -132,7 +132,7 @@ impl SubjectService {
         for subject in query {
             let subject = Subject {
                 subject_id: subject.subject_id.to_string(),
-                name: subject.name.to_string(),
+                subject_name: subject.name.to_string(),
             };
 
             classroom_subjects.push(subject);
@@ -164,7 +164,7 @@ impl SubjectService {
         .ok_or(SubjectServiceError::NotFound)?;
         let subject = Subject {
             subject_id: query.subject_id.to_string(),
-            name: query.name.to_string(),
+            subject_name: query.name.to_string(),
         };
         Ok(subject)
     }
@@ -200,10 +200,73 @@ impl SubjectService {
         })?;
         let subject = Subject {
             subject_id: query_update.subject_id.to_string(),
-            name: query_update.name.to_string(),
+            subject_name: query_update.name.to_string(),
         };
 
         Ok(subject)
+    }
+
+    pub async fn get_secondary_subject_by_id(
+        &self,
+        transaction: &mut PgTransaction,
+        secondary_subject_id: &str,
+    ) -> Result<SecondarySubject, SubjectServiceError> {
+        let query = sqlx::query!(
+            r#"
+        select
+            *
+        from subject_secondary
+        where secondary_subject_id::text = $1
+        "#,
+            secondary_subject_id
+        )
+        .fetch_optional(&mut **transaction)
+        .await
+        .map_err(|err| {
+            SubjectServiceError::UnexpectedError(anyhow!(
+                "Unable to fetch secondary subject from database, with an error: {}",
+                err.to_string()
+            ))
+        })?
+        .ok_or(SubjectServiceError::NotFound)?;
+
+        Ok(SecondarySubject {
+            secondary_subject_id: query.secondary_subject_id.to_string(),
+            secondary_subject_name: query.name,
+            subject_id: query.subject_id.to_string(),
+        })
+    }
+
+    pub async fn get_secondary_subject_by_name(
+        &self,
+        transaction: &mut PgTransaction,
+        secondary_subject_name: &str,
+    ) -> Result<SecondarySubject, SubjectServiceError> {
+        let query = sqlx::query!(
+            r#"
+        select
+            *
+        from subject_secondary
+        where name ilike $1
+        limit 1
+        "#,
+            format!("{secondary_subject_name}%")
+        )
+        .fetch_optional(&mut **transaction)
+        .await
+        .map_err(|err| {
+            SubjectServiceError::UnexpectedError(anyhow!(
+                "Unable to fetch secondary subject from database, with an error: {}",
+                err.to_string()
+            ))
+        })?
+        .ok_or(SubjectServiceError::NotFound)?;
+
+        Ok(SecondarySubject {
+            secondary_subject_id: query.secondary_subject_id.to_string(),
+            secondary_subject_name: query.name,
+            subject_id: query.subject_id.to_string(),
+        })
     }
 }
 

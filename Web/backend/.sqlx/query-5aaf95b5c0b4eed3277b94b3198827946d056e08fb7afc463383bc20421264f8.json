@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from class_meeting where meeting_id::text = $1 and class_id::text = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5aaf95b5c0b4eed3277b94b3198827946d056e08fb7afc463383bc20421264f8"
+}
