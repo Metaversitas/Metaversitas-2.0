@@ -28,7 +28,7 @@ public class HomeMenu : MonoBehaviour
     {
         Application.Quit();
         Debug.Log("Quit");
-        //UnityEditor.EditorApplication.isPlaying = false;
+        UnityEditor.EditorApplication.isPlaying = false;
     }
 
 
