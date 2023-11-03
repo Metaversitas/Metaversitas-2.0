@@ -5455,7 +5455,7 @@ Animator:
   m_GameObject: {fileID: 1694798146184391051}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 0813716208febcb45ba6ba054d518faf, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -5503,7 +5503,7 @@ Animator:
   m_GameObject: {fileID: 919132149372257834}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 0813716208febcb45ba6ba054d518faf, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -5532,7 +5532,7 @@ Animator:
   m_GameObject: {fileID: 919132147848496912}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 0813716208febcb45ba6ba054d518faf, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -5624,7 +5624,7 @@ Animator:
   m_GameObject: {fileID: 3155500471163648319}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 0813716208febcb45ba6ba054d518faf, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -5653,7 +5653,7 @@ Animator:
   m_GameObject: {fileID: 1140101628835120707}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 0813716208febcb45ba6ba054d518faf, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -5682,7 +5682,7 @@ Animator:
   m_GameObject: {fileID: 597886435353518400}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 0813716208febcb45ba6ba054d518faf, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -6472,7 +6472,7 @@ Animator:
   m_GameObject: {fileID: 9129368494103871254}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 0813716208febcb45ba6ba054d518faf, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
