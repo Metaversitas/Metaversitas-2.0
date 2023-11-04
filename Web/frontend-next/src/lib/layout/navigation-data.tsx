@@ -2,20 +2,20 @@ import React from 'react'
 import { MenuItemType, SubMenuType, MenuItemGroupType } from 'antd/es/menu/hooks/useItems'
 import Link from 'next/link'
 
-type MenuItem = MenuItemType | SubMenuType | MenuItemGroupType
+export type TMenuItem = MenuItemType | SubMenuType | MenuItemGroupType
 
 function getItem(
   label: React.ReactNode,
   key: React.Key,
   icon?: React.ReactNode,
-  children?: MenuItem[]
-): MenuItem {
+  children?: TMenuItem[]
+): TMenuItem {
   return {
     key,
     icon,
     children,
     label
-  } as MenuItem
+  } as TMenuItem
 }
 
 export const navLandingPage = [
