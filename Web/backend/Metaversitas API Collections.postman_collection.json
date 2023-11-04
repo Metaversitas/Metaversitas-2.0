@@ -46,7 +46,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user\": {\r\n        \"email\": \"dosen@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
+							"raw": "{\r\n    \"user\": {\r\n        \"email\": \"mahasiswa@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -283,13 +283,56 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://{{host}}/classroom",
+							"raw": "https://{{host}}/classroom?mode=available_class",
 							"protocol": "https",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
 								"classroom"
+							],
+							"query": [
+								{
+									"key": "mode",
+									"value": "available_class",
+									"description": "Default Mode will be: EnrolledClass\nAvailable mode: \n- available_class\n- created_class\n- enrolled_class\n- upcoming_scheduled_class"
+								},
+								{
+									"key": "limit",
+									"value": "1",
+									"description": "Limit the result",
+									"disabled": true
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Skip the known result",
+									"disabled": true
+								},
+								{
+									"key": "semester_filter",
+									"value": "odd",
+									"description": "Available semester field:\n- Odd\n- Even",
+									"disabled": true
+								},
+								{
+									"key": "subject_name_filter",
+									"value": "mathematics",
+									"description": "filter by subject name",
+									"disabled": true
+								},
+								{
+									"key": "subject_id_filter",
+									"value": "282f8c86-1432-4e8f-8f3c-a49bedf931dd",
+									"description": "filter by subject id",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "lorem",
+									"description": "search a class name or teacher name",
+									"disabled": true
+								}
 							]
 						}
 					},

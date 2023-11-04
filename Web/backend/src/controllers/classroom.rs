@@ -83,6 +83,7 @@ pub async fn get_available_classes(
         let Query(params) = params.unwrap_or_default();
         params
     };
+    dbg!(&params);
 
     // 2. get available classes
 
