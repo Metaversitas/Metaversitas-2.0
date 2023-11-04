@@ -3,7 +3,8 @@ use crate::helpers::errors::auth::AuthError;
 use crate::helpers::errors::classroom::ClassroomControllerError;
 use crate::helpers::extractor::AuthenticatedUserWithRole;
 use crate::model::classroom::{
-    ActionUpdateClassMeeting, CreateClassroomParams, DeleteClassroomParams, UpdateClassroomParams,
+    ActionUpdateClassMeeting, CreateClassroomParams, DeleteClassroomParams, QueryParamsClassMode,
+    QueryParamsClasses, UpdateClassroomParams,
 };
 use crate::model::subject::{SecondarySubject, Subject};
 use crate::model::user::{UserRole, UserUniversityRole};
@@ -14,11 +15,12 @@ use crate::service::teacher::TeacherService;
 use crate::service::user::UserService;
 use anyhow::anyhow;
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{FromRef, Path, State};
+use axum::extract::{FromRef, Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::*;
 use axum::{Json, Router};
+use chrono::{Datelike, NaiveDate, NaiveDateTime};
 use serde_json::json;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -68,13 +70,20 @@ pub async fn classroom_router(
 }
 
 pub const HOME_CLASSROOM_PATH: &str = "/";
+
 pub async fn get_available_classes(
     State(app_state): State<Arc<AppState>>,
     State(classroom_service): State<Arc<ClassroomService>>,
+    params: Option<Query<QueryParamsClasses>>,
     is_auth_user: Result<AuthenticatedUserWithRole, AuthError>,
 ) -> Result<Response, ClassroomControllerError> {
     // 1. Authenticated as a student or lecturer
     let auth_user = is_auth_user?;
+    let params = {
+        let Query(params) = params.unwrap_or_default();
+        params
+    };
+
     // 2. get available classes
 
     //TODO: Add some pagination
@@ -83,19 +92,172 @@ pub async fn get_available_classes(
         ClassroomControllerError::Unknown
     })?;
 
-    let available_classroom = classroom_service
-        .get_available_classroom(
-            &mut transaction,
-            auth_user.user_id.as_str(),
-            &auth_user.user_role,
-            &auth_user.university_role,
-        )
-        .await
-        .map_err(|_| ClassroomControllerError::Unknown)?;
-
-    let response = json!({
-        "data": available_classroom
-    });
+    let response = match auth_user.user_role {
+        UserRole::Administrator | UserRole::Staff => {
+            //TODO: If there is some admin panel, this would be useful to get all available classroom and try to edit on it
+            todo!()
+        }
+        UserRole::User => {
+            match auth_user.university_role {
+                UserUniversityRole::Dosen => match &params.mode {
+                    None => {
+                        let list = classroom_service
+                            .get_lecturer_enrolled_classroom(
+                                &mut transaction,
+                                auth_user.user_id.as_str(),
+                                &params,
+                            )
+                            .await
+                            .map_err(|err| {
+                                tracing::error!(
+                                    "Failed to fetch list classroom, with an error: {}",
+                                    err.to_string()
+                                );
+                                ClassroomControllerError::Unknown
+                            })?;
+                        json!({"data": list})
+                    }
+                    Some(mode) => match mode {
+                        QueryParamsClassMode::AvailableClass => {
+                            let list = classroom_service
+                                .get_lecturer_available_classes(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    tracing::error!(
+                                        "Failed to fetch list classroom, with an error: {}",
+                                        err.to_string()
+                                    );
+                                    ClassroomControllerError::Unknown
+                                })?;
+                            json!({"data": list})
+                        }
+                        QueryParamsClassMode::CreatedClass => {
+                            let list = classroom_service
+                                .get_lecturer_created_classes(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    tracing::error!(
+                                        "Failed to fetch list classroom, with an error: {}",
+                                        err.to_string()
+                                    );
+                                    ClassroomControllerError::Unknown
+                                })?;
+                            json!({"data": list})
+                        }
+                        QueryParamsClassMode::EnrolledClass => {
+                            let list = classroom_service
+                                .get_lecturer_enrolled_classroom(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    tracing::error!(
+                                        "Failed to fetch list classroom, with an error: {}",
+                                        err.to_string()
+                                    );
+                                    ClassroomControllerError::Unknown
+                                })?;
+                            json!({"data": list})
+                        }
+                        QueryParamsClassMode::UpcomingScheduledClass => {
+                            let list = classroom_service
+                                .get_lecturer_upcoming_scheduled_classes(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    tracing::error!(
+                                        "Failed to fetch list classroom, with an error: {}",
+                                        err.to_string()
+                                    );
+                                    ClassroomControllerError::Unknown
+                                })?;
+                            json!({"data": list})
+                        }
+                    },
+                },
+                UserUniversityRole::Mahasiswa => {
+                    match &params.mode {
+                        None => {
+                            let list = classroom_service
+                                .get_student_enrolled_classes(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    tracing::error!(
+                                        "Failed to get student enrolled classes, with an error: {}",
+                                        err.to_string()
+                                    );
+                                    ClassroomControllerError::Unknown
+                                })?;
+                            json!({"data": list})
+                        }
+                        Some(mode) => match mode {
+                            QueryParamsClassMode::AvailableClass => {
+                                let list = classroom_service
+                                .get_student_available_classes(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await.map_err(|err| {
+                                tracing::error!("Failed to get student available classes, with an error: {}", err.to_string());
+                                ClassroomControllerError::Unknown
+                            })?;
+                                json!({"data": list})
+                            }
+                            QueryParamsClassMode::CreatedClass => {
+                                return Err(ClassroomControllerError::Other(anyhow!(
+                                    "User is on Student mode but the params is on created classes"
+                                )));
+                            }
+                            QueryParamsClassMode::EnrolledClass => {
+                                let list = classroom_service
+                            .get_student_enrolled_classes(
+                                &mut transaction,
+                                auth_user.user_id.as_str(),
+                                &params,
+                            )
+                            .await.map_err(|err| {
+                                tracing::error!("Failed to get student enrolled classes, with an error: {}", err.to_string());
+                                ClassroomControllerError::Unknown
+                            })?;
+                                json!({"data": list})
+                            }
+                            QueryParamsClassMode::UpcomingScheduledClass => {
+                                let list = classroom_service
+                                    .get_student_upcoming_scheduled_classes(
+                                        &mut transaction,
+                                        auth_user.user_id.as_str(),
+                                        &params,
+                                    )
+                                    .await.map_err(|err| {
+                                    tracing::error!("Failed to get student upcoming scheduled classes, with an error: {}", err.to_string());
+                                    ClassroomControllerError::Unknown
+                                })?;
+                                json!({"data": list})
+                            }
+                        },
+                    }
+                }
+            }
+        }
+    };
 
     Ok((StatusCode::OK, Json(response)).into_response())
 }
@@ -198,6 +360,30 @@ pub async fn create_classes(
                 "Parameter do have multiple meeting therefore exams on the class is not allowed"
             )));
         }
+    }
+
+    let year_start = payload.year_start.parse::<NaiveDate>().map_err(|err| {
+        ClassroomControllerError::Other(anyhow!(
+            "Not able to parse year_start, err={}",
+            err.to_string()
+        ))
+    })?;
+    let year_end = payload.year_end.parse::<NaiveDate>().map_err(|err| {
+        ClassroomControllerError::Other(anyhow!(
+            "Not able to parse year_end, err={}",
+            err.to_string()
+        ))
+    })?;
+    let current_year = chrono::Utc::now().date_naive().year();
+    if year_end.year() <= year_start.year() {
+        return Err(ClassroomControllerError::Other(anyhow!(
+            "year_end is lower than equal current date"
+        )));
+    }
+    if year_start.year() < current_year {
+        return Err(ClassroomControllerError::Other(anyhow!(
+            "year_start is lower than current date"
+        )));
     }
 
     let created_class_id = classroom_service
