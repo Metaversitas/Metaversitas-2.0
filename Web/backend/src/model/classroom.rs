@@ -1,13 +1,11 @@
-use crate::model::exam::{CreateExamParams, Exam, UpdateExamParams};
+use crate::model::exam::{CreateExamParams, UpdateExamParams};
 use crate::model::student::Student;
-use crate::model::subject::{Subject, SubjectWithSecondary};
+use crate::model::subject::SubjectWithSecondary;
 use crate::model::teacher::Teacher;
 use chrono::{DateTime, Utc};
 use redis_macros::FromRedisValue;
-use serde::de::{MapAccess, Visitor};
-use serde::{de, Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 use sqlx::Type;
-use std::collections::HashMap;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Type, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -311,7 +309,7 @@ pub struct QueryPagination {
     pub limit: Option<usize>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct QueryParamsClasses {
     #[serde(flatten)]
     pub pagination: Option<QueryPagination>,
@@ -319,15 +317,4 @@ pub struct QueryParamsClasses {
     pub search: Option<String>,
     #[serde(flatten)]
     pub filter: Option<QueryFilter>,
-}
-
-impl Default for QueryParamsClasses {
-    fn default() -> Self {
-        Self {
-            pagination: None,
-            mode: None,
-            filter: None,
-            search: None,
-        }
-    }
 }
