@@ -161,13 +161,13 @@
 					"name": "Create Classroom",
 					"item": [
 						{
-							"name": "Create Classroom (Empty Teacher and Student) (By name)",
+							"name": "Create Classroom (By subject name)",
 							"request": {
 								"method": "POST",
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"subject_name\": \"Math\"\r\n}",
+									"raw": "{\r\n    // subject by name\r\n    \"subject_name\": \"Physics\",\r\n    // secondary subject by name\r\n    \"secondary_subject_name\": \"Ayunan\",\r\n    // Optional\r\n    // capacity: The default will be 40 if not omitted.\r\n    \"capacity\": 50,\r\n    // Optional\r\n    \"description\": \"Lorem ipsum dolor sit amet.\",\r\n    // Optional\r\n    // ISO8601 format (with timezone)\r\n    \"start_time\": \"2019-09-26T07:58:30.996+0000\",\r\n    // Optional\r\n    // ISO8601 format (with timezone)\r\n    \"end_time\": \"2019-09-26T07:59:30.996+0000\",\r\n    // Optional\r\n    \"students\": [\r\n        {\r\n            \"student_id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\",\r\n            \"user_id\": \"de6a27a2-3cba-475a-a17e-70a512925d3d\"\r\n        }\r\n    ],\r\n    // Optional\r\n    \"teachers\": [\r\n        {\r\n            \"teacher_id\": \"ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae\",\r\n            \"user_id\": \"c3f04a30-38ac-474d-b7da-8fb889495d75\"\r\n        }\r\n    ],\r\n    // Optional\r\n    \"meetings\": [\r\n        {\r\n            \"meeting_name\": \"Lorem ipsum\",\r\n            \"meeting_number\": 1,\r\n            \"topic_description\": \"Lorep ipsum dolor sit amet.\",\r\n            // Optional\r\n            \"description\": \"Lorem ipsum dolor sit amet. Assalamualaikum Jamet.\",\r\n            // // Optional\r\n            \"start_time\": \"2019-09-26T07:58:30.996+0000\",\r\n            // // Optional\r\n            \"end_time\": \"2019-09-26T07:59:30.996+0000\",\r\n            // Optional\r\n            \"exams\": [\r\n                {\r\n                    \"exam_id\": \"60fff264-2e9e-476e-9d05-10e38d1c8bca\"\r\n                }\r\n            ]\r\n        },\r\n        {\r\n            \"meeting_name\": \"Lorem ipsum\",\r\n            \"topic_description\": \"Lorep ipsum dolor sit amet.\",\r\n            \"meeting_number\": 2,\r\n            // Optional\r\n            \"description\": \"Lorem ipsum dolor sit amet. Assalamualaikum Jamet.\",\r\n            // // Optional\r\n            \"start_time\": \"2019-09-26T07:58:30.996+0000\",\r\n            // // Optional\r\n            \"end_time\": \"2019-09-26T07:59:30.996+0000\",\r\n            // Optional\r\n            \"exams\": [\r\n                {\r\n                    \"exam_id\": \"60fff264-2e9e-476e-9d05-10e38d1c8bca\"\r\n                }\r\n            ]\r\n        }\r\n    ],\r\n    // Optional\r\n    // If there is no meetings then exams here should be available\r\n    // If not? server will return forbidden\r\n    // \"exams\": [\r\n    //     {\r\n    //         \"exam_id\": \"60fff264-2e9e-476e-9d05-10e38d1c8bca\",\r\n    //         \"type\": \"default\",\r\n    //         \"exam_name\": \"Test Exams\",\r\n    //         \"created_by\": \"c3f04a30-38ac-474d-b7da-8fb889495d75\"\r\n    //     }\r\n    // ],\r\n    \"semester\": \"odd\",\r\n    \"year_start\": \"2023-01-01\",\r\n    \"year_end\": \"2024-01-01\",\r\n    \"class_name\": \"Lorem ipsum\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -188,67 +188,13 @@
 							"response": []
 						},
 						{
-							"name": "Create Classroom (Empty Teacher and Student) (By id)",
+							"name": "Create Classroom (By subject id)",
 							"request": {
 								"method": "POST",
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"subject_id\": \"d24a4a07-9576-48dd-ad6b-daad5fe05058\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "https://{{host}}/classroom",
-									"protocol": "https",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"classroom"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Create Classroom (Only Teacher)",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"subject_name\": \"Math\",\r\n    \"teachers\": [\"ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae\"]\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "https://{{host}}/classroom",
-									"protocol": "https",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"classroom"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Create Classroom (Only Students)",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"subject_name\": \"Math\",\r\n    \"students\": [\"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\", \"2852ed68-c7e6-4655-9f1a-7baede899f06\"]\r\n}",
+									"raw": "{\r\n    // subject by name\r\n    \"subject_id\": \"d24a4a07-9576-48dd-ad6b-daad5fe05058\",\r\n    // secondary subject by name\r\n    \"secondary_subject_id\": \"a4e0510e-19f2-4c6b-81a6-5ac5c209b207\",\r\n    \r\n    // Optional\r\n    // capacity: The default will be 40 if not omitted.\r\n    \"capacity\": 50,\r\n    // Optional\r\n    \"description\": \"Lorem ipsum dolor sit amet.\",\r\n    // Optional\r\n    // ISO8601 format (with timezone)\r\n    \"start_time\": \"2019-09-26T07:58:30.996+0000\",\r\n    // Optional\r\n    // ISO8601 format (with timezone)\r\n    \"end_time\": \"2019-09-26T07:59:30.996+0000\",\r\n    // Optional\r\n    \"students\": [\r\n        {\r\n            \"student_id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\",\r\n            \"user_id\": \"de6a27a2-3cba-475a-a17e-70a512925d3d\"\r\n        }\r\n    ],\r\n    // Optional\r\n    \"teachers\": [\r\n        {\r\n            \"teacher_id\": \"ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae\",\r\n            \"user_id\": \"c3f04a30-38ac-474d-b7da-8fb889495d75\"\r\n        }\r\n    ],\r\n    // Optional\r\n    \"meetings\": [\r\n        {\r\n            \"meeting_name\": \"Lorem ipsum\",\r\n            \"meeting_number\": 1,\r\n            \"topic_description\": \"Lorep ipsum dolor sit amet.\",\r\n            // Optional\r\n            \"description\": \"Lorem ipsum dolor sit amet. Assalamualaikum Jamet.\",\r\n            // // Optional\r\n            \"start_time\": \"2019-09-26T07:58:30.996+0000\",\r\n            // // Optional\r\n            \"end_time\": \"2019-09-26T07:59:30.996+0000\",\r\n            // Optional\r\n            \"exams\": [\r\n                {\r\n                    \"exam_id\": \"60fff264-2e9e-476e-9d05-10e38d1c8bca\"\r\n                }\r\n            ]\r\n        },\r\n        {\r\n            \"meeting_name\": \"Lorem ipsum\",\r\n            \"topic_description\": \"Lorep ipsum dolor sit amet.\",\r\n            \"meeting_number\": 2,\r\n            // Optional\r\n            \"description\": \"Lorem ipsum dolor sit amet. Assalamualaikum Jamet.\",\r\n            // // Optional\r\n            \"start_time\": \"2019-09-26T07:58:30.996+0000\",\r\n            // // Optional\r\n            \"end_time\": \"2019-09-26T07:59:30.996+0000\",\r\n            // Optional\r\n            \"exams\": [\r\n                {\r\n                    \"exam_id\": \"60fff264-2e9e-476e-9d05-10e38d1c8bca\"\r\n                }\r\n            ]\r\n        }\r\n    ],\r\n    // Optional\r\n    // If there is no meetings then exams here should be available\r\n    // If not? server will return forbidden\r\n    // \"exams\": [\r\n    //     {\r\n    //         \"exam_id\": \"60fff264-2e9e-476e-9d05-10e38d1c8bca\",\r\n    //         \"type\": \"default\",\r\n    //         \"exam_name\": \"Test Exams\",\r\n    //         \"created_by\": \"c3f04a30-38ac-474d-b7da-8fb889495d75\"\r\n    //     }\r\n    // ],\r\n    \"semester\": \"odd\",\r\n    \"year_start\": \"2023-01-01\",\r\n    \"year_end\": \"2024-01-01\",\r\n    \"class_name\": \"Lorem ipsum\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -274,13 +220,13 @@
 					"name": "Update Classroom",
 					"item": [
 						{
-							"name": "Update Classroom (Teacher) (Replace current all of teachers)",
+							"name": "Update Classroom (Action Replace All)",
 							"request": {
 								"method": "PUT",
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"teachers\": {\n        \"type\": \"All\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae\"\n            }\n        ]\n    }\n}",
+									"raw": "{\n    // Optional\n    \"class_name\": \"asdasdas\",\n    // Optional\n    \"description\": \"asdasdasdas\",\n    // Optional\n    \"capacity\": 12,\n    // Optional\n    \"year_start\": \"2024-01-01\",\n    // Optional\n    \"year_end\": \"2025-01-01\",\n    // Optional\n    \"semester\": \"odd\",\n    // Optional\n    \"secondary_subject_id\": \"385e658f-61df-4ddd-af1c-e7c3c5355d00\",\n    // Optional\n    \"subject_id\": \"385e658f-61df-4ddd-af1c-e7c3c5355d00\",\n\n\n    //Optional\n    \"meetings\": {\n        \"type\": \"All\",\n        \"action\": [\n            {\n                \"action\": \"Add\",\n                // Create Params\n                \"create_meeting_name\": \"lorem ipsum\",\n                \"create_meeting_number\": 2,\n                \"create_topic_description\": \"asdasdsad\" ,\n                \"create_exams\": [\n                    {\n                        \"exam_id\": \"60fff264-2e9e-476e-9d05-10e38d1c8bca\"\n                    }\n                ] \n            },\n            {\n                \"action\": \"Edit\",\n                // Update Params\n                \"update_meeting_id\": \"648dd0d2-2aeb-4840-a9af-fdc42a76fe1c\",\n                // //Optional\n                \"update_meeting_name\": \"lorem ipsum edited#3\",\n                //Optional\n                \"update_meeting_number\": 10,\n                // //Optional\n                \"update_topic_description\": \"lorem ipsum edited\"\n                // //Optional\n                // \"exams\": {\n                //     \"type\": \"Single\",\n                //     \"action\": [\n                //     {\n                //         \"action\": \"Edit\",\n                //         \"exam_id\": \"b4bc8612-c3af-4c21-86d7-1d2a89949a6b\"\n                //     }\n                // ]}\n            }\n        ]\n    },\n\n    // Optional\n    // If there is no meetings then exams here should be available\n    // If not? server will return forbidden\n    // \"exams\": {\n    //     \"type\": \"All\",\n    //     \"action\": []\n    // },\n\n\n    // Optional\n    // All means to delete existing teachers on the classroom\n    \"teachers\": {\n        \"type\": \"All\",\n        \"action\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae\"\n            }\n        ]\n    },\n\n    //Optional\n    // All means to delete existing students on the classroom\n    \"students\": {\n        \"type\": \"All\",\n        \"action\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            },\n            {\n                \"type\": \"Add\",\n                \"id\": \"2852ed68-c7e6-4655-9f1a-7baede899f06\"\n            }\n        ]\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -288,27 +234,27 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
+									"raw": "https://{{host}}/classroom/0be91442-91bd-48e1-94a1-86a077e09bce",
 									"protocol": "https",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"classroom",
-										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
+										"0be91442-91bd-48e1-94a1-86a077e09bce"
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "Update Classroom (Teacher) (Replace only given id)",
+							"name": "Update Classroom (Replace only given id)",
 							"request": {
 								"method": "PUT",
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"teachers\": {\n        \"type\": \"Single\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            }\n        ]\n    }\n}",
+									"raw": "{\n    // Optional\n    \"class_name\": \"asdasdas\",\n    // Optional\n    \"description\": \"asdasdasdas\",\n    // Optional\n    \"capacity\": 12,\n    // Optional\n    \"year_start\": \"2024-01-01\",\n    // Optional\n    \"year_end\": \"2025-01-01\",\n    // Optional\n    \"semester\": \"odd\",\n    // Optional\n    \"secondary_subject_id\": \"385e658f-61df-4ddd-af1c-e7c3c5355d00\",\n    // Optional\n    \"subject_id\": \"385e658f-61df-4ddd-af1c-e7c3c5355d00\",\n\n\n    //Optional\n    \"meetings\": {\n        \"type\": \"Single\",\n        \"action\": [\n            {\n                \"action\": \"Add\",\n                // Create Params\n                \"create_meeting_name\": \"lorem ipsum\",\n                \"create_meeting_number\": 2,\n                \"create_topic_description\": \"asdasdsad\" ,\n                \"create_exams\": [\n                    {\n                        \"exam_id\": \"60fff264-2e9e-476e-9d05-10e38d1c8bca\"\n                    }\n                ] \n            },\n            {\n                \"action\": \"Edit\",\n                // Update Params\n                \"update_meeting_id\": \"648dd0d2-2aeb-4840-a9af-fdc42a76fe1c\",\n                // //Optional\n                \"update_meeting_name\": \"lorem ipsum edited#3\",\n                //Optional\n                \"update_meeting_number\": 10,\n                // //Optional\n                \"update_topic_description\": \"lorem ipsum edited\"\n                // //Optional\n                // \"exams\": {\n                //     \"type\": \"Single\",\n                //     \"action\": [\n                //     {\n                //         \"action\": \"Edit\",\n                //         \"exam_id\": \"b4bc8612-c3af-4c21-86d7-1d2a89949a6b\"\n                //     }\n                // ]}\n            }\n        ]\n    },\n\n    // Optional\n    // If there is no meetings then exams here should be available\n    // If not? server will return forbidden\n    // \"exams\": {\n    //     \"type\": \"All\",\n    //     \"action\": []\n    // },\n\n\n    // Optional\n    // Single means to not delete existing teachers on the classroom\n    \"teachers\": {\n        \"type\": \"Single\",\n        \"action\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae\"\n            }\n        ]\n    },\n\n    //Optional\n    // Single means to not delete existing students on the classroom\n    \"students\": {\n        \"type\": \"Single\",\n        \"action\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            },\n            {\n                \"type\": \"Add\",\n                \"id\": \"2852ed68-c7e6-4655-9f1a-7baede899f06\"\n            }\n        ]\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -316,70 +262,14 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
+									"raw": "https://{{host}}/classroom/0be91442-91bd-48e1-94a1-86a077e09bce",
 									"protocol": "https",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"classroom",
-										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update Classroom (Students) (Replace only given id)",
-							"request": {
-								"method": "PUT",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"students\": {\n        \"type\": \"Single\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            },\n            {\n                \"type\": \"Add\",\n                \"id\": \"2852ed68-c7e6-4655-9f1a-7baede899f06\"\n            }\n        ]\n    }\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
-									"protocol": "https",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"classroom",
-										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Update Classroom (Students) (Replace current all of students)",
-							"request": {
-								"method": "PUT",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"students\": {\n        \"type\": \"All\",\n        \"content\": [\n            {\n                \"type\": \"Add\",\n                \"id\": \"dcd3aaee-391b-4d72-9994-ba2a6409cb2c\"\n            },\n            {\n                \"type\": \"Add\",\n                \"id\": \"2852ed68-c7e6-4655-9f1a-7baede899f06\"\n            }\n        ]\n    }\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "https://{{host}}/classroom/06e5c7ac-801e-457d-a576-94e34c3b12cd",
-									"protocol": "https",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"classroom",
-										"06e5c7ac-801e-457d-a576-94e34c3b12cd"
+										"0be91442-91bd-48e1-94a1-86a077e09bce"
 									]
 								}
 							},
@@ -472,7 +362,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"class_ids\": [\n        \"06e5c7ac-801e-457d-a576-94e34c3b12cd\",\n        \"5b099ac5-5b17-4614-b7dd-4dfb26734eec\"\n    ]\n}",
+							"raw": "{\n    \"class_ids\": [\n        \"55ac3190-74ed-48ce-a448-73212e932f6b\"\n    ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"

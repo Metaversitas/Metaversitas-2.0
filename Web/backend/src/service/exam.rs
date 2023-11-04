@@ -1,5 +1,5 @@
 use crate::helpers::errors::exam::ExamServiceError;
-use crate::model::exam::{CreateExamParams, Exam, ExamType, UpdateExamParams};
+use crate::model::exam::{CreateExamParams, Exam, ExamType, ExamWithQuestion, UpdateExamParams};
 use crate::r#const::PgTransaction;
 use anyhow::anyhow;
 use sqlx::{Execute, Postgres, QueryBuilder};
@@ -354,6 +354,21 @@ impl ExamService {
         })?;
 
         Ok(())
+    }
+
+    pub async fn get_exam_by_id_with_questions(
+        &self,
+        transaction: &mut PgTransaction,
+        exam_id: &str,
+    ) -> Result<ExamWithQuestion, ExamServiceError> {
+        // let query = sqlx::query!(r#"
+        // select
+        //     *
+        // from question_exams
+        // inner join questions q on question_exams.question_id = q.question_id
+        // where exam_id::text = $1
+        // "#, exam_id).fetch_all();
+        return todo!();
     }
 }
 
