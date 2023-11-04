@@ -1,14 +1,7 @@
 use crate::backend::AppState;
 use crate::helpers::errors::classroom::{ClassroomControllerError, ClassroomServiceError};
 use crate::helpers::extractor::AuthenticatedUserWithRole;
-use crate::model::classroom::{
-    Action, ActionType, ActionTypeUpdateClassMeeting, ActionTypeUpdateExam, BaseAction,
-    ClassMeeting, ClassSemester, Classroom, CreateClassMeetingParams, CreateClassroomParams,
-    ParamsActionUpdateClassMeeting, ParamsActionUpdateExam, QueryParamsClassMode,
-    QueryParamsClasses, StudentClassroom, TeacherClassroom, UpcomingScheduled,
-    UpcomingScheduledMeetingOrClass, UpdateClassMeetingParams, UpdateClassSubjectParams,
-    UpdateClassroomParams,
-};
+use crate::model::classroom::{Action, ActionType, ActionTypeUpdateClassMeeting, ActionTypeUpdateExam, BaseAction, ClassMeeting, ClassSemester, Classroom, CreateClassMeetingParams, CreateClassroomParams, ParamsActionUpdateClassMeeting, ParamsActionUpdateExam, QueryParamsClassMode, QueryParamsClasses, StudentClassroom, TeacherClassroom, UpcomingScheduled, UpcomingScheduledMeetingOrClass, UpdateClassMeetingParams, UpdateClassSubjectParams, UpdateClassroomParams, QuerySemesterFilterClass};
 use crate::model::exam::Exam;
 use crate::model::subject::{SecondarySubject, Subject, SubjectWithSecondary};
 use crate::model::user::{UserRole, UserUniversityRole};
@@ -1858,7 +1851,27 @@ impl ClassroomService {
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let mut query_builder = QueryBuilder::<Postgres>::new(
+        let mut search: String = format!("%%");
+        if let Some(search_params) = &params.search {
+            search = format!("%{}%", search_params)
+        }
+        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+            with search_subquery as (
+        select
+            classes.class_id
+        from classes
+        inner join class_teachers on classes.class_id = class_teachers.class_id
+        inner join teachers on class_teachers.teacher_id = teachers.teacher_id
+        inner join users_identity on teachers.user_id = users_identity.users_id
+        where (classes.name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"
+         or users_identity.full_name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"))"#);
+        query_builder.push(
             r#"
         select
             classes.class_id,
@@ -1880,21 +1893,12 @@ impl ClassroomService {
                  inner join classes on class_students.class_id = classes.class_id and classes.is_active = true
                  inner join class_subjects on classes.class_id = class_subjects.class_id
                  inner join subjects on class_subjects.subject_id = subjects.subject_id
+                 inner join search_subquery on classes.class_id = search_subquery.class_id
         where user_id::text = "#,
         );
         query_builder.push_bind(user_id);
 
-        query_builder.push(" limit ");
-        if let Some(limit) = &params.limit {
-            query_builder.push_bind(*limit as i32);
-        } else {
-            query_builder.push_bind(10);
-        }
-
-        if let Some(offset) = &params.offset {
-            query_builder.push(" offset ");
-            query_builder.push_bind(*offset as i32);
-        }
+        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
 
         let query = query_builder.build();
         let query = query
@@ -2004,7 +2008,27 @@ impl ClassroomService {
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let mut query_builder = QueryBuilder::<Postgres>::new(
+        let mut search: String = format!("%%");
+        if let Some(search_params) = &params.search {
+            search = format!("%{}%", search_params)
+        }
+        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+            with search_subquery as (
+        select
+            classes.class_id
+        from classes
+        inner join class_teachers on classes.class_id = class_teachers.class_id
+        inner join teachers on class_teachers.teacher_id = teachers.teacher_id
+        inner join users_identity on teachers.user_id = users_identity.users_id
+        where (classes.name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"
+         or users_identity.full_name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"))"#);
+        query_builder.push(
             r#"
         select
         classes.is_active,
@@ -2042,21 +2066,12 @@ impl ClassroomService {
     from classes
         inner join class_subjects on classes.class_id = class_subjects.class_id
         inner join subjects on class_subjects.subject_id = subjects.subject_id
+        inner join search_subquery on classes.class_id = search_subquery.class_id
     where classes.is_active = true
         "#,
         );
 
-        query_builder.push(" limit ");
-        if let Some(limit) = &params.limit {
-            query_builder.push_bind(*limit as i32);
-        } else {
-            query_builder.push_bind(10);
-        }
-
-        if let Some(offset) = &params.offset {
-            query_builder.push(" offset ");
-            query_builder.push_bind(*offset as i32);
-        }
+        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
 
         let query = query_builder.build();
         let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
@@ -2167,7 +2182,27 @@ impl ClassroomService {
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<UpcomingScheduled>, ClassroomServiceError> {
+        let mut search: String = format!("%%");
+        if let Some(search_params) = &params.search {
+            search = format!("%{}%", search_params)
+        }
         let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+            with search_subquery as (
+        select
+            classes.class_id
+        from classes
+        inner join class_teachers on classes.class_id = class_teachers.class_id
+        inner join teachers on class_teachers.teacher_id = teachers.teacher_id
+        inner join users_identity on teachers.user_id = users_identity.users_id
+        where (classes.name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"
+         or users_identity.full_name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"))"#);
+        query_builder.push(r#"
         select
     classes.class_id,
     classes.name,
@@ -2192,6 +2227,8 @@ from students
     inner join class_students on students.student_id = class_students.student_id
     inner join classes on class_students.class_id = classes.class_id and classes.is_active = true
     inner join class_subjects on classes.class_id = class_subjects.class_id
+    inner join subjects on class_subjects.subject_id = subjects.subject_id
+    inner join search_subquery on classes.class_id = search_subquery.class_id
     left join class_meeting on classes.class_id = class_meeting.class_id and classes.have_multiple_meeting = true
 where students.user_id::text =
         "#);
@@ -2228,17 +2265,7 @@ order by
     end
         "#);
 
-        query_builder.push(" limit ");
-        if let Some(limit) = &params.limit {
-            query_builder.push_bind(*limit as i32);
-        } else {
-            query_builder.push_bind(10);
-        }
-
-        if let Some(offset) = &params.offset {
-            query_builder.push(" offset ");
-            query_builder.push_bind(*offset as i32);
-        }
+        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
 
         let query = query_builder.build();
         let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
@@ -2386,7 +2413,27 @@ order by
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let mut query_builder = QueryBuilder::<Postgres>::new(
+        let mut search: String = format!("%%");
+        if let Some(search_params) = &params.search {
+            search = format!("%{}%", search_params)
+        }
+        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+        with search_subquery as (
+    select
+        classes.class_id
+    from classes
+    inner join class_teachers on classes.class_id = class_teachers.class_id
+    inner join teachers on class_teachers.teacher_id = teachers.teacher_id
+    inner join users_identity on teachers.user_id = users_identity.users_id
+    where (classes.name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"
+         or users_identity.full_name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"))"#);
+        query_builder.push(
             r#"
             select
                 classes.is_active,
@@ -2409,21 +2456,12 @@ order by
                  inner join classes on class_teachers.class_id = classes.class_id and classes.is_active = true
                  inner join class_subjects on classes.class_id = class_subjects.class_id
                  inner join subjects on class_subjects.subject_id = subjects.subject_id
+                 inner join search_subquery on search_subquery.class_id = classes.class_id
         where teachers.user_id::text =
         "#,
         );
         query_builder.push_bind(user_id);
-        query_builder.push(" limit ");
-        if let Some(limit) = &params.limit {
-            query_builder.push_bind(*limit as i32);
-        } else {
-            query_builder.push_bind(10);
-        }
-
-        if let Some(offset) = &params.offset {
-            query_builder.push(" offset ");
-            query_builder.push_bind(*offset as i32);
-        }
+        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
 
         let query = query_builder.build();
         let query = query
@@ -2535,7 +2573,27 @@ order by
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let mut query_builder = QueryBuilder::<Postgres>::new(
+        let mut search: String = format!("%%");
+        if let Some(search_params) = &params.search {
+            search = format!("%{}%", search_params)
+        }
+        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+            with search_subquery as (
+        select
+            classes.class_id
+        from classes
+        inner join class_teachers on classes.class_id = class_teachers.class_id
+        inner join teachers on class_teachers.teacher_id = teachers.teacher_id
+        inner join users_identity on teachers.user_id = users_identity.users_id
+        where (classes.name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"
+         or users_identity.full_name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"))"#);
+        query_builder.push(
             r#"
         select
             classes.is_active,
@@ -2557,22 +2615,14 @@ order by
         from classes
             inner join class_subjects on classes.class_id = class_subjects.class_id
             inner join subjects on class_subjects.subject_id = subjects.subject_id
+            inner join search_subquery on classes.class_id = search_subquery.class_id
         where classes.created_by::text =
         "#,
         );
         query_builder.push_bind(user_id);
 
-        query_builder.push(" limit ");
-        if let Some(limit) = &params.limit {
-            query_builder.push_bind(*limit as i32);
-        } else {
-            query_builder.push_bind(10);
-        }
+        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
 
-        if let Some(offset) = &params.offset {
-            query_builder.push(" offset ");
-            query_builder.push_bind(*offset as i32);
-        }
         let query = query_builder.build();
         let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
@@ -2681,7 +2731,27 @@ order by
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let mut query_builder = QueryBuilder::<Postgres>::new(
+        let mut search: String = format!("%%");
+        if let Some(search_params) = &params.search {
+            search = format!("%{}%", search_params)
+        }
+        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+            with search_subquery as (
+        select
+            classes.class_id
+        from classes
+        inner join class_teachers on classes.class_id = class_teachers.class_id
+        inner join teachers on class_teachers.teacher_id = teachers.teacher_id
+        inner join users_identity on teachers.user_id = users_identity.users_id
+        where (classes.name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"
+         or users_identity.full_name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"))"#);
+        query_builder.push(
             r#"
         select
             classes.is_active,
@@ -2722,19 +2792,12 @@ order by
         from classes
             inner join class_subjects on classes.class_id = class_subjects.class_id
             inner join subjects on class_subjects.subject_id = subjects.subject_id
+            inner join search_subquery on classes.class_id = search_subquery.class_id
         "#,
         );
-        query_builder.push(" limit ");
-        if let Some(limit) = &params.limit {
-            query_builder.push_bind(*limit as i32);
-        } else {
-            query_builder.push_bind(10);
-        }
 
-        if let Some(offset) = &params.offset {
-            query_builder.push(" offset ");
-            query_builder.push_bind(*offset as i32);
-        }
+        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
+
         let query = query_builder.build();
         let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
@@ -2844,7 +2907,27 @@ order by
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<UpcomingScheduled>, ClassroomServiceError> {
-        let mut query_builder = QueryBuilder::<Postgres>::new(
+        let mut search: String = format!("%%");
+        if let Some(search_params) = &params.search {
+            search = format!("%{}%", search_params)
+        }
+        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+            with search_subquery as (
+        select
+            classes.class_id
+        from classes
+        inner join class_teachers on classes.class_id = class_teachers.class_id
+        inner join teachers on class_teachers.teacher_id = teachers.teacher_id
+        inner join users_identity on teachers.user_id = users_identity.users_id
+        where (classes.name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"
+         or users_identity.full_name ilike
+        "#);
+        query_builder.push_bind(&search);
+        query_builder.push(r#"))"#);
+        query_builder.push(
             r#"
     select
     classes.class_id,
@@ -2870,6 +2953,7 @@ from teachers
     inner join class_teachers on teachers.teacher_id = class_teachers.teacher_id
     inner join classes on class_teachers.class_id = classes.class_id and classes.is_active = true
     inner join class_subjects on classes.class_id = class_subjects.class_id
+    inner join search_subquery on classes.class_id = search_subquery.class_id
     left join class_meeting on classes.class_id = class_meeting.class_id and classes.have_multiple_meeting = true
 where teachers.user_id::text =
         "#,
@@ -2908,17 +2992,8 @@ order by
     end
         "#,
         );
-        query_builder.push(" limit ");
-        if let Some(limit) = &params.limit {
-            query_builder.push_bind(*limit as i32);
-        } else {
-            query_builder.push_bind(10);
-        }
 
-        if let Some(offset) = &params.offset {
-            query_builder.push(" offset ");
-            query_builder.push_bind(*offset as i32);
-        }
+        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
 
         let query = query_builder.build();
         let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
@@ -3060,5 +3135,50 @@ order by
             upcomings_scheduled.push(upcoming_scheduled);
         }
         Ok(upcomings_scheduled)
+    }
+
+    async fn handle_query_params_filter_classes(&self, params: &QueryParamsClasses, query_builder: &mut QueryBuilder<'_, Postgres>) -> Result<(), ClassroomServiceError> {
+        if let Some(filter) = &params.filter {
+            if let Some(semester_filter) = &filter.semester_filter {
+                query_builder.push(" and classes.semester::text = ");
+                match semester_filter {
+                    QuerySemesterFilterClass::Odd => {
+                        query_builder.push_bind("odd");
+                    }
+                    QuerySemesterFilterClass::Even => {
+                        query_builder.push_bind("even");
+                    }
+                }
+            }
+
+            if let Some(subject_name_filter) = &filter.subject_name_filter {
+                query_builder.push(" and subjects.name ilike ");
+                query_builder.push_bind(format!("{}%", subject_name_filter.to_owned()));
+            }
+
+            if let Some(subject_id_filter) = &filter.subject_id_filter {
+                query_builder.push(" and subjects.subject_id::text = ");
+                query_builder.push_bind(subject_id_filter.to_owned());
+            }
+        }
+
+        // limit params
+        let Some(pagination) = &params.pagination else {
+          return Err(ClassroomServiceError::UnexpectedError(anyhow!("Query pagination is not found")));
+        };
+        query_builder.push(" limit ");
+        if let Some(limit) = &pagination.limit {
+            query_builder.push_bind(*limit as i32);
+        } else {
+            query_builder.push_bind(10);
+        }
+
+        // offset params
+        if let Some(offset) = &pagination.offset {
+            query_builder.push(" offset ");
+            query_builder.push_bind(*offset as i32);
+        }
+
+        Ok(())
     }
 }

@@ -292,19 +292,42 @@ pub enum QueryParamsClassMode {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct QueryParamsClasses {
+#[serde(rename_all = "snake_case")]
+pub enum QuerySemesterFilterClass {
+    Odd,
+    Even,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct QueryFilter {
+    pub semester_filter: Option<QuerySemesterFilterClass>,
+    pub subject_name_filter: Option<String>,
+    pub subject_id_filter: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct QueryPagination {
     pub offset: Option<usize>,
     pub limit: Option<usize>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct QueryParamsClasses {
+    #[serde(flatten)]
+    pub pagination: Option<QueryPagination>,
     pub mode: Option<QueryParamsClassMode>,
-    pub
+    pub search: Option<String>,
+    #[serde(flatten)]
+    pub filter: Option<QueryFilter>,
 }
 
 impl Default for QueryParamsClasses {
     fn default() -> Self {
         Self {
-            offset: None,
-            limit: None,
+            pagination: None,
             mode: None,
+            filter: None,
+            search: None,
         }
     }
 }
