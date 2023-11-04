@@ -3,8 +3,8 @@ use crate::helpers::errors::auth::AuthError;
 use crate::helpers::errors::classroom::ClassroomControllerError;
 use crate::helpers::extractor::AuthenticatedUserWithRole;
 use crate::model::classroom::{
-    ActionUpdateClassMeeting, CreateClassroomParams, DeleteClassroomParams, QueryParamsClassMode,
-    QueryParamsClasses, UpdateClassroomParams,
+    CreateClassroomParams, DeleteClassroomParams, QueryParamsClassMode, QueryParamsClasses,
+    UpdateClassroomParams,
 };
 use crate::model::subject::{SecondarySubject, Subject};
 use crate::model::user::{UserRole, UserUniversityRole};
@@ -20,7 +20,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::*;
 use axum::{Json, Router};
-use chrono::{Datelike, NaiveDate, NaiveDateTime};
+use chrono::{Datelike, NaiveDate};
 use serde_json::json;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -273,7 +273,7 @@ pub async fn create_classes(
 ) -> Result<Response, ClassroomControllerError> {
     let auth_user = auth_user?;
     let payload = {
-        let Json(payload) = payload.map_err(|err| ClassroomControllerError::JsonRejection(err))?;
+        let Json(payload) = payload?;
         payload
     };
 
@@ -355,12 +355,10 @@ pub async fn create_classes(
         Some(v) => v,
     };
 
-    if payload.meetings.is_some() {
-        if !payload.exams.is_none() {
-            return Err(ClassroomControllerError::Other(anyhow!(
-                "Parameter do have multiple meeting therefore exams on the class is not allowed"
-            )));
-        }
+    if payload.meetings.is_some() && payload.exams.is_some() {
+        return Err(ClassroomControllerError::Other(anyhow!(
+            "Parameter do have multiple meeting therefore exams on the class is not allowed"
+        )));
     }
 
     let year_start = payload.year_start.parse::<NaiveDate>().map_err(|err| {

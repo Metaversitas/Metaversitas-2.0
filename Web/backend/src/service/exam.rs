@@ -358,8 +358,8 @@ impl ExamService {
 
     pub async fn get_exam_by_id_with_questions(
         &self,
-        transaction: &mut PgTransaction,
-        exam_id: &str,
+        _transaction: &mut PgTransaction,
+        _exam_id: &str,
     ) -> Result<ExamWithQuestion, ExamServiceError> {
         // let query = sqlx::query!(r#"
         // select
@@ -368,7 +368,7 @@ impl ExamService {
         // inner join questions q on question_exams.question_id = q.question_id
         // where exam_id::text = $1
         // "#, exam_id).fetch_all();
-        return todo!();
+        todo!();
     }
 }
 

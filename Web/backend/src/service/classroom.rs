@@ -1,16 +1,22 @@
 use crate::backend::AppState;
-use crate::helpers::errors::classroom::{ClassroomControllerError, ClassroomServiceError};
+use crate::helpers::errors::classroom::ClassroomServiceError;
 use crate::helpers::extractor::AuthenticatedUserWithRole;
-use crate::model::classroom::{Action, ActionType, ActionTypeUpdateClassMeeting, ActionTypeUpdateExam, BaseAction, ClassMeeting, ClassSemester, Classroom, CreateClassMeetingParams, CreateClassroomParams, ParamsActionUpdateClassMeeting, ParamsActionUpdateExam, QueryParamsClassMode, QueryParamsClasses, StudentClassroom, TeacherClassroom, UpcomingScheduled, UpcomingScheduledMeetingOrClass, UpdateClassMeetingParams, UpdateClassSubjectParams, UpdateClassroomParams, QuerySemesterFilterClass};
-use crate::model::exam::Exam;
+use crate::model::classroom::{
+    Action, ActionType, ActionTypeUpdateClassMeeting, ActionTypeUpdateExam, BaseAction,
+    ClassMeeting, ClassSemester, Classroom, CreateClassMeetingParams, CreateClassroomParams,
+    ParamsActionUpdateClassMeeting, ParamsActionUpdateExam, QueryParamsClasses,
+    QuerySemesterFilterClass, StudentClassroom, TeacherClassroom, UpcomingScheduled,
+    UpcomingScheduledMeetingOrClass, UpdateClassMeetingParams, UpdateClassSubjectParams,
+    UpdateClassroomParams,
+};
 use crate::model::subject::{SecondarySubject, Subject, SubjectWithSecondary};
-use crate::model::user::{UserRole, UserUniversityRole};
+use crate::model::user::UserUniversityRole;
 use crate::r#const::PgTransaction;
 use crate::service::exam::ExamService;
 use crate::service::subject::SubjectService;
 use crate::service::teacher::TeacherService;
 use anyhow::anyhow;
-use chrono::{DateTime, Datelike, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use sqlx::{Execute, Postgres, QueryBuilder, Row};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -169,14 +175,13 @@ impl ClassroomService {
         separated.push_bind(&params.class_name);
         separated.push_bind(true);
         separated.push_bind(&params.semester);
-        let year_start =
-            chrono::NaiveDate::from_str(&params.year_start.as_str()).map_err(|err| {
-                ClassroomServiceError::UnexpectedError(anyhow!(
-                    "Unable to parse year_start into date, with an error: {}",
-                    err.to_string()
-                ))
-            })?;
-        let year_end = chrono::NaiveDate::from_str(&params.year_end.as_str()).map_err(|err| {
+        let year_start = NaiveDate::from_str(params.year_start.as_str()).map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Unable to parse year_start into date, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+        let year_end = NaiveDate::from_str(params.year_end.as_str()).map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to parse year_end into date, with an error: {}",
                 err.to_string()
@@ -188,15 +193,13 @@ impl ClassroomService {
         separated.push_unseparated("::uuid");
 
         if let Some(meetings) = &params.meetings {
-            if meetings.len() == 0 {
+            if meetings.is_empty() {
                 return Err(ClassroomServiceError::UnexpectedError(anyhow!(
                     "Got a meetings params but the length is 0"
                 )));
-            }
-
-            if meetings.len() > 0 {
+            } else {
                 separated.push_bind(true); // have_multiple_meeting
-            };
+            }
         } else {
             separated.push_bind(false); // have_multiple_meeting
         }
@@ -232,13 +235,8 @@ impl ClassroomService {
             ))
         })?;
 
-        let secondary_subject_id = {
-            if let Some(secondary_subject) = secondary_subject {
-                Some(secondary_subject.secondary_subject_id.as_str())
-            } else {
-                None
-            }
-        };
+        let secondary_subject_id = secondary_subject
+            .map(|secondary_subject| secondary_subject.secondary_subject_id.as_str());
 
         self.create_class_subject(
             transaction,
@@ -249,7 +247,6 @@ impl ClassroomService {
         .await?;
 
         if let Some(meetings) = &params.meetings {
-            let mut curr_meeting_number = 1;
             for meeting in meetings {
                 let meeting_id = self
                     .create_class_meeting(transaction, class_id.as_str(), meeting)
@@ -275,7 +272,6 @@ impl ClassroomService {
                             })?;
                     }
                 }
-                curr_meeting_number += 1;
             }
         }
 
@@ -298,10 +294,10 @@ impl ClassroomService {
                         })?;
                 }
             }
-        } else if params.meetings.is_some() {
-            if !params.exams.is_none() {
-                return Err(ClassroomServiceError::UnexpectedError(anyhow!("Parameter do have multiple meeting therefore exams on the class is not allowed")));
-            }
+        } else if params.meetings.is_some() && params.exams.is_some() {
+            return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                "Parameter do have multiple meeting therefore exams on the class is not allowed"
+            )));
         }
 
         if let Some(students) = &params.students {
@@ -509,7 +505,7 @@ impl ClassroomService {
             }
         }
 
-        if let Err(err) = self.update_classes(transaction, class_id, &params).await {
+        if let Err(err) = self.update_classes(transaction, class_id, params).await {
             let err_msg = err.to_string();
             if !err_msg.contains("No value") {
                 return Err(err);
@@ -519,7 +515,7 @@ impl ClassroomService {
         let class_meetings = self.get_class_meetings(transaction, class_id).await?;
 
         if let Some(exams) = &params.exams {
-            if class_meetings.len() > 0 {
+            if !class_meetings.is_empty() {
                 return Err(ClassroomServiceError::UnexpectedError(anyhow!(
                     "Not able to update exams because of meetings is available."
                 )));
@@ -561,7 +557,6 @@ impl ClassroomService {
         match params {
             ActionTypeUpdateClassMeeting::All(action_meetings) => {
                 self.delete_class_meeting_all(transaction, class_id).await?;
-                let mut meeting_number = 1;
                 for action_meeting in action_meetings {
                     match action_meeting.action {
                         BaseAction::Add => {
@@ -621,7 +616,6 @@ impl ClassroomService {
                             )))
                         }
                     }
-                    meeting_number += 1;
                 }
             }
             ActionTypeUpdateClassMeeting::Single(action_meetings) => {
@@ -882,8 +876,8 @@ impl ClassroomService {
         params: &UpdateClassroomParams,
     ) -> Result<(), ClassroomServiceError> {
         let mut count = 0;
-        let mut curr_count = 0;
-        let mut count_changed = 0;
+        let mut _curr_count = 0;
+        let mut _count_changed = 0;
 
         if params.class_name.is_some() {
             count += 1;
@@ -921,83 +915,83 @@ impl ClassroomService {
         if let Some(class_name) = &params.class_name {
             query_builder.push("name = ");
             query_builder.push_bind(class_name);
-            if count > 1 && curr_count != count - 1 {
-                curr_count += 1;
+            if count > 1 && _curr_count != count - 1 {
+                _curr_count += 1;
                 query_builder.push(", ");
             }
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(semester) = &params.semester {
             query_builder.push("semester = ");
             query_builder.push_bind(semester);
-            if count > 1 && curr_count != count - 1 {
-                curr_count += 1;
+            if count > 1 && _curr_count != count - 1 {
+                _curr_count += 1;
                 query_builder.push(", ");
             }
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(year_start) = &params.year_start {
             query_builder.push("year_start = ");
             query_builder.push_bind(year_start);
             query_builder.push("::date");
-            if count > 1 && curr_count != count - 1 {
-                curr_count += 1;
+            if count > 1 && _curr_count != count - 1 {
+                _curr_count += 1;
                 query_builder.push(", ");
             }
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(year_end) = &params.year_end {
             query_builder.push("year_end = ");
             query_builder.push_bind(year_end);
             query_builder.push("::date");
-            if count > 1 && curr_count != count - 1 {
-                curr_count += 1;
+            if count > 1 && _curr_count != count - 1 {
+                _curr_count += 1;
                 query_builder.push(", ");
             }
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(capacity) = &params.capacity {
             query_builder.push("capacity = ");
             query_builder.push_bind(capacity);
-            if count > 1 && curr_count != count - 1 {
-                curr_count += 1;
+            if count > 1 && _curr_count != count - 1 {
+                _curr_count += 1;
                 query_builder.push(", ");
             }
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(description) = &params.description {
             query_builder.push("description = ");
             query_builder.push_bind(description);
-            if count > 1 && curr_count != count - 1 {
-                curr_count += 1;
+            if count > 1 && _curr_count != count - 1 {
+                _curr_count += 1;
                 query_builder.push(", ");
             }
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(start_time) = &params.start_time {
             query_builder.push("start_time = ");
             query_builder.push_bind(start_time);
-            if count > 1 && curr_count != count - 1 {
-                curr_count += 1;
+            if count > 1 && _curr_count != count - 1 {
+                _curr_count += 1;
                 query_builder.push(", ");
             }
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(end_time) = &params.end_time {
             query_builder.push("end_time = ");
             query_builder.push_bind(end_time);
-            if count > 1 && curr_count != count - 1 {
-                curr_count += 1;
+            if count > 1 && _curr_count != count - 1 {
+                _curr_count += 1;
                 query_builder.push(", ");
             }
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         query_builder.push(" where class_id::text = ");
@@ -1070,7 +1064,7 @@ impl ClassroomService {
         class_id: &str,
         teacher_id: &str,
     ) -> Result<(), ClassroomServiceError> {
-        let query = sqlx::query!(
+        let _query = sqlx::query!(
             r#"
         insert into class_teachers (class_id, teacher_id)
         values ($1, $2);
@@ -1364,7 +1358,7 @@ impl ClassroomService {
         params: &UpdateClassSubjectParams,
     ) -> Result<(), ClassroomServiceError> {
         let mut count = 0;
-        let mut curr_count = 0;
+        let mut _curr_count = 0;
 
         if params.subject_id.is_some() {
             count += 1;
@@ -1386,9 +1380,9 @@ impl ClassroomService {
             query_builder.push_bind(subject_id);
             query_builder.push("::uuid");
 
-            if count > 0 && curr_count != count - 1 {
+            if count > 0 && _curr_count != count - 1 {
                 query_builder.push(", ");
-                curr_count += 1;
+                _curr_count += 1;
             }
         }
 
@@ -1397,9 +1391,9 @@ impl ClassroomService {
             query_builder.push_bind(secondary_subject_id);
             query_builder.push("::uuid");
 
-            if count > 0 && curr_count != count - 1 {
+            if count > 0 && _curr_count != count - 1 {
                 query_builder.push(", ");
-                curr_count += 1;
+                _curr_count += 1;
             }
         }
 
@@ -1468,7 +1462,7 @@ impl ClassroomService {
         );
 
         let mut count = 0;
-        let mut curr_count = 0;
+        let mut _curr_count = 0;
 
         if params.description.is_some() {
             query_builder.push(", description");
@@ -1492,31 +1486,31 @@ impl ClassroomService {
         query_builder.push(", ");
         query_builder.push_bind(&params.topic_description);
         query_builder.push(", ");
-        query_builder.push_bind(&params.meeting_number);
-        if count > 0 && curr_count != count - 1 {
+        query_builder.push_bind(params.meeting_number);
+        if count > 0 && _curr_count != count - 1 {
             query_builder.push(", ");
         }
 
         if let Some(description) = &params.description {
             query_builder.push_bind(description);
-            if count > 0 && curr_count != count - 1 {
+            if count > 0 && _curr_count != count - 1 {
                 query_builder.push(", ");
             }
-            curr_count += 1;
+            _curr_count += 1;
         }
         if let Some(start_time) = &params.start_time {
             query_builder.push_bind(start_time);
-            if count > 0 && curr_count != count - 1 {
+            if count > 0 && _curr_count != count - 1 {
                 query_builder.push(", ");
             }
-            curr_count += 1;
+            _curr_count += 1;
         }
         if let Some(end_time) = &params.end_time {
             query_builder.push_bind(end_time);
-            if count > 0 && curr_count != count - 1 {
+            if count > 0 && _curr_count != count - 1 {
                 query_builder.push(", ");
             }
-            curr_count += 1;
+            _curr_count += 1;
         }
         query_builder.push(")");
         query_builder.push(r#" returning meeting_id::text"#);
@@ -1527,9 +1521,11 @@ impl ClassroomService {
                 err.to_string()
             ))
         })?;
-        let meeting_id = query.try_get::<String, &str>("meeting_id").map_err(|err| {
-            ClassroomServiceError::UnexpectedError(anyhow!("Not found meeting_id"))
-        })?;
+        let meeting_id = query
+            .try_get::<String, &str>("meeting_id")
+            .map_err(|_err| {
+                ClassroomServiceError::UnexpectedError(anyhow!("Not found meeting_id"))
+            })?;
         Ok(meeting_id)
     }
 
@@ -1541,8 +1537,8 @@ impl ClassroomService {
     ) -> Result<(), ClassroomServiceError> {
         let mut query_builder = QueryBuilder::<Postgres>::new("update class_meeting set ");
         let mut count = 0;
-        let mut curr_count = 0;
-        let mut count_changed = 0;
+        let mut _curr_count = 0;
+        let mut _count_changed = 0;
 
         if params.meeting_name.is_some() {
             count += 1;
@@ -1564,60 +1560,60 @@ impl ClassroomService {
             query_builder.push("name = ");
             query_builder.push_bind(meeting_name);
 
-            if count > 1 && curr_count != count - 1 {
+            if count > 1 && _curr_count != count - 1 {
                 query_builder.push(", ");
-                curr_count += 1;
+                _curr_count += 1;
             }
 
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(topic_description) = &params.topic_description {
             query_builder.push("topic_description = ");
             query_builder.push_bind(topic_description);
 
-            if count > 1 && curr_count != count - 1 {
+            if count > 1 && _curr_count != count - 1 {
                 query_builder.push(", ");
-                curr_count += 1;
+                _curr_count += 1;
             }
 
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(description) = &params.description {
             query_builder.push("description = ");
             query_builder.push_bind(description);
 
-            if count > 1 && curr_count != count - 1 {
+            if count > 1 && _curr_count != count - 1 {
                 query_builder.push(", ");
-                curr_count += 1;
+                _curr_count += 1;
             }
 
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(start_time) = &params.start_time {
             query_builder.push("start_time = ");
             query_builder.push_bind(start_time);
 
-            if count > 1 && curr_count != count - 1 {
+            if count > 1 && _curr_count != count - 1 {
                 query_builder.push(", ");
-                curr_count += 1;
+                _curr_count += 1;
             }
 
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         if let Some(end_time) = &params.end_time {
             query_builder.push("end_time = ");
             query_builder.push_bind(end_time);
 
-            if count > 1 && curr_count != count - 1 {
+            if count > 1 && _curr_count != count - 1 {
                 query_builder.push(", ");
-                curr_count += 1;
+                _curr_count += 1;
             }
 
-            count_changed += 1;
+            _count_changed += 1;
         }
 
         query_builder.push(" where class_id::text = ");
@@ -1625,7 +1621,7 @@ impl ClassroomService {
         query_builder.push(" and meeting_id::text = ");
         query_builder.push_bind(&params.meeting_id);
 
-        if count_changed == 0 {
+        if _count_changed == 0 {
             return Err(ClassroomServiceError::UnexpectedError(anyhow!(
                 "No value to be updated"
             )));
@@ -1824,7 +1820,7 @@ impl ClassroomService {
             have_multiple_meeting: query.have_multiple_meeting,
             subject,
             meetings: {
-                if class_meeting.len() > 0 {
+                if !class_meeting.is_empty() {
                     Some(class_meeting)
                 } else {
                     None
@@ -1851,11 +1847,12 @@ impl ClassroomService {
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let mut search: String = format!("%%");
+        let mut search: String = "%%".to_string();
         if let Some(search_params) = &params.search {
             search = format!("%{}%", search_params)
         }
-        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+        let mut query_builder = QueryBuilder::<Postgres>::new(
+            r#"
             with search_subquery as (
         select
             classes.class_id
@@ -1864,11 +1861,14 @@ impl ClassroomService {
         inner join teachers on class_teachers.teacher_id = teachers.teacher_id
         inner join users_identity on teachers.user_id = users_identity.users_id
         where (classes.name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
-        query_builder.push(r#"
+        query_builder.push(
+            r#"
          or users_identity.full_name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
         query_builder.push(r#"))"#);
         query_builder.push(
@@ -1898,7 +1898,8 @@ impl ClassroomService {
         );
         query_builder.push_bind(user_id);
 
-        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
+        self.handle_query_params_filter_classes(params, &mut query_builder)
+            .await?;
 
         let query = query_builder.build();
         let query = query
@@ -2008,11 +2009,12 @@ impl ClassroomService {
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let mut search: String = format!("%%");
+        let mut search: String = "%%".to_string();
         if let Some(search_params) = &params.search {
             search = format!("%{}%", search_params)
         }
-        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+        let mut query_builder = QueryBuilder::<Postgres>::new(
+            r#"
             with search_subquery as (
         select
             classes.class_id
@@ -2021,11 +2023,14 @@ impl ClassroomService {
         inner join teachers on class_teachers.teacher_id = teachers.teacher_id
         inner join users_identity on teachers.user_id = users_identity.users_id
         where (classes.name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
-        query_builder.push(r#"
+        query_builder.push(
+            r#"
          or users_identity.full_name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
         query_builder.push(r#"))"#);
         query_builder.push(
@@ -2071,7 +2076,8 @@ impl ClassroomService {
         "#,
         );
 
-        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
+        self.handle_query_params_filter_classes(params, &mut query_builder)
+            .await?;
 
         let query = query_builder.build();
         let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
@@ -2182,11 +2188,12 @@ impl ClassroomService {
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<UpcomingScheduled>, ClassroomServiceError> {
-        let mut search: String = format!("%%");
+        let mut search: String = "%%".to_string();
         if let Some(search_params) = &params.search {
             search = format!("%{}%", search_params)
         }
-        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+        let mut query_builder = QueryBuilder::<Postgres>::new(
+            r#"
             with search_subquery as (
         select
             classes.class_id
@@ -2195,11 +2202,14 @@ impl ClassroomService {
         inner join teachers on class_teachers.teacher_id = teachers.teacher_id
         inner join users_identity on teachers.user_id = users_identity.users_id
         where (classes.name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
-        query_builder.push(r#"
+        query_builder.push(
+            r#"
          or users_identity.full_name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
         query_builder.push(r#"))"#);
         query_builder.push(r#"
@@ -2233,7 +2243,8 @@ from students
 where students.user_id::text =
         "#);
         query_builder.push_bind(user_id);
-        query_builder.push(r#"
+        query_builder.push(
+            r#"
         and (
         exists(
                 select 1
@@ -2263,15 +2274,18 @@ order by
         when classes.have_multiple_meeting = true then class_meeting.end_time
         else classes.end_time
     end
-        "#);
+        "#,
+        );
 
-        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
+        self.handle_query_params_filter_classes(params, &mut query_builder)
+            .await?;
 
         let query = query_builder.build();
         let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to fetch upcoming scheduled class for student, with an error: {}",
-                err.to_string()))
+                err.to_string()
+            ))
         })?;
 
         let mut upcomings_scheduled: Vec<UpcomingScheduled> = Vec::with_capacity(query.len());
@@ -2299,25 +2313,25 @@ order by
                 }
             };
             let subject_id = fetched_classroom
-            .try_get::<Uuid, &str>("subject_id")
-            .map_err(|err| {
-                ClassroomServiceError::UnexpectedError(anyhow!(
+                .try_get::<Uuid, &str>("subject_id")
+                .map_err(|err| {
+                    ClassroomServiceError::UnexpectedError(anyhow!(
                         "Unable to parse subject_id when fetching to database, with an error: {}",
                         err.to_string()
                     ))
-            })?
-            .to_string();
+                })?
+                .to_string();
             let subject = self
-            .subject_service
-            .get_subject_by_id(transaction, subject_id.as_str())
-            .await
-            .map_err(|err| {
-                ClassroomServiceError::UnexpectedError(anyhow!(
+                .subject_service
+                .get_subject_by_id(transaction, subject_id.as_str())
+                .await
+                .map_err(|err| {
+                    ClassroomServiceError::UnexpectedError(anyhow!(
                         "Unable to get a subject={}, with an error: {}",
                         subject_id,
                         err.to_string()
                     ))
-            })?;
+                })?;
             let subject_with_secondary = SubjectWithSecondary {
                 subject_id: subject.subject_id,
                 subject_name: subject.subject_name,
@@ -2325,46 +2339,47 @@ order by
             };
 
             let tmp_class_id = fetched_classroom
-            .try_get::<Uuid, &str>("class_id")
-            .map_err(|err| {
-                ClassroomServiceError::UnexpectedError(anyhow!(
+                .try_get::<Uuid, &str>("class_id")
+                .map_err(|err| {
+                    ClassroomServiceError::UnexpectedError(anyhow!(
                         "Unable to parse class_id when fetching to database, with an error: {}",
                         err.to_string()
                     ))
-            })?
-            .to_string();
-            let tmp_class_name = fetched_classroom.try_get::<String, &str>("name").map_err(
-                |err| {
-                    ClassroomServiceError::UnexpectedError(anyhow!(
+                })?
+                .to_string();
+            let tmp_class_name =
+                fetched_classroom
+                    .try_get::<String, &str>("name")
+                    .map_err(|err| {
+                        ClassroomServiceError::UnexpectedError(anyhow!(
                         "Unable to parse class_name when fetching to database, with an error: {}",
                         err.to_string()
                     ))
-                },
-            )?;
+                    })?;
             let list_teacher = self
-            .get_list_teacher_by_classroom(transaction, tmp_class_id.as_str())
-            .await?;
+                .get_list_teacher_by_classroom(transaction, tmp_class_id.as_str())
+                .await?;
             let tmp_current_meeting_id = fetched_classroom
-            .try_get::<Option<Uuid>, &str>("current_meeting_id")
-            .map_err(|err| {
-                ClassroomServiceError::UnexpectedError(anyhow!(
+                .try_get::<Option<Uuid>, &str>("current_meeting_id")
+                .map_err(|err| {
+                    ClassroomServiceError::UnexpectedError(anyhow!(
                         "Unable to parse class_id when fetching to database, with an error: {}",
                         err.to_string()
                     ))
-            })?;
+                })?;
             let tmp_have_multiple_meeting = fetched_classroom.try_get::<bool, &str>("have_multiple_meeting").map_err(|err| {
                 ClassroomServiceError::UnexpectedError(anyhow!("Unable to parse have_multiple_meeting when fetch to database, with an error: {}", err.to_string()))
             })?;
             let tmp_meeting_id = fetched_classroom
-            .try_get::<Option<Uuid>, &str>("meeting_id")
-            .map_err(|err| {
-                ClassroomServiceError::UnexpectedError(anyhow!(
+                .try_get::<Option<Uuid>, &str>("meeting_id")
+                .map_err(|err| {
+                    ClassroomServiceError::UnexpectedError(anyhow!(
                         "Unable to parse class_id when fetching to database, with an error: {}",
                         err.to_string()
                     ))
-            })?;
+                })?;
 
-            let mut upcoming_scheduled: UpcomingScheduled;
+            let upcoming_scheduled: UpcomingScheduled;
 
             if tmp_have_multiple_meeting {
                 let Some(_) = tmp_current_meeting_id else {
@@ -2378,8 +2393,8 @@ order by
                     )));
                 };
                 let meeting = self
-                .get_class_meeting_by_id(transaction, meeting_id.to_string().as_str())
-                .await?;
+                    .get_class_meeting_by_id(transaction, meeting_id.to_string().as_str())
+                    .await?;
 
                 upcoming_scheduled = UpcomingScheduled {
                     class_id: tmp_class_id,
@@ -2390,8 +2405,8 @@ order by
                 };
             } else {
                 let classroom = self
-                .get_classroom_by_id(transaction, tmp_class_id.as_str())
-                .await?;
+                    .get_classroom_by_id(transaction, tmp_class_id.as_str())
+                    .await?;
 
                 upcoming_scheduled = UpcomingScheduled {
                     class_id: tmp_class_id,
@@ -2413,11 +2428,12 @@ order by
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let mut search: String = format!("%%");
+        let mut search: String = "%%".to_string();
         if let Some(search_params) = &params.search {
             search = format!("%{}%", search_params)
         }
-        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+        let mut query_builder = QueryBuilder::<Postgres>::new(
+            r#"
         with search_subquery as (
     select
         classes.class_id
@@ -2426,11 +2442,14 @@ order by
     inner join teachers on class_teachers.teacher_id = teachers.teacher_id
     inner join users_identity on teachers.user_id = users_identity.users_id
     where (classes.name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
-        query_builder.push(r#"
+        query_builder.push(
+            r#"
          or users_identity.full_name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
         query_builder.push(r#"))"#);
         query_builder.push(
@@ -2461,7 +2480,8 @@ order by
         "#,
         );
         query_builder.push_bind(user_id);
-        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
+        self.handle_query_params_filter_classes(params, &mut query_builder)
+            .await?;
 
         let query = query_builder.build();
         let query = query
@@ -2573,11 +2593,12 @@ order by
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let mut search: String = format!("%%");
+        let mut search: String = "%%".to_string();
         if let Some(search_params) = &params.search {
             search = format!("%{}%", search_params)
         }
-        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+        let mut query_builder = QueryBuilder::<Postgres>::new(
+            r#"
             with search_subquery as (
         select
             classes.class_id
@@ -2586,11 +2607,14 @@ order by
         inner join teachers on class_teachers.teacher_id = teachers.teacher_id
         inner join users_identity on teachers.user_id = users_identity.users_id
         where (classes.name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
-        query_builder.push(r#"
+        query_builder.push(
+            r#"
          or users_identity.full_name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
         query_builder.push(r#"))"#);
         query_builder.push(
@@ -2621,7 +2645,8 @@ order by
         );
         query_builder.push_bind(user_id);
 
-        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
+        self.handle_query_params_filter_classes(params, &mut query_builder)
+            .await?;
 
         let query = query_builder.build();
         let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
@@ -2731,11 +2756,12 @@ order by
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
-        let mut search: String = format!("%%");
+        let mut search: String = "%%".to_string();
         if let Some(search_params) = &params.search {
             search = format!("%{}%", search_params)
         }
-        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+        let mut query_builder = QueryBuilder::<Postgres>::new(
+            r#"
             with search_subquery as (
         select
             classes.class_id
@@ -2744,11 +2770,14 @@ order by
         inner join teachers on class_teachers.teacher_id = teachers.teacher_id
         inner join users_identity on teachers.user_id = users_identity.users_id
         where (classes.name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
-        query_builder.push(r#"
+        query_builder.push(
+            r#"
          or users_identity.full_name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
         query_builder.push(r#"))"#);
         query_builder.push(
@@ -2796,7 +2825,8 @@ order by
         "#,
         );
 
-        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
+        self.handle_query_params_filter_classes(params, &mut query_builder)
+            .await?;
 
         let query = query_builder.build();
         let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
@@ -2907,11 +2937,12 @@ order by
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<UpcomingScheduled>, ClassroomServiceError> {
-        let mut search: String = format!("%%");
+        let mut search: String = "%%".to_string();
         if let Some(search_params) = &params.search {
             search = format!("%{}%", search_params)
         }
-        let mut query_builder = QueryBuilder::<Postgres>::new(r#"
+        let mut query_builder = QueryBuilder::<Postgres>::new(
+            r#"
             with search_subquery as (
         select
             classes.class_id
@@ -2920,11 +2951,14 @@ order by
         inner join teachers on class_teachers.teacher_id = teachers.teacher_id
         inner join users_identity on teachers.user_id = users_identity.users_id
         where (classes.name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
-        query_builder.push(r#"
+        query_builder.push(
+            r#"
          or users_identity.full_name ilike
-        "#);
+        "#,
+        );
         query_builder.push_bind(&search);
         query_builder.push(r#"))"#);
         query_builder.push(
@@ -2993,7 +3027,8 @@ order by
         "#,
         );
 
-        self.handle_query_params_filter_classes(params, &mut query_builder).await?;
+        self.handle_query_params_filter_classes(params, &mut query_builder)
+            .await?;
 
         let query = query_builder.build();
         let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
@@ -3063,14 +3098,15 @@ order by
                     ))
                 })?
                 .to_string();
-            let tmp_class_name = fetched_classroom.try_get::<String, &str>("name").map_err(
-                |err| {
-                    ClassroomServiceError::UnexpectedError(anyhow!(
+            let tmp_class_name =
+                fetched_classroom
+                    .try_get::<String, &str>("name")
+                    .map_err(|err| {
+                        ClassroomServiceError::UnexpectedError(anyhow!(
                         "Unable to parse class_name when fetching to database, with an error: {}",
                         err.to_string()
                     ))
-                },
-            )?;
+                    })?;
             let list_teacher = self
                 .get_list_teacher_by_classroom(transaction, tmp_class_id.as_str())
                 .await?;
@@ -3094,7 +3130,7 @@ order by
                     ))
                 })?;
 
-            let mut upcoming_scheduled: UpcomingScheduled;
+            let upcoming_scheduled: UpcomingScheduled;
 
             if tmp_have_multiple_meeting {
                 let Some(_) = tmp_current_meeting_id else {
@@ -3137,7 +3173,11 @@ order by
         Ok(upcomings_scheduled)
     }
 
-    async fn handle_query_params_filter_classes(&self, params: &QueryParamsClasses, query_builder: &mut QueryBuilder<'_, Postgres>) -> Result<(), ClassroomServiceError> {
+    async fn handle_query_params_filter_classes(
+        &self,
+        params: &QueryParamsClasses,
+        query_builder: &mut QueryBuilder<'_, Postgres>,
+    ) -> Result<(), ClassroomServiceError> {
         if let Some(filter) = &params.filter {
             if let Some(semester_filter) = &filter.semester_filter {
                 query_builder.push(" and classes.semester::text = ");
@@ -3164,7 +3204,9 @@ order by
 
         // limit params
         let Some(pagination) = &params.pagination else {
-          return Err(ClassroomServiceError::UnexpectedError(anyhow!("Query pagination is not found")));
+            return Err(ClassroomServiceError::UnexpectedError(anyhow!(
+                "Query pagination is not found"
+            )));
         };
         query_builder.push(" limit ");
         if let Some(limit) = &pagination.limit {

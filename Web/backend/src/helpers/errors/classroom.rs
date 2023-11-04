@@ -59,7 +59,7 @@ impl IntoResponse for ClassroomControllerError {
                 tracing::error!("{}", err.to_string());
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Internal server error, reason: {}", err.to_string()),
+                    format!("Internal server error, reason: {}", err),
                 )
             }
             ClassroomControllerError::Unknown => (
