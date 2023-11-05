@@ -283,7 +283,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://{{host}}/classroom?mode=available_class",
+							"raw": "https://{{host}}/classroom",
 							"protocol": "https",
 							"host": [
 								"{{host}}"
@@ -295,7 +295,8 @@
 								{
 									"key": "mode",
 									"value": "available_class",
-									"description": "Default Mode will be: EnrolledClass\nAvailable mode: \n- available_class\n- created_class\n- enrolled_class\n- upcoming_scheduled_class"
+									"description": "Default Mode will be: EnrolledClass\nAvailable mode: \n- available_class\n- created_class\n- enrolled_class\n- upcoming_scheduled_class",
+									"disabled": true
 								},
 								{
 									"key": "limit",

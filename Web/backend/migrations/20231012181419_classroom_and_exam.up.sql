@@ -84,7 +84,6 @@ create table public.subject_secondary (
 );
 create unique index subject_unique_secondary_pk on subject_secondary using btree (secondary_subject_id);
 
-
 create type semester as enum ('odd', 'even');
 create table public.classes (
                                 class_id uuid primary key not null default gen_random_uuid(),
@@ -100,11 +99,32 @@ create table public.classes (
                                 created_by uuid not null,
                                 start_time timestamp with time zone,
                                 end_time timestamp with time zone,
-                                foreign key (current_meeting_id) references public.class_meeting (meeting_id)
-                                    match simple on update cascade on delete set null,
                                 foreign key (created_by) references public.users (user_id)
                                     match simple on update no action on delete no action
 );
+
+create table public.class_meeting (
+                                      meeting_id uuid not null default gen_random_uuid(),
+                                      class_id uuid not null,
+                                      name text not null,
+                                      description text,
+                                      start_time timestamp with time zone,
+                                      end_time timestamp with time zone,
+                                      topic_description text not null,
+                                      created_at timestamp with time zone not null default now(),
+                                      updated_at timestamp with time zone not null default now(),
+                                      meeting_number integer not null,
+                                      is_active boolean not null,
+                                      primary key (meeting_id, class_id),
+                                      foreign key (class_id) references public.classes (class_id)
+                                          match simple on update cascade on delete cascade
+);
+create unique index class_meeting_pk on class_meeting using btree (meeting_id);
+
+
+alter table public.classes
+    add foreign key (current_meeting_id) references public.class_meeting (meeting_id)
+        match simple on update cascade on delete set null;
 
 create table public.class_grades (
                                      grade_id uuid not null,
@@ -120,23 +140,6 @@ create table public.class_grades (
                                      foreign key (student_id) references public.students (student_id)
                                          match simple on update cascade on delete cascade
 );
-
-create table public.class_meeting (
-                                      meeting_id uuid not null default gen_random_uuid(),
-                                      class_id uuid not null,
-                                      name text not null,
-                                      description text,
-                                      start_time timestamp with time zone,
-                                      end_time timestamp with time zone,
-                                      topic_description text not null,
-                                      created_at timestamp with time zone not null default now(),
-                                      updated_at timestamp with time zone not null default now(),
-                                      meeting_number integer not null,
-                                      primary key (meeting_id, class_id),
-                                      foreign key (class_id) references public.classes (class_id)
-                                          match simple on update cascade on delete cascade
-);
-create unique index class_meeting_pk on class_meeting using btree (meeting_id);
 
 create table public.class_students (
                                        class_id uuid not null,

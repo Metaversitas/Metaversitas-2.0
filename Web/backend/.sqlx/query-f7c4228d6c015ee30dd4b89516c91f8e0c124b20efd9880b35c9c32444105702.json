@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        select\n            meeting_id::text as \"meeting_id!\",\n            class_id::text as \"class_id!\",\n            meeting_number,\n            name as meeting_name,\n            topic_description,\n            description,\n            created_at,\n            updated_at,\n            start_time,\n            end_time\n        from class_meeting\n        where class_id::text = $1;\n        ",
+  "query": "\n        select\n            meeting_id::text as \"meeting_id!\",\n            class_id::text as \"class_id!\",\n            name,\n            meeting_number,\n            topic_description,\n            description,\n            is_active,\n            created_at,\n            updated_at,\n            start_time,\n            end_time\n        from class_meeting\n        where meeting_id::text = $1\n        ",
   "describe": {
     "columns": [
       {
@@ -15,13 +15,13 @@
       },
       {
         "ordinal": 2,
-        "name": "meeting_number",
-        "type_info": "Int4"
+        "name": "name",
+        "type_info": "Text"
       },
       {
         "ordinal": 3,
-        "name": "meeting_name",
-        "type_info": "Text"
+        "name": "meeting_number",
+        "type_info": "Int4"
       },
       {
         "ordinal": 4,
@@ -35,21 +35,26 @@
       },
       {
         "ordinal": 6,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "updated_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "start_time",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "end_time",
         "type_info": "Timestamptz"
       }
@@ -68,9 +73,10 @@
       true,
       false,
       false,
+      false,
       true,
       true
     ]
   },
-  "hash": "92e07dd96913ab229f914979a1cd343fbe3462b6341fc1718ffa1bad3b3c487e"
+  "hash": "f7c4228d6c015ee30dd4b89516c91f8e0c124b20efd9880b35c9c32444105702"
 }

@@ -10,6 +10,7 @@ use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
 use redis::{AsyncCommands, JsonAsyncCommands};
 use std::sync::Arc;
+use crate::r#const::{ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 
 pub struct UserService {
     app_state: Arc<AppState>,
@@ -151,14 +152,22 @@ impl UserService {
             AuthToken::new(jwt_claims, self.app_state.config.jwt_secret.to_string())
                 .map_err(|_| UserServiceError::UnableCreateSession)?
                 .into_cookie_value();
+        let cookie_auth_token = {
+            let cookie = Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", jwt_auth_token))
+            .path("/")
+            .secure(true)
+            .max_age(time::Duration::minutes(5))
+            .http_only(true);
+                if self.app_state.config.web_app_environment.contains(ENV_ENVIRONMENT_PRODUCTION) {
+                    cookie.same_site(SameSite::Strict).finish()
+                } else if self.app_state.config.web_app_environment.contains(ENV_ENVIRONMENT_DEVELOPMENT) {
+                    cookie.same_site(SameSite::None).finish()
+                } else {
+                    cookie.same_site(SameSite::Strict).finish()
+                }
+        };
         let cookie_jar = cookie_jar.add(
-            Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", jwt_auth_token))
-                .path("/")
-                .secure(true)
-                .same_site(SameSite::Lax)
-                .max_age(time::Duration::minutes(5))
-                .http_only(true)
-                .finish(),
+            cookie_auth_token
         );
 
         Ok(cookie_jar)

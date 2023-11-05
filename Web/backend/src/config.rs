@@ -1,9 +1,9 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use crate::r#const::{
-    ENV_DATABASE_URL, ENV_JWT_EXPIRED_IN, ENV_JWT_MAX_AGE, ENV_JWT_SECRET, ENV_REDIS_HOSTNAME,
-    ENV_REDIS_IS_TLS, ENV_REDIS_PORT, ENV_WEB_APP_HOST, ENV_WEB_APP_MODE_TLS, ENV_WEB_APP_PORT,
-    ENV_WEB_APP_PORT_SSL,
+    ENV_DATABASE_URL, ENV_ENVIRONMENT, ENV_JWT_EXPIRED_IN, ENV_JWT_MAX_AGE, ENV_JWT_SECRET,
+    ENV_REDIS_HOSTNAME, ENV_REDIS_IS_TLS, ENV_REDIS_PORT, ENV_WEB_APP_HOST, ENV_WEB_APP_MODE_TLS,
+    ENV_WEB_APP_PORT, ENV_WEB_APP_PORT_SSL,
 };
 use std::sync::Arc;
 
@@ -20,6 +20,7 @@ pub struct Config {
     pub web_app_port_ssl: Arc<str>,
     pub web_app_host: Arc<str>,
     pub web_app_mode_tls: Arc<bool>,
+    pub web_app_environment: Arc<str>,
 }
 
 impl Config {
@@ -74,6 +75,9 @@ impl Config {
             .parse::<bool>()
             .unwrap()
             .into();
+        let web_app_environment = std::env::var(ENV_ENVIRONMENT)
+            .unwrap_or("PROD".to_string())
+            .into();
 
         Config {
             database_url,
@@ -87,6 +91,7 @@ impl Config {
             web_app_port_ssl,
             web_app_host,
             web_app_mode_tls,
+            web_app_environment,
         }
     }
 }
