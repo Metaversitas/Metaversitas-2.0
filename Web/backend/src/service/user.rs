@@ -112,12 +112,7 @@ impl UserService {
         let mut redis_conn = self
             .app_state
             .redis
-            .get_async_connection()
-            .await
-            .map_err(|_| {
-                tracing::error!("Can't get connection into redis");
-                UserServiceError::RedisConnectionError
-            })?;
+        .clone();
 
         let result = redis_conn
             .get::<String, redis::Value>(session_token.to_owned())
@@ -177,10 +172,7 @@ impl UserService {
         let user_data_key = format!("user_data:{}", &user_id);
         let mut redis_conn = self
             .app_state
-            .redis
-            .get_async_connection()
-            .await
-            .map_err(|_| UserServiceError::RedisConnectionError)?;
+            .redis.clone();
         let is_exists = redis_conn
             .exists::<String, usize>(user_data_key.to_owned())
             .await
@@ -237,10 +229,7 @@ impl UserService {
     pub async fn get_profile(&self, user_id: &str) -> Result<ProfileUserData, UserServiceError> {
         let mut redis_conn = self
             .app_state
-            .redis
-            .get_async_connection()
-            .await
-            .map_err(|_| UserServiceError::RedisConnectionError)?;
+            .redis.clone();
         let is_exists = redis_conn
             .exists::<String, usize>(format!("profile:{}", &user_id))
             .await

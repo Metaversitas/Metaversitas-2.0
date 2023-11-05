@@ -43,10 +43,7 @@ async fn main() -> Result<()> {
         redis_uri_scheme, &config.redis_host_name, &config.redis_port
     );
     let redis_client = redis::Client::open(redis_conn_url).unwrap();
-    let _ = redis_client
-        .get_async_connection()
-        .await
-        .expect("Unable to connect with redis");
+    let redis_connection_manager = redis_client.get_tokio_connection_manager().await.expect("Can't create Redis connection manager");
 
     let ssl_config = RustlsConfig::from_pem_file(
         std::env::current_dir()
@@ -63,7 +60,7 @@ async fn main() -> Result<()> {
 
     // sqlx::migrate!("./migrations/").run(&db_pool).await?;
     let app_state = Arc::new(AppState {
-        redis: redis_client,
+        redis: redis_connection_manager,
         database: db_pool,
         config,
     });

@@ -152,7 +152,7 @@ pub async fn new_session(
         .add(
             cookie_session
         );
-    let mut redis_conn = state.redis.get_async_connection().await?;
+    let mut redis_conn = state.redis.clone();
     let set_redis = redis_conn
         .set_nx::<String, String, usize>(session_id.to_owned(), user_id.to_owned())
         .await?;
@@ -186,10 +186,7 @@ pub async fn check_session(
         return Err(AuthError::Unauthorized);
     }
 
-    let mut redis_conn = state.redis.get_async_connection().await.map_err(|_| {
-        tracing::error!("Can't get connection into redis");
-        AuthError::DatabaseError
-    })?;
+    let mut redis_conn = state.redis.clone();
 
     let result = redis_conn
         .get::<String, redis::Value>(session_token.to_owned())
@@ -263,10 +260,7 @@ pub async fn delete_session(
         .map(|cookie| cookie.value().to_owned())
         .ok_or(AuthError::Unauthorized)?;
 
-    let mut redis_conn = state.redis.get_async_connection().await.map_err(|_| {
-        tracing::error!("Can't get a connection to redis");
-        AuthError::DatabaseError
-    })?;
+    let mut redis_conn = state.redis.clone();
     redis_conn
         .del::<String, ()>(session_token)
         .await
