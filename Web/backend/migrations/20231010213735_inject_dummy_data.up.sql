@@ -62,3 +62,5 @@ INSERT INTO public.users_university_identity VALUES (111200032, 'de6a27a2-3cba-4
 INSERT INTO public.users_university_identity VALUES (111120033, 'c3f04a30-38ac-474d-b7da-8fb889495d75', 2, 'dosen', 1, 40000);
 INSERT INTO public.users_university_identity VALUES (111120034, 'ad05b191-7d8e-4fba-8009-d7615bdab6bd', 3, 'dosen', 1, 40000);
 INSERT INTO public.users_university_identity VALUES (111120035, 'bd390205-c344-449c-8493-d8f6021cbe71', 4, 'mahasiswa',1, 40000);
+
+INSERT INTO public.game (version, description, installed_on, is_live, updated_at, created_at) VALUES (1, 'Alpha Version', '2023-09-21 13:09:49.033000 +00:00', true, '2023-09-21 13:09:49.033000 +00:00', '2023-09-21 13:09:49.033000 +00:00');
