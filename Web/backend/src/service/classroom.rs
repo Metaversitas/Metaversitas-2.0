@@ -247,10 +247,34 @@ impl ClassroomService {
         .await?;
 
         if let Some(meetings) = &params.meetings {
+            //TODO: Should change the first_class_meeting to be more valid
+            let mut first_class_meeting = true;
             for meeting in meetings {
                 let meeting_id = self
                     .create_class_meeting(transaction, class_id.as_str(), meeting)
                     .await?;
+                if first_class_meeting {
+                    self.update_classes(transaction, class_id.as_str(), &UpdateClassroomParams {
+                        class_name: None,
+                        semester: None,
+                        year_start: None,
+                        year_end: None,
+                        capacity: None,
+                        description: None,
+                        is_active: None,
+                        current_meeting_id: Some(meeting_id.to_owned()),
+                        subjects: None,
+                        meetings: None,
+                        exams: None,
+                        start_time: None,
+                        end_time: None,
+                        subject_id: None,
+                        subject_name: None,
+                        students: None,
+                        teachers: None,
+                    }).await?;
+                    first_class_meeting = false;
+                }
                 let class_meeting = self
                     .get_class_meeting_by_id(transaction, meeting_id.as_str())
                     .await?;
@@ -903,6 +927,12 @@ impl ClassroomService {
         if params.end_time.is_some() {
             count += 1;
         }
+        if params.current_meeting_id.is_some() {
+            count += 1;
+        }
+        if params.is_active.is_some() {
+            count += 1;
+        }
 
         if count == 0 {
             return Err(ClassroomServiceError::UnexpectedError(anyhow!(
@@ -987,6 +1017,27 @@ impl ClassroomService {
         if let Some(end_time) = &params.end_time {
             query_builder.push("end_time = ");
             query_builder.push_bind(end_time);
+            if count > 1 && _curr_count != count - 1 {
+                _curr_count += 1;
+                query_builder.push(", ");
+            }
+            _count_changed += 1;
+        }
+
+        if let Some(is_active) = &params.is_active {
+            query_builder.push("is_active = ");
+            query_builder.push_bind(is_active);
+            if count > 1 && _curr_count != count - 1 {
+                _curr_count += 1;
+                query_builder.push(", ");
+            }
+            _count_changed += 1;
+        }
+
+        if let Some(current_meeting_id) = &params.current_meeting_id {
+            query_builder.push("current_meeting_id = ");
+            query_builder.push_bind(current_meeting_id);
+            query_builder.push("::uuid");
             if count > 1 && _curr_count != count - 1 {
                 _curr_count += 1;
                 query_builder.push(", ");
@@ -2213,67 +2264,67 @@ impl ClassroomService {
         query_builder.push_bind(&search);
         query_builder.push(r#"))"#);
         query_builder.push(r#"
-        select
-    classes.class_id,
-    classes.name,
-    classes.have_multiple_meeting,
-    classes.current_meeting_id,
-    case
-        when classes.have_multiple_meeting = true
-            then class_meeting.start_time
-        else classes.start_time
-    end as start_time,
-    case
-        when classes.have_multiple_meeting = true
-            then class_meeting.end_time
-        else
-            classes.end_time
-    end as end_time,
-    class_meeting.meeting_id,
-    class_meeting.meeting_number,
-    class_subjects.subject_id,
-    class_subjects.secondary_subject_id
-from students
-    inner join class_students on students.student_id = class_students.student_id
-    inner join classes on class_students.class_id = classes.class_id and classes.is_active = true
-    inner join class_subjects on classes.class_id = class_subjects.class_id
-    inner join subjects on class_subjects.subject_id = subjects.subject_id
-    inner join search_subquery on classes.class_id = search_subquery.class_id
-    left join class_meeting on classes.class_id = class_meeting.class_id and classes.have_multiple_meeting = true
-where students.user_id::text =
+                select
+            classes.class_id,
+            classes.name,
+            classes.have_multiple_meeting,
+            classes.current_meeting_id,
+            case
+                when classes.have_multiple_meeting = true
+                    then class_meeting.start_time
+                else classes.start_time
+            end as start_time,
+            case
+                when classes.have_multiple_meeting = true
+                    then class_meeting.end_time
+                else
+                    classes.end_time
+            end as end_time,
+            class_meeting.meeting_id,
+            class_meeting.meeting_number,
+            class_subjects.subject_id,
+            class_subjects.secondary_subject_id
+        from students
+            inner join class_students on students.student_id = class_students.student_id
+            inner join classes on class_students.class_id = classes.class_id and classes.is_active = true
+            inner join class_subjects on classes.class_id = class_subjects.class_id
+            inner join subjects on class_subjects.subject_id = subjects.subject_id
+            inner join search_subquery on classes.class_id = search_subquery.class_id
+            left join class_meeting on classes.class_id = class_meeting.class_id and classes.have_multiple_meeting = true
+        where students.user_id::text =
         "#);
         query_builder.push_bind(user_id);
         query_builder.push(
             r#"
-        and (
-        exists(
-                select 1
-                from classes
-                         inner join class_meeting on classes.class_id = class_meeting.class_id
-                where classes.have_multiple_meeting = true
-                  and class_meeting.start_time is not null
-                  and class_meeting.end_time is not null
-                  and class_meeting.start_time > current_timestamp
+                and (
+                exists(
+                        select 1
+                        from classes
+                                 inner join class_meeting on classes.class_id = class_meeting.class_id
+                        where classes.have_multiple_meeting = true
+                          and class_meeting.start_time is not null
+                          and class_meeting.end_time is not null
+                          and class_meeting.start_time > current_timestamp
+                    )
+                or exists
+                    (
+                        select 1
+                        from classes
+                        where classes.have_multiple_meeting = false
+                          and classes.start_time is not null
+                          and classes.end_time is not null
+                          and classes.start_time > current_timestamp
+                    )
             )
-        or exists
-            (
-                select 1
-                from classes
-                where classes.have_multiple_meeting = false
-                  and classes.start_time is not null
-                  and classes.end_time is not null
-                  and classes.start_time > current_timestamp
-            )
-    )
-order by
-    case
-        when classes.have_multiple_meeting = true then class_meeting.start_time
-        else classes.start_time
-    end,
-    case
-        when classes.have_multiple_meeting = true then class_meeting.end_time
-        else classes.end_time
-    end
+        order by
+            case
+                when classes.have_multiple_meeting = true then class_meeting.start_time
+                else classes.start_time
+            end,
+            case
+                when classes.have_multiple_meeting = true then class_meeting.end_time
+                else classes.end_time
+            end
         "#,
         );
 
