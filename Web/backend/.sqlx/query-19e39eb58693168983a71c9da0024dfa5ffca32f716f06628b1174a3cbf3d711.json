@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            meeting_id::text as \"meeting_id!\",\n            class_id::text as \"class_id!\",\n            meeting_number,\n            name as meeting_name,\n            topic_description,\n            description,\n            is_active as \"is_active!\",\n            created_at,\n            updated_at,\n            start_time,\n            end_time\n        from class_meeting\n        where class_id::text = $1;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "meeting_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "class_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "meeting_number",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "meeting_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "topic_description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "is_active!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "start_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "end_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "19e39eb58693168983a71c9da0024dfa5ffca32f716f06628b1174a3cbf3d711"
+}

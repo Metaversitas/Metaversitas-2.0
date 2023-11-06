@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            class_teachers.class_id,\n            class_teachers.teacher_id,\n            users_identity.full_name\n        from class_teachers\n        inner join teachers on class_teachers.teacher_id = teachers.teacher_id\n        inner join users_identity on users_identity.users_id = teachers.user_id\n        where class_teachers.class_id::text = $1 and class_teachers.teacher_id::text = $2;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "class_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "teacher_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "full_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "843d8ffd2573963bd39d03f25733a7952759822d676f9ac1bf8e5dab698f6f2f"
+}

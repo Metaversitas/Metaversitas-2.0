@@ -3,8 +3,8 @@ use crate::helpers::errors::auth::AuthError;
 use crate::helpers::errors::question::QuestionControllerError;
 use crate::helpers::extractor::AuthenticatedUserWithRole;
 use crate::model::question::{
-    ChoiceAnswerBody, CreateQuestion, CreateQuestionParams, Question,
-    QuestionType, UpdateQuestionParams,
+    ChoiceAnswerBody, CreateQuestion, CreateQuestionParams, Question, QuestionType,
+    UpdateQuestionParams,
 };
 use crate::model::user::{UserRole, UserUniversityRole};
 use crate::service::question::QuestionService;
@@ -236,13 +236,17 @@ pub async fn update_question(
                 })?;
         }
 
-        if key_answer.text_answer.is_some() && !matches!(question.question_type, QuestionType::Descriptive) {
+        if key_answer.text_answer.is_some()
+            && !matches!(question.question_type, QuestionType::Descriptive)
+        {
             return Err(QuestionControllerError::ErrorWithMessage(anyhow!(
-                    "Current question type is not a descriptive, change it first."
+                "Current question type is not a descriptive, change it first."
             )));
         }
 
-        if key_answer.table_answer.is_some() && !matches!(question.question_type, QuestionType::Table) {
+        if key_answer.table_answer.is_some()
+            && !matches!(question.question_type, QuestionType::Table)
+        {
             return Err(QuestionControllerError::ErrorWithMessage(anyhow!(
                 "Current question type is not a table, change it first."
             )));

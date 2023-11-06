@@ -1,0 +1,4 @@
+'use client'
+import { Layout } from 'antd'
+
+export default Layout.Sider

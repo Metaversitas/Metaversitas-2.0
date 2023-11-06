@@ -3,10 +3,10 @@ use crate::helpers::errors::auth::AuthError;
 use crate::helpers::errors::classroom::ClassroomControllerError;
 use crate::helpers::extractor::AuthenticatedUserWithRole;
 use crate::model::classroom::{
-    CreateClassroomParams, CreatedClassroom, DeleteClassroomParams,
+    CreateClassroomParams, DeleteClassroomParams, QueryParamsClassMode, QueryParamsClasses,
     UpdateClassroomParams,
 };
-use crate::model::subject::Subject;
+use crate::model::subject::{SecondarySubject, Subject};
 use crate::model::user::{UserRole, UserUniversityRole};
 use crate::service::classroom::ClassroomService;
 use crate::service::student::StudentService;
@@ -15,11 +15,12 @@ use crate::service::teacher::TeacherService;
 use crate::service::user::UserService;
 use anyhow::anyhow;
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{FromRef, Path, State};
+use axum::extract::{FromRef, Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::*;
 use axum::{Json, Router};
+use chrono::{Datelike, NaiveDate};
 use serde_json::json;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -69,29 +70,195 @@ pub async fn classroom_router(
 }
 
 pub const HOME_CLASSROOM_PATH: &str = "/";
+
 pub async fn get_available_classes(
+    State(app_state): State<Arc<AppState>>,
     State(classroom_service): State<Arc<ClassroomService>>,
-    auth_user: Result<AuthenticatedUserWithRole, AuthError>,
+    params: Option<Query<QueryParamsClasses>>,
+    is_auth_user: Result<AuthenticatedUserWithRole, AuthError>,
 ) -> Result<Response, ClassroomControllerError> {
     // 1. Authenticated as a student or lecturer
-    let auth_user = auth_user?;
+    let auth_user = is_auth_user?;
+    let params = {
+        let Query(params) = params.unwrap_or_default();
+        params
+    };
+    dbg!(&params);
+
     // 2. get available classes
 
     //TODO: Add some pagination
+    let mut transaction = app_state.database.begin().await.map_err(|_| {
+        tracing::error!("Failed to acquire a Postgres Connection from the pool");
+        ClassroomControllerError::Unknown
+    })?;
 
-    let available_classroom = classroom_service
-        .get_available_classroom(
-            auth_user.user_id.as_str(),
-            &auth_user.user_role,
-            &auth_user.university_role,
-        )
-        .await
-        .map_err(|_| ClassroomControllerError::Unknown)?;
-
-    let response = json!({
-        "status": true,
-        "data": available_classroom
-    });
+    let response = match auth_user.user_role {
+        UserRole::Administrator | UserRole::Staff => {
+            //TODO: If there is some admin panel, this would be useful to get all available classroom and try to edit on it
+            todo!()
+        }
+        UserRole::User => {
+            match auth_user.university_role {
+                UserUniversityRole::Dosen => match &params.mode {
+                    None => {
+                        let list = classroom_service
+                            .get_lecturer_enrolled_classroom(
+                                &mut transaction,
+                                auth_user.user_id.as_str(),
+                                &params,
+                            )
+                            .await
+                            .map_err(|err| {
+                                tracing::error!(
+                                    "Failed to fetch list classroom, with an error: {}",
+                                    err.to_string()
+                                );
+                                ClassroomControllerError::Unknown
+                            })?;
+                        json!({"data": list})
+                    }
+                    Some(mode) => match mode {
+                        QueryParamsClassMode::AvailableClass => {
+                            let list = classroom_service
+                                .get_lecturer_available_classes(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    tracing::error!(
+                                        "Failed to fetch list classroom, with an error: {}",
+                                        err.to_string()
+                                    );
+                                    ClassroomControllerError::Unknown
+                                })?;
+                            json!({"data": list})
+                        }
+                        QueryParamsClassMode::CreatedClass => {
+                            let list = classroom_service
+                                .get_lecturer_created_classes(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    tracing::error!(
+                                        "Failed to fetch list classroom, with an error: {}",
+                                        err.to_string()
+                                    );
+                                    ClassroomControllerError::Unknown
+                                })?;
+                            json!({"data": list})
+                        }
+                        QueryParamsClassMode::EnrolledClass => {
+                            let list = classroom_service
+                                .get_lecturer_enrolled_classroom(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    tracing::error!(
+                                        "Failed to fetch list classroom, with an error: {}",
+                                        err.to_string()
+                                    );
+                                    ClassroomControllerError::Unknown
+                                })?;
+                            json!({"data": list})
+                        }
+                        QueryParamsClassMode::UpcomingScheduledClass => {
+                            let list = classroom_service
+                                .get_lecturer_upcoming_scheduled_classes(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    tracing::error!(
+                                        "Failed to fetch list classroom, with an error: {}",
+                                        err.to_string()
+                                    );
+                                    ClassroomControllerError::Unknown
+                                })?;
+                            json!({"data": list})
+                        }
+                    },
+                },
+                UserUniversityRole::Mahasiswa => {
+                    match &params.mode {
+                        None => {
+                            let list = classroom_service
+                                .get_student_enrolled_classes(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await
+                                .map_err(|err| {
+                                    tracing::error!(
+                                        "Failed to get student enrolled classes, with an error: {}",
+                                        err.to_string()
+                                    );
+                                    ClassroomControllerError::Unknown
+                                })?;
+                            json!({"data": list})
+                        }
+                        Some(mode) => match mode {
+                            QueryParamsClassMode::AvailableClass => {
+                                let list = classroom_service
+                                .get_student_available_classes(
+                                    &mut transaction,
+                                    auth_user.user_id.as_str(),
+                                    &params,
+                                )
+                                .await.map_err(|err| {
+                                tracing::error!("Failed to get student available classes, with an error: {}", err.to_string());
+                                ClassroomControllerError::Unknown
+                            })?;
+                                json!({"data": list})
+                            }
+                            QueryParamsClassMode::CreatedClass => {
+                                return Err(ClassroomControllerError::Other(anyhow!(
+                                    "User is on Student mode but the params is on created classes"
+                                )));
+                            }
+                            QueryParamsClassMode::EnrolledClass => {
+                                let list = classroom_service
+                            .get_student_enrolled_classes(
+                                &mut transaction,
+                                auth_user.user_id.as_str(),
+                                &params,
+                            )
+                            .await.map_err(|err| {
+                                tracing::error!("Failed to get student enrolled classes, with an error: {}", err.to_string());
+                                ClassroomControllerError::Unknown
+                            })?;
+                                json!({"data": list})
+                            }
+                            QueryParamsClassMode::UpcomingScheduledClass => {
+                                let list = classroom_service
+                                    .get_student_upcoming_scheduled_classes(
+                                        &mut transaction,
+                                        auth_user.user_id.as_str(),
+                                        &params,
+                                    )
+                                    .await.map_err(|err| {
+                                    tracing::error!("Failed to get student upcoming scheduled classes, with an error: {}", err.to_string());
+                                    ClassroomControllerError::Unknown
+                                })?;
+                                json!({"data": list})
+                            }
+                        },
+                    }
+                }
+            }
+        }
+    };
 
     Ok((StatusCode::OK, Json(response)).into_response())
 }
@@ -110,12 +277,6 @@ pub async fn create_classes(
         payload
     };
 
-    if matches!(auth_user.user_role, UserRole::Administrator)
-        || matches!(auth_user.user_role, UserRole::Staff)
-    {
-        todo!()
-    }
-
     if matches!(auth_user.university_role, UserUniversityRole::Mahasiswa) {
         return Err(ClassroomControllerError::UnableCreateClass);
     }
@@ -126,6 +287,7 @@ pub async fn create_classes(
     })?;
 
     let mut subject_classroom: Option<Subject> = None;
+    let mut secondary_subject: Option<SecondarySubject> = None;
 
     if payload.subject_name.is_none() && payload.subject_id.is_none() {
         return Err(ClassroomControllerError::Other(anyhow!(
@@ -161,6 +323,30 @@ pub async fn create_classes(
         );
     }
 
+    if let Some(secondary_subject_id) = &payload.secondary_subject_id {
+        secondary_subject = Some(
+            subject_service
+                .get_secondary_subject_by_id(&mut transaction, secondary_subject_id.as_str())
+                .await
+                .map_err(|err| {
+                    tracing::error!("{}", err.to_string());
+                    ClassroomControllerError::Other(anyhow!("Secondary subject is not exists!"))
+                })?,
+        );
+    }
+
+    if let Some(secondary_subject_name) = &payload.secondary_subject_name {
+        secondary_subject = Some(
+            subject_service
+                .get_secondary_subject_by_name(&mut transaction, secondary_subject_name.as_str())
+                .await
+                .map_err(|err| {
+                    tracing::error!("{}", err.to_string());
+                    ClassroomControllerError::Other(anyhow!("Secondary subject is not exists!"))
+                })?,
+        );
+    }
+
     let subject_classroom = match subject_classroom {
         None => {
             tracing::error!("subject_classroom is a none!");
@@ -169,12 +355,43 @@ pub async fn create_classes(
         Some(v) => v,
     };
 
+    if payload.meetings.is_some() && payload.exams.is_some() {
+        return Err(ClassroomControllerError::Other(anyhow!(
+            "Parameter do have multiple meeting therefore exams on the class is not allowed"
+        )));
+    }
+
+    let year_start = payload.year_start.parse::<NaiveDate>().map_err(|err| {
+        ClassroomControllerError::Other(anyhow!(
+            "Not able to parse year_start, err={}",
+            err.to_string()
+        ))
+    })?;
+    let year_end = payload.year_end.parse::<NaiveDate>().map_err(|err| {
+        ClassroomControllerError::Other(anyhow!(
+            "Not able to parse year_end, err={}",
+            err.to_string()
+        ))
+    })?;
+    let current_year = chrono::Utc::now().date_naive().year();
+    if year_end.year() <= year_start.year() {
+        return Err(ClassroomControllerError::Other(anyhow!(
+            "year_end is lower than equal current date"
+        )));
+    }
+    if year_start.year() < current_year {
+        return Err(ClassroomControllerError::Other(anyhow!(
+            "year_start is lower than current date"
+        )));
+    }
+
     let created_class_id = classroom_service
         .create_classroom(
             &mut transaction,
-            &auth_user.user_role,
-            &auth_user.university_role,
+            &auth_user,
             &payload,
+            &subject_classroom,
+            secondary_subject.as_ref(),
         )
         .await
         .map_err(|err| {
@@ -182,16 +399,25 @@ pub async fn create_classes(
             ClassroomControllerError::UnableCreateClass
         })?;
 
+    let classroom = classroom_service
+        .get_classroom_by_id(&mut transaction, created_class_id.as_str())
+        .await
+        .map_err(|err| {
+            tracing::error!(
+                "Unable to fetch classroom={}, with an error: {}",
+                created_class_id,
+                err.to_string()
+            );
+            ClassroomControllerError::Other(anyhow!("Unable to get created classroom"))
+        })?;
+
     transaction.commit().await.map_err(|err| {
-        tracing::error!("{}", err.to_string());
+        tracing::error!(
+            "Unable to commit transaction, with an error: {}",
+            err.to_string()
+        );
         ClassroomControllerError::UnableCreateClass
     })?;
-
-    let classroom = CreatedClassroom {
-        class_id: created_class_id.to_owned(),
-        subject_id: subject_classroom.subject_id.to_owned(),
-        subject_name: subject_classroom.name.to_owned(),
-    };
 
     let payload = json!({
         "message": "Class created successfully!",
@@ -206,24 +432,26 @@ pub async fn update_classroom(
     State(classroom_service): State<Arc<ClassroomService>>,
     State(teacher_service): State<Arc<TeacherService>>,
     Path(classroom_id): Path<String>,
-    auth_user: Result<AuthenticatedUserWithRole, AuthError>,
+    is_auth_user: Result<AuthenticatedUserWithRole, AuthError>,
     payload: Result<Json<UpdateClassroomParams>, JsonRejection>,
 ) -> Result<Response, ClassroomControllerError> {
-    let auth_user = auth_user?;
+    let auth_user = is_auth_user?;
     let payload = {
         let Json(payload) = payload?;
         payload
     };
-    let classroom_id = Uuid::from_str(classroom_id.as_str()).map_err(|_| {
-        tracing::error!("Unable to parse classroom_id");
-        ClassroomControllerError::Other(anyhow!("Parse classroom_id to uuid failed"))
+    let classroom_id = Uuid::parse_str(classroom_id.as_str()).map_err(|err| {
+        let err_msg = err.to_string();
+        tracing::error!(
+            "Unable to parse classroom_id={}, with an error: {}",
+            classroom_id,
+            err_msg
+        );
+        ClassroomControllerError::Other(anyhow!(
+            "Parse classroom_id to uuid failed, error: {}",
+            err_msg
+        ))
     })?;
-
-    if matches!(auth_user.user_role, UserRole::Administrator)
-        || matches!(auth_user.user_role, UserRole::Staff)
-    {
-        todo!()
-    }
 
     if matches!(auth_user.university_role, UserUniversityRole::Mahasiswa) {
         return Err(ClassroomControllerError::UnableCreateClass);
@@ -236,28 +464,53 @@ pub async fn update_classroom(
         ClassroomControllerError::Unknown
     })?;
 
-    // Check if user has a permission to edit the classroom
-    let teacher = teacher_service
-        .get_teacher_by_id(&mut transaction, auth_user.user_id.as_str())
-        .await?;
-    let classroom = classroom_service
-        .get_teacher_classroom_by_id(
-            &mut transaction,
-            classroom_id.to_string().as_str(),
-            teacher.teacher_id.as_str(),
-        )
-        .await?;
+    if matches!(auth_user.user_role, UserRole::User)
+        && matches!(auth_user.university_role, UserUniversityRole::Dosen)
+    {
+        // Check if user has a permission to edit the classroom
+        let teacher = teacher_service
+            .get_teacher_by_id(&mut transaction, auth_user.user_id.as_str())
+            .await?;
+        let classroom = classroom_service
+            .get_teacher_classroom_by_id(
+                &mut transaction,
+                classroom_id.to_string().as_str(),
+                teacher.teacher_id.as_str(),
+            )
+            .await?;
 
-    if teacher.teacher_id != classroom.teacher_id {
-        return Err(ClassroomControllerError::Unauthorized);
+        if teacher.teacher_id != classroom.teacher_id {
+            return Err(ClassroomControllerError::Unauthorized);
+        }
     }
 
     classroom_service
-        .update_classroom(&mut transaction, classroom_id.to_string(), payload)
+        .update_classroom(
+            &mut transaction,
+            classroom_id.to_string().as_str(),
+            &payload,
+        )
+        .await
+        .map_err(|err| {
+            let err_msg = err.to_string();
+            tracing::error!(
+                "Error happened on update_classroom, with an error: {}",
+                err_msg
+            );
+            if err_msg.contains("meetings is available") {
+                return ClassroomControllerError::Other(anyhow!("{}", err_msg));
+            }
+
+            ClassroomControllerError::Unknown
+        })?;
+
+    let classroom = classroom_service
+        .get_classroom_by_id(&mut transaction, classroom_id.to_string().as_str())
         .await
         .map_err(|err| {
             tracing::error!(
-                "Error happened on update_classroom, with an error: {}",
+                "Unable to get classroom by id={}, with an error: {}",
+                classroom_id.to_string(),
                 err.to_string()
             );
             ClassroomControllerError::Unknown
@@ -269,18 +522,127 @@ pub async fn update_classroom(
     })?;
 
     let response = json!({
-        "status": true,
-        "message": "Classroom has been updated successfully!"
+        "message": "Classroom has been updated successfully!",
+        "data": classroom
     });
 
     Ok((StatusCode::CREATED, Json(response)).into_response())
 }
 
-pub async fn get_class_data() -> Result<Response, ClassroomControllerError> {
+pub async fn get_class_data(
+    State(app_state): State<Arc<AppState>>,
+    State(classroom_service): State<Arc<ClassroomService>>,
+    State(student_service): State<Arc<StudentService>>,
+    State(teacher_service): State<Arc<TeacherService>>,
+    is_auth_user: Result<AuthenticatedUserWithRole, AuthError>,
+    Path(class_id): Path<String>,
+) -> Result<Response, ClassroomControllerError> {
     //Check if it is authenticated
+    let auth_user = is_auth_user?;
+    let class_id = Uuid::parse_str(class_id.as_str()).map_err(|err| {
+        ClassroomControllerError::Other(anyhow!(
+            "Failed to parse class_id={}, with an error: {}",
+            class_id,
+            err.to_string()
+        ))
+    })?;
+
+    let mut transaction = app_state.database.begin().await.map_err(|err| {
+        tracing::error!(
+            "Failed to acquire a Postgres Connection from the pool, reason: {}",
+            err.to_string()
+        );
+        ClassroomControllerError::Unknown
+    })?;
+
     //Check if class is available
+    let classroom = classroom_service
+        .get_classroom_by_id(&mut transaction, class_id.to_string().as_str())
+        .await
+        .map_err(|err| {
+            let err_msg = err.to_string();
+            tracing::error!(
+                "Unable to fetch classroom={}, with an error: {}",
+                class_id.to_string(),
+                err.to_string()
+            );
+
+            if err_msg.contains("Not found") {
+                return ClassroomControllerError::Other(anyhow!("{}", err_msg));
+            }
+            ClassroomControllerError::Unknown
+        })?;
     //Check if user has an access to class
-    todo!()
+    match auth_user.university_role {
+        UserUniversityRole::Dosen => {
+            let teacher = teacher_service
+                .get_teacher_by_id(&mut transaction, auth_user.user_id.as_str())
+                .await
+                .map_err(|err| {
+                    let err_msg = err.to_string();
+                    tracing::error!(
+                        "Unable to fetch teacher data user_id={}, with an error: {}",
+                        auth_user.user_id,
+                        err_msg
+                    );
+
+                    if err_msg.contains("Teacher isn't exists!") {
+                        return ClassroomControllerError::Other(anyhow!("{}", err_msg));
+                    }
+                    ClassroomControllerError::Unknown
+                })?;
+            let _teacher_classroom = classroom_service.get_teacher_classroom_by_id(&mut transaction, classroom.class_id.as_str(), teacher.teacher_id.as_str()).await
+            .map_err(|err| {
+                let err_msg = err.to_string();
+                tracing::error!("Unable to fetch teacher_classroom data; class_id={} | teacher_id={}, with an error: {}", class_id.to_string(), teacher.teacher_id, err_msg);
+
+                if err_msg.contains("Not found") {
+                    return ClassroomControllerError::Other(anyhow!("{}", err_msg));
+                }
+                ClassroomControllerError::Unknown
+            })?;
+        }
+        UserUniversityRole::Mahasiswa => {
+            let student = student_service
+                .get_student_by_id(&mut transaction, auth_user.user_id.as_str())
+                .await
+                .map_err(|err| {
+                    let err_msg = err.to_string();
+                    tracing::error!(
+                        "Unable to fetch student data user_id={}, with an error: {}",
+                        auth_user.user_id,
+                        err_msg
+                    );
+
+                    if err_msg.contains("Student isn't exists") {
+                        return ClassroomControllerError::Other(anyhow!("{}", err_msg));
+                    }
+                    ClassroomControllerError::Unknown
+                })?;
+            let _student_classroom = classroom_service
+                .get_student_classroom_by_id(
+                    &mut transaction,
+                    classroom.class_id.as_str(),
+                    student.student_id.as_str(),
+                )
+                .await
+                .map_err(|err| {
+                    let err_msg = err.to_string();
+                    tracing::error!(
+                        "Unable to fetch student_classroom data student_id={}, with an error: {}",
+                        student.student_id,
+                        err_msg
+                    );
+
+                    if err_msg.contains("Not found") {
+                        return ClassroomControllerError::Other(anyhow!("{}", err_msg));
+                    }
+                    ClassroomControllerError::Unknown
+                })?;
+        }
+    };
+    let response = json!({"data": classroom});
+    Ok((StatusCode::OK, Json(response)).into_response())
 }
 
 pub async fn delete_classroom(
@@ -351,7 +713,7 @@ pub async fn delete_classroom(
 
     let response = json!({"status": true, "message": "Classroom has been deleted successfully!"});
 
-    Ok((StatusCode::NO_CONTENT, Json(response)).into_response())
+    Ok((StatusCode::OK, Json(response)).into_response())
 }
 
 pub const ENROLL_CLASSROOM_WITH_ID_PATH: &str = "/:id/enroll";
@@ -436,7 +798,7 @@ pub async fn enroll_classroom(
     transaction.commit().await.map_err(|_| {
         ClassroomControllerError::Other(anyhow!("Unable to commit transaction into postgres"))
     })?;
-    let response_payload = json!({"status": true, "message": "Successfully enroll a class!"});
+    let response_payload = json!({"message": "Successfully enroll a class!"});
 
     Ok((StatusCode::CREATED, Json(response_payload)).into_response())
 }

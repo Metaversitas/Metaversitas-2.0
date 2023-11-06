@@ -14,6 +14,7 @@ use rand::Rng;
 use redis::{AsyncCommands, Value};
 use serde::Serialize;
 use std::sync::Arc;
+use crate::r#const::{ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 
 pub const COOKIE_SESSION_TOKEN_NAME: &str = "session_token";
 pub const COOKIE_AUTH_NAME: &str = "Authorization";
@@ -119,23 +120,39 @@ pub async fn new_session(
     };
     let jwt_auth_token =
         AuthToken::new(jwt_claims, state.config.jwt_secret.to_string())?.into_cookie_value();
+    let cookie_auth_token = {
+        let cookie = Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", jwt_auth_token))
+        .path("/")
+        .secure(true)
+        .max_age(time::Duration::minutes(5))
+        .http_only(true);
+        if state.config.web_app_environment.contains(ENV_ENVIRONMENT_PRODUCTION) {
+            cookie.same_site(SameSite::Strict).finish()
+        } else if state.config.web_app_environment.contains(ENV_ENVIRONMENT_DEVELOPMENT) {
+            cookie.same_site(SameSite::None).finish()
+        } else {
+            cookie.same_site(SameSite::Strict).finish()
+        }
+    };
+    let cookie_session = {
+      let cookie =  Cookie::build(COOKIE_SESSION_TOKEN_NAME, session_id.to_owned())
+      .path("/")
+      .secure(true);
+        if state.config.web_app_environment.contains(ENV_ENVIRONMENT_PRODUCTION) {
+            cookie.same_site(SameSite::Strict).finish()
+        } else if state.config.web_app_environment.contains(ENV_ENVIRONMENT_DEVELOPMENT) {
+            cookie.same_site(SameSite::None).finish()
+        } else {
+            cookie.same_site(SameSite::Strict).finish()
+        }
+    };
     let cookie_jar = cookie_jar
-        .add(
-            Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", jwt_auth_token))
-                .path("/")
-                .secure(true)
-                .same_site(SameSite::Lax)
-                .max_age(time::Duration::minutes(5))
-                .http_only(true)
-                .finish(),
+        .add(cookie_auth_token,
         )
         .add(
-            Cookie::build(COOKIE_SESSION_TOKEN_NAME, session_id.to_owned())
-                .path("/")
-                .secure(true)
-                .finish(),
+            cookie_session
         );
-    let mut redis_conn = state.redis.get_async_connection().await?;
+    let mut redis_conn = state.redis.clone();
     let set_redis = redis_conn
         .set_nx::<String, String, usize>(session_id.to_owned(), user_id.to_owned())
         .await?;
@@ -169,10 +186,7 @@ pub async fn check_session(
         return Err(AuthError::Unauthorized);
     }
 
-    let mut redis_conn = state.redis.get_async_connection().await.map_err(|_| {
-        tracing::error!("Can't get connection into redis");
-        AuthError::DatabaseError
-    })?;
+    let mut redis_conn = state.redis.clone();
 
     let result = redis_conn
         .get::<String, redis::Value>(session_token.to_owned())
@@ -214,14 +228,22 @@ pub async fn check_session(
         let new_jwt_auth_token =
             AuthToken::new(new_jwt_claims, state.config.jwt_secret.to_string())?
                 .into_cookie_value();
+        let cookie_auth_token = {
+            let cookie = Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", new_jwt_auth_token))
+            .path("/")
+            .secure(true)
+            .max_age(time::Duration::minutes(5))
+            .http_only(true);
+            if state.config.web_app_environment.contains(ENV_ENVIRONMENT_PRODUCTION) {
+                cookie.same_site(SameSite::Strict).finish()
+            } else if state.config.web_app_environment.contains(ENV_ENVIRONMENT_DEVELOPMENT) {
+                cookie.same_site(SameSite::None).finish()
+            } else {
+                cookie.same_site(SameSite::Strict).finish()
+            }
+        };
         let cookie_jar = cookie_jar.add(
-            Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", new_jwt_auth_token))
-                .path("/")
-                .secure(true)
-                .same_site(SameSite::Lax)
-                .max_age(time::Duration::minutes(5))
-                .http_only(true)
-                .finish(),
+            cookie_auth_token
         );
         return Ok((true, auth_user, cookie_jar));
     }
@@ -238,10 +260,7 @@ pub async fn delete_session(
         .map(|cookie| cookie.value().to_owned())
         .ok_or(AuthError::Unauthorized)?;
 
-    let mut redis_conn = state.redis.get_async_connection().await.map_err(|_| {
-        tracing::error!("Can't get a connection to redis");
-        AuthError::DatabaseError
-    })?;
+    let mut redis_conn = state.redis.clone();
     redis_conn
         .del::<String, ()>(session_token)
         .await
