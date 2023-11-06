@@ -255,6 +255,8 @@ pub struct UpdateClassroomParams {
     pub year_end: Option<String>,
     pub capacity: Option<i64>,
     pub description: Option<String>,
+    pub is_active: Option<bool>,
+    pub current_meeting_id: Option<String>,
     #[serde(flatten)]
     pub subjects: Option<UpdateClassSubjectParams>,
     // Update meetings params
