@@ -15,9 +15,7 @@ impl GameService {
     }
 
     pub async fn verify_game_version(&self, version: &str) -> Result<(), GameServiceError> {
-        let mut redis_con = self
-            .app_state
-            .redis.clone();
+        let mut redis_con = self.app_state.redis.clone();
         let redis_game_version = redis_con
             .get::<String, Value>(format!("{}{}", REDIS_GAME_VERSION_KEY, version))
             .await

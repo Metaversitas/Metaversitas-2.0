@@ -8,6 +8,8 @@ use axum::http::{StatusCode, Uri};
 use axum::response::Redirect;
 use axum::BoxError;
 use axum_server::tls_rustls::RustlsConfig;
+use redis::aio::ConnectionManager;
+use s3::bucket::Bucket;
 use sqlx::{Pool, Postgres};
 use std::future::Future;
 use std::net::SocketAddr;
@@ -15,11 +17,11 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::signal;
-use redis::aio::ConnectionManager;
 
 pub struct AppState {
     pub redis: ConnectionManager,
     pub database: Pool<Postgres>,
+    pub bucket: Bucket,
     pub config: Config,
 }
 

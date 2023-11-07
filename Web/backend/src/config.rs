@@ -2,8 +2,10 @@
 
 use crate::r#const::{
     ENV_DATABASE_URL, ENV_ENVIRONMENT, ENV_JWT_EXPIRED_IN, ENV_JWT_MAX_AGE, ENV_JWT_SECRET,
-    ENV_REDIS_HOSTNAME, ENV_REDIS_IS_TLS, ENV_REDIS_PORT, ENV_WEB_APP_HOST, ENV_WEB_APP_MODE_TLS,
-    ENV_WEB_APP_PORT, ENV_WEB_APP_PORT_SSL,
+    ENV_MINIO_ACCESS_KEY, ENV_MINIO_BUCKET_NAME, ENV_MINIO_BUCKET_REGION, ENV_MINIO_HOST_URL,
+    ENV_MINIO_ROOT_PASSWORD, ENV_MINIO_ROOT_USER, ENV_MINIO_SECRET_KEY, ENV_REDIS_HOSTNAME,
+    ENV_REDIS_IS_TLS, ENV_REDIS_PORT, ENV_WEB_APP_HOST, ENV_WEB_APP_MODE_TLS, ENV_WEB_APP_PORT,
+    ENV_WEB_APP_PORT_SSL,
 };
 use std::sync::Arc;
 
@@ -21,6 +23,11 @@ pub struct Config {
     pub web_app_host: Arc<str>,
     pub web_app_mode_tls: Arc<bool>,
     pub web_app_environment: Arc<str>,
+    pub minio_bucket_name: Arc<str>,
+    pub minio_access_key: Arc<str>,
+    pub minio_secret_key: Arc<str>,
+    pub minio_host_url: Arc<str>,
+    pub minio_bucket_region: Arc<str>,
 }
 
 impl Config {
@@ -78,6 +85,21 @@ impl Config {
         let web_app_environment = std::env::var(ENV_ENVIRONMENT)
             .unwrap_or("PROD".to_string())
             .into();
+        let minio_bucket_name = std::env::var(ENV_MINIO_BUCKET_NAME)
+            .expect("ENV MINIO_BUCKET_NAME must be set")
+            .into();
+        let minio_access_key = std::env::var(ENV_MINIO_ACCESS_KEY)
+            .expect("ENV MINIO_ACCESS_KEY must be set")
+            .into();
+        let minio_secret_key = std::env::var(ENV_MINIO_SECRET_KEY)
+            .expect("ENV MINIO_SECRET_KEY must be set")
+            .into();
+        let minio_host_url = std::env::var(ENV_MINIO_HOST_URL)
+            .expect("ENV MINIO_HOST_URL must be set")
+            .into();
+        let minio_bucket_region = std::env::var(ENV_MINIO_BUCKET_REGION)
+            .unwrap_or("".to_string())
+            .into();
 
         Config {
             database_url,
@@ -92,6 +114,11 @@ impl Config {
             web_app_host,
             web_app_mode_tls,
             web_app_environment,
+            minio_bucket_name,
+            minio_access_key,
+            minio_secret_key,
+            minio_host_url,
+            minio_bucket_region,
         }
     }
 }

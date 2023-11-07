@@ -15,6 +15,18 @@ services:
     links:
       - redis
       - db
+  minio:
+    image: minio/minio:latest
+    restart: always
+    container_name: metaversitas-cloud-storage
+    volumes:
+      - metaversitas-cloud-storage:/data
+    env_file:
+      - ./.env
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9090:9090"
+    command: server /data --console-address ":9090"
   db:
     image: postgres:15
     restart: always
@@ -42,4 +54,6 @@ volumes:
   metaversitas-volume:
     driver: local
   metaversitas-redis-volume:
+    driver: local
+  metaversitas-cloud-storage:
     driver: local
