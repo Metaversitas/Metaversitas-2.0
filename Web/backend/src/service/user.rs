@@ -1,9 +1,11 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{new_session, AuthToken, COOKIE_AUTH_NAME};
 use crate::helpers::errors::user::UserServiceError;
-use crate::model::user::{ProfileUserData, RegisteredUser, User, UserGender, UserRole};
+use crate::model::user::{
+    ProfileUserData, RegisteredUser, UpdateParamsUserIdentity, User, UserGender, UserRole,
+};
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
-use crate::r#const::{ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
+use crate::r#const::{PgTransaction, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 use crate::service::object_storage::ObjectStorage;
 use anyhow::anyhow;
 use argon2::password_hash::SaltString;
@@ -11,6 +13,7 @@ use argon2::{Argon2, PasswordHash};
 use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
 use redis::{AsyncCommands, JsonAsyncCommands};
+use sqlx::{Postgres, QueryBuilder};
 use std::sync::Arc;
 
 pub struct UserService {
@@ -275,11 +278,16 @@ impl UserService {
             .await
             .map_err(|_| UserServiceError::DatabaseConnectionError)?;
 
-            let signed_url = self.object_storage.bucket_presigned_get_url(query.photo_url.as_str(), None).await.map_err(|err| {
-                UserServiceError::UnexpectedError(anyhow!("Unable to get presigned bucket url, with an error: {}", err.to_string()))
-            })?;
-
-            let trimmed_url = signed_url.splitn(4, '/').collect::<Vec<&str>>();
+            let signed_url = self
+                .object_storage
+                .bucket_presigned_get_url(query.photo_url.as_str(), None)
+                .await
+                .map_err(|err| {
+                    UserServiceError::UnexpectedError(anyhow!(
+                        "Unable to get presigned bucket url, with an error: {}",
+                        err.to_string()
+                    ))
+                })?;
 
             let data = ProfileUserData {
                 user_id: query.user_id.to_string(),
@@ -291,7 +299,7 @@ impl UserService {
                 user_university_id: query.user_university_id as u64,
                 user_univ_role: query.user_univ_role,
                 gender: query.gender,
-                profile_image_url: format!("{}", trimmed_url.get(3).unwrap_or(&"/")),
+                profile_image_url: signed_url,
             };
 
             let profile_user_id = format!("profile:{}", &user_id);
@@ -318,6 +326,78 @@ impl UserService {
         } else {
             Err(UserServiceError::UnableToParse)
         }
+    }
+
+    pub async fn update_user_identity(
+        &self,
+        transaction: &mut PgTransaction,
+        user_id: &str,
+        params: &UpdateParamsUserIdentity,
+    ) -> Result<(), UserServiceError> {
+        let mut count = 0;
+        let mut _curr_count = 0;
+
+        if params.photo_url.is_some() {
+            count += 1;
+        }
+        if params.full_name.is_some() {
+            count += 1;
+        }
+        if params.gender.is_some() {
+            count += 1;
+        }
+
+        if count == 0 {
+            return Err(UserServiceError::UnexpectedError(anyhow!(
+                "No value to be changed"
+            )));
+        }
+
+        let mut query_builder = QueryBuilder::<Postgres>::new(r#"update users_identity set "#);
+
+        if let Some(photo_url) = &params.photo_url {
+            query_builder.push("photo_url = ");
+            query_builder.push_bind(photo_url);
+
+            if count > 1 && _curr_count != count - 1 {
+                query_builder.push(", ");
+                _curr_count += 1;
+            }
+        }
+
+        if let Some(full_name) = &params.full_name {
+            query_builder.push("full_name = ");
+            query_builder.push_bind(full_name);
+
+            if count > 1 && _curr_count != count - 1 {
+                query_builder.push(", ");
+                _curr_count += 1;
+            }
+        }
+
+        if let Some(gender) = &params.gender {
+            query_builder.push("gender = ");
+            query_builder.push_bind(gender);
+
+            if count > 1 && _curr_count != count - 1 {
+                query_builder.push(", ");
+                _curr_count += 1;
+            }
+        }
+
+        query_builder.push(" where users_id::text = ");
+        query_builder.push_bind(user_id);
+
+        let query = query_builder.build();
+
+        query.execute(&mut **transaction).await.map_err(|err| {
+            UserServiceError::UnexpectedError(anyhow!(
+                "Unable to execute query to database, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+
+        Ok(())
     }
 }
 
