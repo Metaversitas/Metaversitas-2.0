@@ -46,7 +46,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user\": {\r\n        \"email\": \"mahasiswa@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
+							"raw": "{\r\n    \"user\": {\r\n        \"email\": \"dosen@dikti.go.id\",\r\n        \"password\": \"Test12345678!⏳\"\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -147,6 +147,43 @@
 							"path": [
 								"user",
 								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change User Photo Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "",
+									"description": "Upload file",
+									"type": "file",
+									"src": "/Users/weebz/Downloads/user_default.png"
+								},
+								{
+									"key": "",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{host}}/user/profile/changeUserImage",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"user",
+								"profile",
+								"changeUserImage"
 							]
 						}
 					},
