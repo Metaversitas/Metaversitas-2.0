@@ -86,7 +86,12 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
         Arc::clone(&user_service),
     )
     .await;
-    let user_router = user_router(Arc::clone(&app_state), Arc::clone(&user_service)).await;
+    let user_router = user_router(
+        Arc::clone(&app_state),
+        Arc::clone(&user_service),
+        Arc::clone(&object_storage_service),
+    )
+    .await;
     let classroom_router = classroom_router(
         Arc::clone(&app_state),
         Arc::clone(&classroom_service),

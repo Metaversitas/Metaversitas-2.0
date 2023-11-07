@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 
-const DEFAULT_PRESIGNED_URL_EXPIRATION: Lazy<chrono::Duration> =
+static DEFAULT_PRESIGNED_URL_EXPIRATION: Lazy<chrono::Duration> =
     Lazy::new(|| chrono::Duration::hours(1));
 
 pub struct ObjectStorage {
@@ -21,7 +21,8 @@ impl ObjectStorage {
         path_to_object: &str,
         expiration: Option<i32>,
     ) -> Result<String, ObjectStorageError> {
-        let url = self.app_state
+        let url = self
+            .app_state
             .bucket
             .presign_get(
                 path_to_object,
@@ -30,14 +31,14 @@ impl ObjectStorage {
                         DEFAULT_PRESIGNED_URL_EXPIRATION
                             .num_seconds()
                             .try_into()
-                            .map_err(|err| {
+                            .map_err(|_| {
                                 ObjectStorageError::UnexpectedError(anyhow!(
                                     "Unable to convert default url expiration into i32"
                                 ))
                             })?,
                     )
                     .try_into()
-                    .map_err(|err| {
+                    .map_err(|_| {
                         ObjectStorageError::UnexpectedError(anyhow!(
                             "Unable to convert expiration into u32"
                         ))

@@ -81,9 +81,10 @@ impl IntoResponse for AuthError {
                 .into_response(),
             AuthError::Other(error) => {
                 tracing::error!("Got an error: {}", error.to_string());
+                let err_msg = error.to_string();
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(json!({"message": "Internal Server Error"})),
+                    Json(json!({"message": err_msg})),
                 )
                     .into_response()
             }

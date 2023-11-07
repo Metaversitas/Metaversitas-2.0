@@ -193,3 +193,10 @@ pub struct AuthDataPhoton {
     pub user_univ_role: UserUniversityRole,
     pub gender: UserGender,
 }
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct UpdateParamsUserIdentity {
+    pub full_name: Option<String>,
+    pub gender: Option<UserGender>,
+    pub photo_url: Option<String>,
+}
