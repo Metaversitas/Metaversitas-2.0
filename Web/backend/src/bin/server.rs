@@ -5,6 +5,8 @@ use axum_server::tls_rustls::RustlsConfig;
 use dotenvy::dotenv;
 use metaversitas::backend::{AppState, Backend};
 use metaversitas::config::Config;
+use s3::creds::Credentials;
+use s3::{Bucket, Region};
 use sqlx::postgres::PgPoolOptions;
 use std::net::SocketAddr;
 use std::str::FromStr;
@@ -43,7 +45,27 @@ async fn main() -> Result<()> {
         redis_uri_scheme, &config.redis_host_name, &config.redis_port
     );
     let redis_client = redis::Client::open(redis_conn_url).unwrap();
-    let redis_connection_manager = redis_client.get_tokio_connection_manager().await.expect("Can't create Redis connection manager");
+    let redis_connection_manager = redis_client
+        .get_tokio_connection_manager()
+        .await
+        .expect("Can't create Redis connection manager");
+
+    let minio_bucket = Bucket::new(
+        config.minio_bucket_name.as_ref(),
+        Region::Custom {
+            region: config.minio_bucket_region.to_string(),
+            endpoint: config.minio_host_url.to_string(),
+        },
+        Credentials::new(
+            Some(config.minio_access_key.as_ref()),
+            Some(config.minio_secret_key.as_ref()),
+            None,
+            None,
+            None,
+        )?,
+    )
+    .expect("Unable to create a S3 Bucket")
+    .with_path_style();
 
     let ssl_config = RustlsConfig::from_pem_file(
         std::env::current_dir()
@@ -58,11 +80,12 @@ async fn main() -> Result<()> {
     .await
     .unwrap();
 
-    // sqlx::migrate!("./migrations/").run(&db_pool).await?;
+    sqlx::migrate!("./migrations/").run(&db_pool).await?;
     let app_state = Arc::new(AppState {
         redis: redis_connection_manager,
         database: db_pool,
         config,
+        bucket: minio_bucket,
     });
     let server_backend = Backend {
         socket_address: socket,

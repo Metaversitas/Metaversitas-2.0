@@ -254,25 +254,30 @@ impl ClassroomService {
                     .create_class_meeting(transaction, class_id.as_str(), meeting)
                     .await?;
                 if first_class_meeting {
-                    self.update_classes(transaction, class_id.as_str(), &UpdateClassroomParams {
-                        class_name: None,
-                        semester: None,
-                        year_start: None,
-                        year_end: None,
-                        capacity: None,
-                        description: None,
-                        is_active: None,
-                        current_meeting_id: Some(meeting_id.to_owned()),
-                        subjects: None,
-                        meetings: None,
-                        exams: None,
-                        start_time: None,
-                        end_time: None,
-                        subject_id: None,
-                        subject_name: None,
-                        students: None,
-                        teachers: None,
-                    }).await?;
+                    self.update_classes(
+                        transaction,
+                        class_id.as_str(),
+                        &UpdateClassroomParams {
+                            class_name: None,
+                            semester: None,
+                            year_start: None,
+                            year_end: None,
+                            capacity: None,
+                            description: None,
+                            is_active: None,
+                            current_meeting_id: Some(meeting_id.to_owned()),
+                            subjects: None,
+                            meetings: None,
+                            exams: None,
+                            start_time: None,
+                            end_time: None,
+                            subject_id: None,
+                            subject_name: None,
+                            students: None,
+                            teachers: None,
+                        },
+                    )
+                    .await?;
                     first_class_meeting = false;
                 }
                 let class_meeting = self

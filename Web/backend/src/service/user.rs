@@ -3,6 +3,8 @@ use crate::helpers::authentication::{new_session, AuthToken, COOKIE_AUTH_NAME};
 use crate::helpers::errors::user::UserServiceError;
 use crate::model::user::{ProfileUserData, RegisteredUser, User, UserGender, UserRole};
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
+use crate::r#const::{ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
+use crate::service::object_storage::ObjectStorage;
 use anyhow::anyhow;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash};
@@ -10,17 +12,20 @@ use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
 use redis::{AsyncCommands, JsonAsyncCommands};
 use std::sync::Arc;
-use crate::r#const::{ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 
 pub struct UserService {
     app_state: Arc<AppState>,
+    object_storage: Arc<ObjectStorage>,
 }
 
 const DEFAULT_TIME_CACHE_EXIST: time::Duration = time::Duration::minutes(30);
 
 impl UserService {
-    pub fn new(app_state: Arc<AppState>) -> Self {
-        Self { app_state }
+    pub fn new(app_state: Arc<AppState>, object_storage: Arc<ObjectStorage>) -> Self {
+        Self {
+            app_state,
+            object_storage,
+        }
     }
 
     pub async fn login(&self, email: &str, password: &str) -> Result<CookieJar, UserServiceError> {
@@ -109,10 +114,7 @@ impl UserService {
         session_token: &str,
         cookie_jar: CookieJar,
     ) -> Result<CookieJar, UserServiceError> {
-        let mut redis_conn = self
-            .app_state
-            .redis
-        .clone();
+        let mut redis_conn = self.app_state.redis.clone();
 
         let result = redis_conn
             .get::<String, redis::Value>(session_token.to_owned())
@@ -149,30 +151,36 @@ impl UserService {
                 .into_cookie_value();
         let cookie_auth_token = {
             let cookie = Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", jwt_auth_token))
-            .path("/")
-            .secure(true)
-            .max_age(time::Duration::minutes(5))
-            .http_only(true);
-                if self.app_state.config.web_app_environment.contains(ENV_ENVIRONMENT_PRODUCTION) {
-                    cookie.same_site(SameSite::Strict).finish()
-                } else if self.app_state.config.web_app_environment.contains(ENV_ENVIRONMENT_DEVELOPMENT) {
-                    cookie.same_site(SameSite::None).finish()
-                } else {
-                    cookie.same_site(SameSite::Strict).finish()
-                }
+                .path("/")
+                .secure(true)
+                .max_age(time::Duration::minutes(5))
+                .http_only(true);
+            if self
+                .app_state
+                .config
+                .web_app_environment
+                .contains(ENV_ENVIRONMENT_PRODUCTION)
+            {
+                cookie.same_site(SameSite::Strict).finish()
+            } else if self
+                .app_state
+                .config
+                .web_app_environment
+                .contains(ENV_ENVIRONMENT_DEVELOPMENT)
+            {
+                cookie.same_site(SameSite::None).finish()
+            } else {
+                cookie.same_site(SameSite::Strict).finish()
+            }
         };
-        let cookie_jar = cookie_jar.add(
-            cookie_auth_token
-        );
+        let cookie_jar = cookie_jar.add(cookie_auth_token);
 
         Ok(cookie_jar)
     }
 
     pub async fn get_user_data(&self, user_id: &str) -> Result<User, UserServiceError> {
         let user_data_key = format!("user_data:{}", &user_id);
-        let mut redis_conn = self
-            .app_state
-            .redis.clone();
+        let mut redis_conn = self.app_state.redis.clone();
         let is_exists = redis_conn
             .exists::<String, usize>(user_data_key.to_owned())
             .await
@@ -227,9 +235,7 @@ impl UserService {
     }
 
     pub async fn get_profile(&self, user_id: &str) -> Result<ProfileUserData, UserServiceError> {
-        let mut redis_conn = self
-            .app_state
-            .redis.clone();
+        let mut redis_conn = self.app_state.redis.clone();
         let is_exists = redis_conn
             .exists::<String, usize>(format!("profile:{}", &user_id))
             .await
@@ -253,6 +259,7 @@ impl UserService {
             users.nickname as in_game_nickname,
             identity.full_name as full_name,
             identity.gender as "gender!: UserGender",
+            identity.photo_url as "photo_url!",
             university.name as university_name,
             university_faculty.faculty_name as faculty_name,
             university_faculty.faculty_id as faculty_id,
@@ -268,6 +275,12 @@ impl UserService {
             .await
             .map_err(|_| UserServiceError::DatabaseConnectionError)?;
 
+            let signed_url = self.object_storage.bucket_presigned_get_url(query.photo_url.as_str(), None).await.map_err(|err| {
+                UserServiceError::UnexpectedError(anyhow!("Unable to get presigned bucket url, with an error: {}", err.to_string()))
+            })?;
+
+            let trimmed_url = signed_url.splitn(4, '/').collect::<Vec<&str>>();
+
             let data = ProfileUserData {
                 user_id: query.user_id.to_string(),
                 in_game_nickname: query.in_game_nickname.to_owned(),
@@ -278,6 +291,7 @@ impl UserService {
                 user_university_id: query.user_university_id as u64,
                 user_univ_role: query.user_univ_role,
                 gender: query.gender,
+                profile_image_url: format!("{}", trimmed_url.get(3).unwrap_or(&"/")),
             };
 
             let profile_user_id = format!("profile:{}", &user_id);

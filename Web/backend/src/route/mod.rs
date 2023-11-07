@@ -10,6 +10,7 @@ use crate::r#const::{ENV_ENVIRONMENT, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONME
 use crate::service::classroom::ClassroomService;
 use crate::service::exam::ExamService;
 use crate::service::game::GameService;
+use crate::service::object_storage::ObjectStorage;
 use crate::service::question::QuestionService;
 use crate::service::student::StudentService;
 use crate::service::subject::SubjectService;
@@ -62,7 +63,11 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
         .concurrency_limit(1000);
 
     let game_service = Arc::new(GameService::new(Arc::clone(&app_state)));
-    let user_service = Arc::new(UserService::new(Arc::clone(&app_state)));
+    let object_storage_service = Arc::new(ObjectStorage::new(Arc::clone(&app_state)));
+    let user_service = Arc::new(UserService::new(
+        Arc::clone(&app_state),
+        Arc::clone(&object_storage_service),
+    ));
     let subject_service = Arc::new(SubjectService::new());
     let exam_service = Arc::new(ExamService::new());
     let teacher_service = Arc::new(TeacherService::new());

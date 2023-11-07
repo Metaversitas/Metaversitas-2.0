@@ -37,3 +37,4 @@ parking_lot = "0.12.1"
 once_cell = "1.18.0"
 axum-server = { version = "0.5.1", features = ["tls-rustls"] }
 garde = { version = "0.15.0", features = ["email"] }
+rust-s3 = { version = "0.33.0", features = ["tokio-rustls-tls"] }

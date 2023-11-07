@@ -2,6 +2,7 @@ pub mod answer;
 pub mod auth;
 pub mod classroom;
 pub mod exam;
+pub mod object_storage;
 pub mod question;
 pub mod student;
 pub mod subject;
