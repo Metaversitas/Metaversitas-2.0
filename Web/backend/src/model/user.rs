@@ -6,7 +6,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 
-#[derive(Debug, Serialize, Deserialize, Type, FromRedisValue, ToRedisArgs)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type, FromRedisValue, ToRedisArgs)]
 #[sqlx(type_name = "user_role")]
 #[sqlx(rename_all = "lowercase")]
 pub enum UserRole {
@@ -199,4 +199,20 @@ pub struct UpdateParamsUserIdentity {
     pub full_name: Option<String>,
     pub gender: Option<UserGender>,
     pub photo_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct UpdateParamsUserData {
+    pub email: Option<String>,
+    pub password_hash: Option<String>,
+    pub nickname: Option<String>,
+    pub is_verified: Option<bool>,
+    pub role: Option<UserRole>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct UpdateUserPasswordParams {
+    pub current_password: String,
+    pub new_password: String,
+    pub confirm_new_password: String,
 }

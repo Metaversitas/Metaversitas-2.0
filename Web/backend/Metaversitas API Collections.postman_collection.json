@@ -188,6 +188,34 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "User Change Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"current_password\": \"asdasdasd\",\n    \"new_password\": \"asdasdasdas\",\n    \"confirm_new_password\": \"asdasdasdas\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{host}}/user/changePassword",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"user",
+								"changePassword"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
