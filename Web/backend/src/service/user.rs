@@ -1,9 +1,7 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{new_session, AuthToken, COOKIE_AUTH_NAME};
 use crate::helpers::errors::user::UserServiceError;
-use crate::model::user::{
-    ProfileUserData, RegisteredUser, UpdateParamsUserIdentity, User, UserGender, UserRole,
-};
+use crate::model::user::{ProfileUserData, RegisteredUser, UpdateParamsUserData, UpdateParamsUserIdentity, User, UserGender, UserRole};
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
 use crate::r#const::{PgTransaction, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 use crate::service::object_storage::ObjectStorage;
@@ -194,7 +192,15 @@ impl UserService {
         if is_exists == 0 {
             let query = sqlx::query!(
                 r#"
-            select users.role as "role!: UserRole"
+            select
+                users.role as "role!: UserRole",
+                users.user_id::text as "user_id!",
+                users.email::text as "email!",
+                users.password_hash,
+                users.created_at,
+                users.updated_at,
+                users.nickname,
+                users.is_verified
             from users
             where users.user_id::text = $1
             "#,
@@ -205,14 +211,14 @@ impl UserService {
             .map_err(|_| UserServiceError::DatabaseConnectionError)?;
 
             let data = User {
-                id: None,
+                id: Some(query.user_id),
                 role: Some(query.role),
-                email: None,
-                password_hash: None,
-                nickname: None,
-                verified: None,
-                created_at: None,
-                updated_at: None,
+                email: Some(query.email),
+                password_hash: Some(query.password_hash),
+                nickname: Some(query.nickname),
+                verified: Some(query.is_verified),
+                created_at: Some(query.created_at),
+                updated_at: Some(query.updated_at),
             };
 
             let _ = redis_conn
@@ -395,6 +401,95 @@ impl UserService {
                 "Unable to execute query to database, with an error: {}",
                 err.to_string()
             ))
+        })?;
+
+        Ok(())
+    }
+
+    pub async fn update_user_data(&self, transaction: &mut PgTransaction, user_id: &str, params: &UpdateParamsUserData) -> Result<(), UserServiceError> {
+        let mut count = 0;
+        let mut _curr_count = 0;
+
+        if params.email.is_some() {
+            count += 1;
+        }
+        if params.password_hash.is_some() {
+            count += 1;
+        }
+        if params.is_verified.is_some() {
+            count += 1;
+        }
+        if params.nickname.is_some() {
+            count += 1;
+        }
+        if params.role.is_some() {
+            count += 1;
+        }
+
+        if count == 0 {
+           return Err(UserServiceError::UnexpectedError(anyhow!("No value to be updated")));
+        }
+
+        let mut query_builder = QueryBuilder::<Postgres>::new(r#"update users set "#);
+
+
+        if let Some(email) = &params.email {
+            query_builder.push("email = ");
+            query_builder.push_bind(email);
+
+            if count > 1 && _curr_count != count - 1 {
+                query_builder.push(", ");
+                _curr_count += 1;
+            }
+        }
+
+        if let Some(password_hash) = &params.password_hash {
+            query_builder.push("password_hash = ");
+            query_builder.push_bind(password_hash);
+
+            if count > 1 && _curr_count != count - 1 {
+                query_builder.push(", ");
+                _curr_count += 1;
+            }
+        }
+
+        if let Some(nickname) = &params.nickname {
+            query_builder.push("nickname = ");
+            query_builder.push_bind(nickname);
+
+            if count > 1 && _curr_count != count - 1 {
+                query_builder.push(", ");
+                _curr_count += 1;
+            }
+        }
+
+        if let Some(is_verified) = &params.is_verified {
+            query_builder.push("is_verified = ");
+            query_builder.push_bind(is_verified);
+
+            if count > 1 && _curr_count != count - 1 {
+                query_builder.push(", ");
+                _curr_count += 1;
+            }
+        }
+
+        if let Some(role) = &params.role {
+            query_builder.push("role = ");
+            query_builder.push_bind(role);
+
+            if count > 1 && _curr_count != count - 1 {
+                query_builder.push(", ");
+                _curr_count += 1;
+            }
+        }
+
+        query_builder.push(" where user_id::text = ");
+        query_builder.push_bind(user_id);
+
+
+        let query = query_builder.build();
+        query.execute(&mut **transaction).await.map_err(|err| {
+            UserServiceError::UnexpectedError(anyhow!("Unable to execute update user, with an error: {}", err.to_string()))
         })?;
 
         Ok(())
