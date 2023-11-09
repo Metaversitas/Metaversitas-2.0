@@ -15,14 +15,10 @@ public class TeleportMap : NetworkBehaviour
     Vector3 TP1Location;
     Vector3 TP2Location;
 
-    [SerializeField] private App _app;
-
-    Player thisPlayer;
 
     // Start is called before the first frame update
     void Start()
     {
-        InitializePlayer();
         TP1Location = TP1.transform.position;
         TP2Location = TP2.transform.position;
     }
@@ -40,14 +36,9 @@ public class TeleportMap : NetworkBehaviour
         }
     }
 
-    void InitializePlayer()
-    {
-        _app = App.FindInstance();
-        thisPlayer = _app.GetPlayer();
-    }
     void TeleportOurPlayer(Vector3 tpLocation)
     {
-        thisPlayer.transform.position = tpLocation;
+        Object.transform.position = tpLocation;
         Debug.Log(tpLocation + "Teleported");
     }
 }
