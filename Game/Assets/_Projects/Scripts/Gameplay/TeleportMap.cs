@@ -14,11 +14,14 @@ public class TeleportMap : NetworkBehaviour
 
     Vector3 TP1Location;
     Vector3 TP2Location;
+    public Player player;
+    public Character character;
 
 
     // Start is called before the first frame update
     void Start()
     {
+        player = FindAnyObjectByType<Player>();
         TP1Location = TP1.transform.position;
         TP2Location = TP2.transform.position;
     }
@@ -26,6 +29,10 @@ public class TeleportMap : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (character == null)
+        {
+            character = player.GetCharacter();
+        }
         if (Input.GetKeyDown("1"))
         {
             TeleportOurPlayer(TP1Location);

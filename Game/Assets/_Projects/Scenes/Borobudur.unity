@@ -4260,7 +4260,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3830240990975714032, guid: 5c1ffb3cab7812447831154465474105, type: 3}
       propertyPath: introVideos.Array.size
-      value: 3
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 3830240990975714032, guid: 5c1ffb3cab7812447831154465474105, type: 3}
       propertyPath: videoPlayers.Array.size
@@ -4280,6 +4280,14 @@ PrefabInstance:
       objectReference: {fileID: 32900000, guid: 6a2368981e901f9459c6b5ed423454be, type: 3}
     - target: {fileID: 3830240990975714032, guid: 5c1ffb3cab7812447831154465474105, type: 3}
       propertyPath: introVideos.Array.data[2]
+      value: 
+      objectReference: {fileID: 32900000, guid: e5d3476f0f80bb345910f4c9991ae2b0, type: 3}
+    - target: {fileID: 3830240990975714032, guid: 5c1ffb3cab7812447831154465474105, type: 3}
+      propertyPath: introVideos.Array.data[3]
+      value: 
+      objectReference: {fileID: 32900000, guid: e5d3476f0f80bb345910f4c9991ae2b0, type: 3}
+    - target: {fileID: 3830240990975714032, guid: 5c1ffb3cab7812447831154465474105, type: 3}
+      propertyPath: introVideos.Array.data[4]
       value: 
       objectReference: {fileID: 32900000, guid: e5d3476f0f80bb345910f4c9991ae2b0, type: 3}
     - target: {fileID: 3830240990975714032, guid: 5c1ffb3cab7812447831154465474105, type: 3}
