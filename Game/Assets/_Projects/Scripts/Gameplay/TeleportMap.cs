@@ -18,6 +18,9 @@ public class TeleportMap : NetworkBehaviour
     public Player player;
     public Character character;
 
+    [SerializeField] public Button button1;
+    [SerializeField] public Button button2;
+
 
     // Start is called before the first frame update
     void Start()
@@ -25,6 +28,8 @@ public class TeleportMap : NetworkBehaviour
         player = FindAnyObjectByType<Player>();
         TP1Location = TP1.transform.position;
         TP2Location = TP2.transform.position;
+        button1.onClick.AddListener(TeleportButton1Clicked);
+        button2.onClick.AddListener(TeleportButton2Clicked);
     }
 
     // Update is called once per frame
@@ -34,23 +39,30 @@ public class TeleportMap : NetworkBehaviour
         {
             character = player.GetCharacter();
         }
-        RPC_TeleportOurPlayer();
-        
+    }
+
+    void TeleportButton1Clicked()
+    {
+        // Call the RPC_TeleportOurPlayer1 method when button1 is clicked
+        RPC_TeleportOurPlayer1();
+    }
+    void TeleportButton2Clicked()
+    {
+        // Call the RPC_TeleportOurPlayer1 method when button1 is clicked
+        RPC_TeleportOurPlayer2();
     }
 
     [Rpc]
-    void RPC_TeleportOurPlayer()
+    void RPC_TeleportOurPlayer1()
     {
-        if (Input.GetKeyDown("1"))
-        {
-            TeleportOurPlayer(TP1Location);
-        }
-        else if (Input.GetKeyDown("2"))
-        {
-            TeleportOurPlayer(TP2Location);
-        }
-        
+        TeleportOurPlayer(TP1Location);
     }
+    [Rpc]
+    void RPC_TeleportOurPlayer2()
+    {
+        TeleportOurPlayer(TP2Location);
+    }
+
 
     void TeleportOurPlayer(Vector3 tpLocation)
     {
