@@ -14,6 +14,7 @@ public class TeleportMap : NetworkBehaviour
 
     Vector3 TP1Location;
     Vector3 TP2Location;
+
     public Player player;
     public Character character;
 
@@ -33,6 +34,13 @@ public class TeleportMap : NetworkBehaviour
         {
             character = player.GetCharacter();
         }
+        RPC_TeleportOurPlayer();
+        
+    }
+
+    [Rpc]
+    void RPC_TeleportOurPlayer()
+    {
         if (Input.GetKeyDown("1"))
         {
             TeleportOurPlayer(TP1Location);
@@ -41,11 +49,12 @@ public class TeleportMap : NetworkBehaviour
         {
             TeleportOurPlayer(TP2Location);
         }
+        
     }
 
     void TeleportOurPlayer(Vector3 tpLocation)
     {
-        Object.transform.position = tpLocation;
+        character.transform.position = tpLocation;
         Debug.Log(tpLocation + "Teleported");
     }
 }
