@@ -370,6 +370,46 @@ impl ExamService {
         // "#, exam_id).fetch_all();
         todo!();
     }
+
+    pub async fn get_exams_by_subject_id(
+        &self,
+        transaction: &mut PgTransaction,
+        subject_id: &str,
+    ) -> Result<Vec<Exam>, ExamServiceError> {
+        let query = sqlx::query!(r#"
+        select
+            exam_subject.subject_id, exam_subject.secondary_subject_id,
+            exams.exam_id::text as "exam_id!: String", exams.name as exam_name, description, created_by::text as "created_by!: String", created_at, updated_at, exams.type as "exam_type!: ExamType",
+            s.name as subject_name,
+            ss.name as subject_secondary_name
+        from exam_subject
+        inner join exams on exam_subject.exam_id = exams.exam_id
+        inner join subjects s on exam_subject.subject_id = s.subject_id
+        left join subject_secondary ss on exam_subject.secondary_subject_id = ss.secondary_subject_id
+        where exam_subject.subject_id::text = $1
+        "#, subject_id)
+        .fetch_all(&mut **transaction)
+        .await
+        .map_err(|err| {
+           ExamServiceError::UnexpectedError(anyhow!("Unable to get list of exam by subject_id, with an error: {}", err.to_string()))
+        })?;
+
+        let mut exams = vec![];
+
+        for tmp_exam in query {
+            exams.push(Exam {
+                exam_id: tmp_exam.exam_id,
+                r#type: tmp_exam.exam_type,
+                exam_name: tmp_exam.exam_name,
+                description: tmp_exam.description,
+                created_by: tmp_exam.created_by,
+                created_at: Some(tmp_exam.created_at),
+                updated_at: Some(tmp_exam.updated_at),
+            })
+        }
+
+        Ok(exams)
+    }
 }
 
 impl Default for ExamService {

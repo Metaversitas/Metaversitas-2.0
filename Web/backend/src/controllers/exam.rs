@@ -2,13 +2,13 @@ use crate::backend::AppState;
 use crate::helpers::errors::auth::AuthError;
 use crate::helpers::errors::exam::ExamControllerError;
 use crate::helpers::extractor::AuthenticatedUserWithRole;
-use crate::model::exam::{CreateExamParams, UpdateExamParams};
+use crate::model::exam::{CreateExamParams, Exam, QueryParamsExam, UpdateExamParams};
 use crate::model::user::{UserRole, UserUniversityRole};
 use crate::service::exam::ExamService;
 use crate::service::user::UserService;
 use anyhow::anyhow;
 use axum::extract::rejection::JsonRejection;
-use axum::extract::{FromRef, Path, State};
+use axum::extract::{FromRef, Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
@@ -89,29 +89,50 @@ pub async fn get_exam_with_id(
 pub async fn get_available_exams(
     State(app_state): State<Arc<AppState>>,
     State(exam_service): State<Arc<ExamService>>,
+    params: Option<Query<QueryParamsExam>>,
     is_auth_user: Result<AuthenticatedUserWithRole, AuthError>,
 ) -> Result<Response, ExamControllerError> {
     let _auth_user = is_auth_user?;
+    let Query(params) = params.unwrap_or_default();
 
     let mut transaction = app_state.database.begin().await.map_err(|_| {
         tracing::error!("Failed to acquire a Postgres Connection from the pool");
         ExamControllerError::Unknown
     })?;
 
-    let exam = exam_service
-        .get_available_exams(&mut transaction)
-        .await
-        .map_err(|err| {
-            let error_msg = err.to_string();
-            tracing::error!("Got an error while getting exams, err: {}", error_msg);
+    let exam: Vec<Exam>;
 
-            if error_msg.contains("Not found") {
-                return ExamControllerError::ErrorWithMessage(anyhow!(
-                    "Not found any available exam",
-                ));
-            }
-            ExamControllerError::Unknown
-        })?;
+    if let Some(subject_id) = params.subject_id {
+        exam = exam_service
+            .get_exams_by_subject_id(&mut transaction, subject_id.as_str())
+            .await
+            .map_err(|err| {
+                let error_msg = err.to_string();
+                tracing::error!("Got an error while getting exams, err: {}", error_msg);
+
+                if error_msg.contains("Not found") {
+                    return ExamControllerError::ErrorWithMessage(anyhow!(
+                        "Not found any available exam",
+                    ));
+                }
+                ExamControllerError::Unknown
+            })?;
+    } else {
+        exam = exam_service
+            .get_available_exams(&mut transaction)
+            .await
+            .map_err(|err| {
+                let error_msg = err.to_string();
+                tracing::error!("Got an error while getting exams, err: {}", error_msg);
+
+                if error_msg.contains("Not found") {
+                    return ExamControllerError::ErrorWithMessage(anyhow!(
+                        "Not found any available exam",
+                    ));
+                }
+                ExamControllerError::Unknown
+            })?;
+    }
 
     let response = json!({"data": exam});
 

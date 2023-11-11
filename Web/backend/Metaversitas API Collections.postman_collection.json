@@ -677,6 +677,32 @@
 					"response": []
 				},
 				{
+					"name": "Get Available Exams",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host}}/exam",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"exam"
+							],
+							"query": [
+								{
+									"key": "subject_id",
+									"value": "d24a4a07-9576-48dd-ad6b-daad5fe05058",
+									"description": "Optional",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Delete an exam",
 					"request": {
 						"method": "DELETE",
@@ -749,6 +775,29 @@
 							"path": [
 								"exam",
 								"{{exam_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subject",
+			"item": [
+				{
+					"name": "Get All of Subject",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{host}}/subject",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"subject"
 							]
 						}
 					},

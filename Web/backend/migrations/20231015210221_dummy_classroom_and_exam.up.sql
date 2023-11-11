@@ -7,6 +7,10 @@ INSERT INTO public.student_schedule (schedule_id, student_id, start_time, end_ti
 INSERT INTO public.subjects (subject_id, name) VALUES ('282f8c86-1432-4e8f-8f3c-a49bedf931dd', 'Mathematics');
 INSERT INTO public.subjects (subject_id, name) VALUES ('d24a4a07-9576-48dd-ad6b-daad5fe05058', 'Physics');
 
+INSERT INTO public.subject_secondary (secondary_subject_id, subject_id, name) VALUES ('a4e0510e-19f2-4c6b-81a6-5ac5c209b207', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', 'Ayunan Matematis');
+INSERT INTO public.subject_secondary (secondary_subject_id, subject_id, name) VALUES ('385e658f-61df-4ddd-af1c-e7c3c5355d00', 'd24a4a07-9576-48dd-ad6b-daad5fe05058', 'Archimedes');
+
+
 INSERT INTO public.teachers (teacher_id, user_id) VALUES ('ac0b6326-0ee3-4acb-bc17-a2f43a5e74ae', 'c3f04a30-38ac-474d-b7da-8fb889495d75');
 
 INSERT INTO public.classes (class_id, is_active, name, description, capacity, current_meeting_id, have_multiple_meeting, semester, year_start, year_end, created_by, start_time, end_time) VALUES ('06e5c7ac-801e-457d-a576-94e34c3b12cd', true, 'Test class #1', 'Lorem ipsum dolor sit amet', 40, null, true, 'even', '2023-01-01', '2024-01-01', 'c3f04a30-38ac-474d-b7da-8fb889495d75', null, null);

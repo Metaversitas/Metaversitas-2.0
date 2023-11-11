@@ -1,7 +1,10 @@
 use crate::backend::AppState;
 use crate::helpers::authentication::{new_session, AuthToken, COOKIE_AUTH_NAME};
 use crate::helpers::errors::user::UserServiceError;
-use crate::model::user::{ProfileUserData, RegisteredUser, UpdateParamsUserData, UpdateParamsUserIdentity, User, UserGender, UserRole};
+use crate::model::user::{
+    ProfileUserData, RegisteredUser, UpdateParamsUserData, UpdateParamsUserIdentity, User,
+    UserGender, UserRole,
+};
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
 use crate::r#const::{PgTransaction, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 use crate::service::object_storage::ObjectStorage;
@@ -406,7 +409,12 @@ impl UserService {
         Ok(())
     }
 
-    pub async fn update_user_data(&self, transaction: &mut PgTransaction, user_id: &str, params: &UpdateParamsUserData) -> Result<(), UserServiceError> {
+    pub async fn update_user_data(
+        &self,
+        transaction: &mut PgTransaction,
+        user_id: &str,
+        params: &UpdateParamsUserData,
+    ) -> Result<(), UserServiceError> {
         let mut count = 0;
         let mut _curr_count = 0;
 
@@ -427,11 +435,12 @@ impl UserService {
         }
 
         if count == 0 {
-           return Err(UserServiceError::UnexpectedError(anyhow!("No value to be updated")));
+            return Err(UserServiceError::UnexpectedError(anyhow!(
+                "No value to be updated"
+            )));
         }
 
         let mut query_builder = QueryBuilder::<Postgres>::new(r#"update users set "#);
-
 
         if let Some(email) = &params.email {
             query_builder.push("email = ");
@@ -486,10 +495,12 @@ impl UserService {
         query_builder.push(" where user_id::text = ");
         query_builder.push_bind(user_id);
 
-
         let query = query_builder.build();
         query.execute(&mut **transaction).await.map_err(|err| {
-            UserServiceError::UnexpectedError(anyhow!("Unable to execute update user, with an error: {}", err.to_string()))
+            UserServiceError::UnexpectedError(anyhow!(
+                "Unable to execute update user, with an error: {}",
+                err.to_string()
+            ))
         })?;
 
         Ok(())

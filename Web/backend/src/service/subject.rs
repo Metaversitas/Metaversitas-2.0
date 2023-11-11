@@ -1,7 +1,8 @@
 use crate::helpers::errors::subject::SubjectServiceError;
-use crate::model::subject::{SecondarySubject, Subject};
+use crate::model::subject::{SecondarySubject, Subject, SubjectWithSecondaryList};
 use crate::r#const::PgTransaction;
 use anyhow::anyhow;
+use std::collections::HashMap;
 use std::str::FromStr;
 use uuid::Uuid;
 
@@ -41,6 +42,75 @@ impl SubjectService {
             subject_id: query.subject_id.to_string(),
             subject_name: query.name,
         })
+    }
+
+    pub async fn get_all_subject_with_secondary(
+        &self,
+        transaction: &mut PgTransaction,
+    ) -> Result<Vec<SubjectWithSecondaryList>, SubjectServiceError> {
+        let query = sqlx::query!(
+            r#"
+            select
+                subjects.subject_id as "subject_id!",
+                subjects.name as "subject_name!",
+                subject_secondary.secondary_subject_id as "subject_secondary_id?",
+                subject_secondary.name as "subject_secondary_name?"
+            from subjects
+            left join subject_secondary on subjects.subject_id = subject_secondary.subject_id;
+        "#
+        )
+        .fetch_all(&mut **transaction)
+        .await
+        .map_err(|err| {
+            SubjectServiceError::UnexpectedError(anyhow!(
+                "Unable to get all subject from database, with an error: {}",
+                err.to_string()
+            ))
+        })?;
+
+        let mut subjects: Vec<SubjectWithSecondaryList> = vec![];
+        let mut subject_map: HashMap<Subject, Vec<SecondarySubject>> = HashMap::new();
+
+        for subject in query {
+            let tmp_subject = Subject {
+                subject_id: subject.subject_id.to_string(),
+                subject_name: subject.subject_name,
+            };
+
+            if let Some(list_secondary_subject) = subject_map.get_mut(&tmp_subject) {
+                if let Some(subject_secondary_id) = subject.subject_secondary_id {
+                    if let Some(subject_secondary_name) = subject.subject_secondary_name {
+                        list_secondary_subject.push(SecondarySubject {
+                            secondary_subject_id: subject_secondary_id.to_string(),
+                            secondary_subject_name: subject_secondary_name,
+                            subject_id: subject.subject_id.to_string(),
+                        })
+                    }
+                }
+            } else {
+                let mut list_secondary_subject = vec![];
+                if let Some(subject_secondary_id) = subject.subject_secondary_id {
+                    if let Some(subject_secondary_name) = subject.subject_secondary_name {
+                        list_secondary_subject.push(SecondarySubject {
+                            secondary_subject_id: subject_secondary_id.to_string(),
+                            secondary_subject_name: subject_secondary_name,
+                            subject_id: subject.subject_id.to_string(),
+                        })
+                    }
+                }
+                subject_map.insert(tmp_subject, list_secondary_subject);
+            }
+        }
+
+        for (subject, secondary_list) in subject_map {
+            subjects.push(SubjectWithSecondaryList {
+                subject_id: subject.subject_id,
+                subject_name: subject.subject_name,
+                secondary_subjects: Some(secondary_list),
+            })
+        }
+
+        Ok(subjects)
     }
 
     pub async fn delete_subject_by_id(

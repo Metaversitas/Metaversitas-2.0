@@ -83,7 +83,6 @@ pub async fn get_available_classes(
         let Query(params) = params.unwrap_or_default();
         params
     };
-    dbg!(&params);
 
     // 2. get available classes
 
@@ -382,6 +381,12 @@ pub async fn create_classes(
     if year_start.year() < current_year {
         return Err(ClassroomControllerError::Other(anyhow!(
             "year_start is lower than current date"
+        )));
+    }
+
+    if year_end.year() - year_start.year() == 1 {
+        return Err(ClassroomControllerError::Other(anyhow!(
+            "year_start and year_end gap is not equal 1 year"
         )));
     }
 
