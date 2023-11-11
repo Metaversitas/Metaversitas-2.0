@@ -10,8 +10,6 @@ public class TeleportMap : NetworkBehaviour
     public GameObject TP1;
     public GameObject TP2;
 
-    public GameObject Object;
-
     Vector3 TP1Location;
     Vector3 TP2Location;
 
@@ -44,23 +42,12 @@ public class TeleportMap : NetworkBehaviour
     void TeleportButton1Clicked()
     {
         // Call the RPC_TeleportOurPlayer1 method when button1 is clicked
-        RPC_TeleportOurPlayer1();
+        character.RPC_TeleportOurPlayer(TP1Location);
     }
     void TeleportButton2Clicked()
     {
         // Call the RPC_TeleportOurPlayer1 method when button1 is clicked
-        RPC_TeleportOurPlayer2();
-    }
-
-    [Rpc]
-    void RPC_TeleportOurPlayer1()
-    {
-        TeleportOurPlayer(TP1Location);
-    }
-    [Rpc]
-    void RPC_TeleportOurPlayer2()
-    {
-        TeleportOurPlayer(TP2Location);
+        character.RPC_TeleportOurPlayer(TP2Location);
     }
 
 
