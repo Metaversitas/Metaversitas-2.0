@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            exam_subject.subject_id, exam_subject.secondary_subject_id,\n            exams.exam_id::text as \"exam_id!: String\", exams.name as exam_name, description, created_by::text as \"created_by!: String\", created_at, updated_at, exams.type as \"exam_type!: ExamType\",\n            s.name as subject_name,\n            ss.name as subject_secondary_name\n        from exam_subject\n        inner join exams on exam_subject.exam_id = exams.exam_id\n        inner join subjects s on exam_subject.subject_id = s.subject_id\n        left join subject_secondary ss on exam_subject.secondary_subject_id = ss.secondary_subject_id\n        where exam_subject.subject_id::text = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "subject_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "secondary_subject_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "exam_id!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "exam_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_by!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "exam_type!: ExamType",
+        "type_info": {
+          "Custom": {
+            "name": "exam_type",
+            "kind": {
+              "Enum": [
+                "upload",
+                "default"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "subject_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "subject_secondary_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      null,
+      false,
+      true,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "82653f497e2312f2ad951ca7ffbc4a5af405f706448a6beabc756064d7d4e9a2"
+}

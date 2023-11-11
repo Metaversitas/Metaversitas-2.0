@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            select\n                subjects.subject_id as \"subject_id!\",\n                subjects.name as \"subject_name!\",\n                subject_secondary.secondary_subject_id as \"subject_secondary_id?\",\n                subject_secondary.name as \"subject_secondary_name?\"\n            from subjects\n            left join subject_secondary on subjects.subject_id = subject_secondary.subject_id;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "subject_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "subject_name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "subject_secondary_id?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "subject_secondary_name?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "12a8fcfe30b4daab3299f578019bd7dce35fb5099e143504f898f8aacc2c8fb7"
+}
