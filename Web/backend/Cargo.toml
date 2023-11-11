@@ -39,3 +39,4 @@ axum-server = { version = "0.5.1", features = ["tls-rustls"] }
 garde = { version = "0.15.0", features = ["email"] }
 rust-s3 = { version = "0.33.0", features = ["tokio-rustls-tls"] }
 byte-unit = "4.0.19"
+openssl = { version = "0.10.59", features = ["vendored"] }
