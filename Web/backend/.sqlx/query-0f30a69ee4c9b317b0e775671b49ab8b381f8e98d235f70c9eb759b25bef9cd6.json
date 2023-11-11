@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            select\n                users.role as \"role!: UserRole\",\n                users.user_id::text as \"user_id!\",\n                users.email::text as \"email!\",\n                users.password_hash,\n                users.created_at,\n                users.updated_at,\n                users.nickname,\n                users.is_verified\n            from users\n            where users.user_id::text = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "role!: UserRole",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "email!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "password_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "nickname",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "is_verified",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0f30a69ee4c9b317b0e775671b49ab8b381f8e98d235f70c9eb759b25bef9cd6"
+}
