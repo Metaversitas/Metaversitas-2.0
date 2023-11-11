@@ -137,7 +137,7 @@ pub async fn new_session(
             .web_app_environment
             .contains(ENV_ENVIRONMENT_DEVELOPMENT)
         {
-            cookie.same_site(SameSite::None).finish()
+            cookie.same_site(SameSite::None).domain("").finish()
         } else {
             cookie.same_site(SameSite::Strict).finish()
         }
@@ -157,7 +157,7 @@ pub async fn new_session(
             .web_app_environment
             .contains(ENV_ENVIRONMENT_DEVELOPMENT)
         {
-            cookie.same_site(SameSite::None).finish()
+            cookie.same_site(SameSite::None).domain("").finish()
         } else {
             cookie.same_site(SameSite::Strict).finish()
         }
@@ -256,7 +256,7 @@ pub async fn check_session(
                 .web_app_environment
                 .contains(ENV_ENVIRONMENT_DEVELOPMENT)
             {
-                cookie.same_site(SameSite::None).finish()
+                cookie.same_site(SameSite::None).domain("").finish()
             } else {
                 cookie.same_site(SameSite::Strict).finish()
             }

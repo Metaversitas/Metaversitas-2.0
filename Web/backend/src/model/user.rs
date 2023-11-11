@@ -168,6 +168,7 @@ pub struct ProfileUserData {
     pub user_univ_role: UserUniversityRole,
     pub gender: UserGender,
     pub profile_image_url: String,
+    pub user_role: UserRole,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

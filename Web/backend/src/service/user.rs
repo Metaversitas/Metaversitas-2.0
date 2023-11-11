@@ -172,7 +172,7 @@ impl UserService {
                 .web_app_environment
                 .contains(ENV_ENVIRONMENT_DEVELOPMENT)
             {
-                cookie.same_site(SameSite::None).finish()
+                cookie.same_site(SameSite::None).domain("").finish()
             } else {
                 cookie.same_site(SameSite::Strict).finish()
             }
@@ -269,6 +269,8 @@ impl UserService {
         select
             users.user_id as user_id,
             users.nickname as in_game_nickname,
+            users.is_verified,
+            users.role as "role!: UserRole",
             identity.full_name as full_name,
             identity.gender as "gender!: UserGender",
             identity.photo_url as "photo_url!",
@@ -309,6 +311,7 @@ impl UserService {
                 user_univ_role: query.user_univ_role,
                 gender: query.gender,
                 profile_image_url: signed_url,
+                user_role: query.role,
             };
 
             let profile_user_id = format!("profile:{}", &user_id);
