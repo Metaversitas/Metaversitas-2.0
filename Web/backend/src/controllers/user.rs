@@ -1,11 +1,14 @@
 use crate::backend::AppState;
 use crate::helpers::errors::auth::AuthError;
 use crate::helpers::extractor::AuthenticatedUser;
-use crate::model::user::{ProfileResponse, UpdateParamsUserData, UpdateParamsUserIdentity, UpdateUserPasswordParams};
+use crate::model::user::{
+    ProfileResponse, UpdateParamsUserData, UpdateParamsUserIdentity, UpdateUserPasswordParams,
+};
 use crate::service::object_storage::ObjectStorage;
-use crate::service::user::{hash_password, UserService, verify_password};
+use crate::service::user::{hash_password, verify_password, UserService};
 use anyhow::anyhow;
 use axum::extract::multipart::MultipartRejection;
+use axum::extract::rejection::JsonRejection;
 use axum::extract::{FromRef, Multipart, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -15,7 +18,6 @@ use byte_unit::Byte;
 use once_cell::sync::Lazy;
 use serde_json::json;
 use std::sync::Arc;
-use axum::extract::rejection::JsonRejection;
 
 #[derive(Clone, FromRef)]
 pub struct UserServiceRouter {
@@ -68,9 +70,7 @@ async fn change_password(
 ) -> Result<Response, AuthError> {
     let auth_user = is_auth_user?;
     let payload = {
-      let Json(payload) = payload.map_err(|err| {
-         AuthError::JsonExtractorRejection(err)
-      })?;
+        let Json(payload) = payload?;
         payload
     };
 
@@ -79,17 +79,28 @@ async fn change_password(
         AuthError::Unknown
     })?;
 
-    let user = user_service.get_user_data(auth_user.user_id.as_str()).await.map_err(|err| {
-       tracing::error!("Unable to get user data, with an error: {}", err.to_string());
-        AuthError::Unknown
-    })?;
+    let user = user_service
+        .get_user_data(auth_user.user_id.as_str())
+        .await
+        .map_err(|err| {
+            tracing::error!(
+                "Unable to get user data, with an error: {}",
+                err.to_string()
+            );
+            AuthError::Unknown
+        })?;
 
-    verify_password(payload.current_password, user.password_hash.ok_or(AuthError::Other(anyhow!("Unable to get password hash from user data")))?).await.map_err(|_| {
-        AuthError::Other(anyhow!("Unable to failed password"))
-    })?;
+    verify_password(
+        payload.current_password,
+        user.password_hash.ok_or(AuthError::Other(anyhow!(
+            "Unable to get password hash from user data"
+        )))?,
+    )
+    .await
+    .map_err(|_| AuthError::Other(anyhow!("Unable to failed password")))?;
 
     if payload.new_password != payload.confirm_new_password {
-        return Err(AuthError::Other(anyhow!("New password is not the same.")))
+        return Err(AuthError::Other(anyhow!("New password is not the same.")));
     }
 
     let new_password_hashed = hash_password(payload.new_password).await.map_err(|_| {
@@ -97,16 +108,26 @@ async fn change_password(
         AuthError::Unknown
     })?;
 
-    user_service.update_user_data(&mut transaction, auth_user.user_id.as_str(), &UpdateParamsUserData {
-        email: None,
-        password_hash: Some(new_password_hashed),
-        nickname: None,
-        is_verified: None,
-        role: None,
-    }).await.map_err(|err| {
-       tracing::error!("Unable to update user data with an error: {}", err.to_string());
-        AuthError::Unknown
-    })?;
+    user_service
+        .update_user_data(
+            &mut transaction,
+            auth_user.user_id.as_str(),
+            &UpdateParamsUserData {
+                email: None,
+                password_hash: Some(new_password_hashed),
+                nickname: None,
+                is_verified: None,
+                role: None,
+            },
+        )
+        .await
+        .map_err(|err| {
+            tracing::error!(
+                "Unable to update user data with an error: {}",
+                err.to_string()
+            );
+            AuthError::Unknown
+        })?;
 
     transaction.commit().await.map_err(|err| {
         tracing::error!(
@@ -143,7 +164,7 @@ async fn change_image_user_profile(
         AuthError::Unknown
     })?;
 
-    if let Some(file) =  files.next_field().await.map_err(|err| {
+    if let Some(file) = files.next_field().await.map_err(|err| {
         AuthError::Other(anyhow!(
             "Error when upload, with an error: {}",
             err.to_string()

@@ -5,6 +5,7 @@ use crate::controllers::exam::{exam_router, EXAM_CONTROLLER_PATH};
 use crate::controllers::health::{health_checker, HEALTH_PATH_CONTROLLER};
 use crate::controllers::homepage::{homepage, HOMEPAGE_PATH_CONTROLLER};
 use crate::controllers::question::{question_router, QUESTION_ROUTER_PATH};
+use crate::controllers::subject::{subject_router, SUBJECT_PATH_CONTROLLER};
 use crate::controllers::user::{user_router, USER_PATH_CONTROLLER};
 use crate::r#const::{ENV_ENVIRONMENT, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 use crate::service::classroom::ClassroomService;
@@ -113,6 +114,7 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
         Arc::clone(&exam_service),
     )
     .await;
+    let subject_router = subject_router(Arc::clone(&app_state), Arc::clone(&subject_service)).await;
 
     Router::new()
         .nest(AUTH_PATH_CONTROLLER, auth_router)
@@ -120,6 +122,7 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
         .nest(CLASSROOM_PATH_CONTROLLER, classroom_router)
         .nest(QUESTION_ROUTER_PATH, question_router)
         .nest(EXAM_CONTROLLER_PATH, exam_router)
+        .nest(SUBJECT_PATH_CONTROLLER, subject_router)
         .route(HEALTH_PATH_CONTROLLER, get(health_checker))
         .route(HOMEPAGE_PATH_CONTROLLER, get(homepage))
         .layer(service_builder)
