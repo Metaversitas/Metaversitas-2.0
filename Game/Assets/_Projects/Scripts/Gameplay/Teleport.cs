@@ -40,5 +40,6 @@ public class Teleport : MonoBehaviour
         {
             Close();
         }
+        Debug.Log(_playerStateManager.CurrentGameState);
     }
 }
