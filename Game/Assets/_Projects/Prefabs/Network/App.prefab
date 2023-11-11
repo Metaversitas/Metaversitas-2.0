@@ -1070,4 +1070,5 @@ MonoBehaviour:
     RoomPertemuan: 
   networkRunnerPrefab: {fileID: 3866670711834171497, guid: 64ee52ea8662e5442a03d27e618a7787, type: 3}
   FpsCamera: {fileID: 0}
+  LocalCharacter: {fileID: 0}
   userManager: {fileID: 0}

@@ -43,7 +43,11 @@ public class Character : NetworkBehaviour
     public override void Spawned()
 	{
         app = App.FindInstance();
-		UserData  userData;
+        if (Object.HasInputAuthority)
+        {
+            app.LocalCharacter = this;
+        }
+        UserData  userData;
 		UserGender userGender;
 		UserUniversityRole role;
         try
