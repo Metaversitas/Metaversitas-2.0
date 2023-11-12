@@ -1,8 +1,8 @@
 import React from 'react'
-import { Badge, Card, Col, Row } from 'antd'
+import { Badge, Button, Card, Col, Row, Typography } from 'antd'
 import Link from 'next/link'
-import Text from '@/components/typography/text'
-import Title from '@/components/typography/title'
+
+const { Title, Text } = Typography
 
 type TClass = {
   subject: string
@@ -10,8 +10,9 @@ type TClass = {
   lecturer: string
   classId: string
   isEnroll: boolean
+  pta: string
 }
-const Class = ({ subject, topic, lecturer, classId, isEnroll }: TClass) => {
+const Class = ({ subject, topic, lecturer, classId, isEnroll, pta }: TClass) => {
   return (
     <Card>
       <Row gutter={[0, 16]}>
@@ -25,14 +26,22 @@ const Class = ({ subject, topic, lecturer, classId, isEnroll }: TClass) => {
           <Row align={'bottom'} justify={'space-between'}>
             <Col>
               <Text style={{ fontSize: 14 }} strong>
-                {lecturer}
+                Dosen: {lecturer}
               </Text>
               <Text type={'secondary'} style={{ fontSize: 14 }}>
-                PTA 2022/2023
+                PTA {pta}
               </Text>
             </Col>
             <Col>
-              <Link href={`/classroom/${classId}`}>{isEnroll ? 'Enroll' : 'Lihat'}</Link>
+              <Link
+                href={`/dashboard/classroom/${classId}`}
+                // href={{
+                //   pathname: '/dashboard/classroom',
+                //   query: { classId }
+                // }}
+              >
+                <Button>{isEnroll ? 'Enroll' : 'Lihat'}</Button>
+              </Link>
             </Col>
           </Row>
         </Col>
