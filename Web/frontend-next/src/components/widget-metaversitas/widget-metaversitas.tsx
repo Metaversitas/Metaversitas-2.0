@@ -1,16 +1,29 @@
 import React from 'react'
-import { Button, Col, Row, Space } from 'antd'
+import { Button, Col, Row, Space, Typography } from 'antd'
 import Link from 'next/link'
-import Title from '@/components/typography/title'
-import Text from '@/components/typography/text'
+import Image from 'next/image'
+import Widget from '../../../public/image/Asset 4@4x.png'
 import LandingPageContent from '@/components/landing-page/landing-page-content'
 
+const { Title, Text } = Typography
 const WidgetMetaversitas = () => {
   return (
     <LandingPageContent>
-      <Row align={'middle'} gutter={56} justify={'center'}>
+      <Row align={'middle'} gutter={[56, 24]} justify={'center'}>
         <Col md={24} lg={10}>
-          <div style={{ background: '#f0f0f0', height: 330 }} />
+          <Row justify={{ md: 'center', lg: 'end' }}>
+            <Col>
+              <Image
+                src={Widget}
+                alt={'widget'}
+                style={{
+                  maxWidth: 380,
+                  width: '100%',
+                  height: 'auto'
+                }}
+              />
+            </Col>
+          </Row>
         </Col>
         <Col md={24} lg={10}>
           <Space size={24} direction={'vertical'}>

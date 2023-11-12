@@ -1,7 +1,5 @@
-import axiosInstance from '@/lib/axios-instance'
+import fetchInstance from '@/lib/fetch-instance'
 
 export const getAvailableClasses = async () => {
-  const res = await axiosInstance('/classroom')
-
-  return res.data
+  return await fetchInstance('/classroom')
 }
