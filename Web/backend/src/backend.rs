@@ -15,9 +15,10 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::signal;
+use redis::aio::ConnectionManager;
 
 pub struct AppState {
-    pub redis: redis::Client,
+    pub redis: ConnectionManager,
     pub database: Pool<Postgres>,
     pub config: Config,
 }

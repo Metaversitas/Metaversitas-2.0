@@ -1,7 +1,7 @@
+use crate::model::question::Question;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::Type;
-use crate::model::question::Question;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]

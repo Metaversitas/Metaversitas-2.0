@@ -10,6 +10,7 @@ use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
 use redis::{AsyncCommands, JsonAsyncCommands};
 use std::sync::Arc;
+use crate::r#const::{ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 
 pub struct UserService {
     app_state: Arc<AppState>,
@@ -111,12 +112,7 @@ impl UserService {
         let mut redis_conn = self
             .app_state
             .redis
-            .get_async_connection()
-            .await
-            .map_err(|_| {
-                tracing::error!("Can't get connection into redis");
-                UserServiceError::RedisConnectionError
-            })?;
+        .clone();
 
         let result = redis_conn
             .get::<String, redis::Value>(session_token.to_owned())
@@ -151,14 +147,22 @@ impl UserService {
             AuthToken::new(jwt_claims, self.app_state.config.jwt_secret.to_string())
                 .map_err(|_| UserServiceError::UnableCreateSession)?
                 .into_cookie_value();
+        let cookie_auth_token = {
+            let cookie = Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", jwt_auth_token))
+            .path("/")
+            .secure(true)
+            .max_age(time::Duration::minutes(5))
+            .http_only(true);
+                if self.app_state.config.web_app_environment.contains(ENV_ENVIRONMENT_PRODUCTION) {
+                    cookie.same_site(SameSite::Strict).finish()
+                } else if self.app_state.config.web_app_environment.contains(ENV_ENVIRONMENT_DEVELOPMENT) {
+                    cookie.same_site(SameSite::None).finish()
+                } else {
+                    cookie.same_site(SameSite::Strict).finish()
+                }
+        };
         let cookie_jar = cookie_jar.add(
-            Cookie::build(COOKIE_AUTH_NAME, format!("Bearer {}", jwt_auth_token))
-                .path("/")
-                .secure(true)
-                .same_site(SameSite::Lax)
-                .max_age(time::Duration::minutes(5))
-                .http_only(true)
-                .finish(),
+            cookie_auth_token
         );
 
         Ok(cookie_jar)
@@ -168,10 +172,7 @@ impl UserService {
         let user_data_key = format!("user_data:{}", &user_id);
         let mut redis_conn = self
             .app_state
-            .redis
-            .get_async_connection()
-            .await
-            .map_err(|_| UserServiceError::RedisConnectionError)?;
+            .redis.clone();
         let is_exists = redis_conn
             .exists::<String, usize>(user_data_key.to_owned())
             .await
@@ -228,10 +229,7 @@ impl UserService {
     pub async fn get_profile(&self, user_id: &str) -> Result<ProfileUserData, UserServiceError> {
         let mut redis_conn = self
             .app_state
-            .redis
-            .get_async_connection()
-            .await
-            .map_err(|_| UserServiceError::RedisConnectionError)?;
+            .redis.clone();
         let is_exists = redis_conn
             .exists::<String, usize>(format!("profile:{}", &user_id))
             .await

@@ -1,13 +1,11 @@
-use crate::model::exam::{CreateExamParams, Exam, UpdateExamParams};
+use crate::model::exam::{CreateExamParams, UpdateExamParams};
 use crate::model::student::Student;
-use crate::model::subject::{Subject, SubjectWithSecondary};
+use crate::model::subject::SubjectWithSecondary;
 use crate::model::teacher::Teacher;
 use chrono::{DateTime, Utc};
 use redis_macros::FromRedisValue;
-use serde::de::{MapAccess, Visitor};
-use serde::{de, Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 use sqlx::Type;
-use std::collections::HashMap;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Type, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -43,10 +41,13 @@ pub struct Classroom {
     pub start_time: Option<DateTime<Utc>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub end_time: Option<DateTime<Utc>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_enrolled: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TeacherClassroom {
+    #[serde(skip)]
     pub class_id: String,
     pub teacher_id: String,
     pub teacher_name: String,
@@ -82,8 +83,10 @@ pub struct CreateClassroomParams {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ClassMeeting {
     pub meeting_id: String,
+    #[serde(skip_serializing)]
     pub class_id: String,
     pub meeting_number: i64,
+    pub is_active: bool,
     pub meeting_name: String,
     pub topic_description: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -94,6 +97,26 @@ pub struct ClassMeeting {
     pub end_time: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "lowercase")]
+#[serde(tag = "upcoming_type")]
+pub enum UpcomingScheduledMeetingOrClass {
+    Class(Classroom),
+    Meeting(ClassMeeting),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UpcomingScheduled {
+    pub class_id: String,
+    pub class_name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub teachers: Option<Vec<TeacherClassroom>>,
+    #[serde(flatten)]
+    pub subject: SubjectWithSecondary,
+    #[serde(flatten)]
+    pub upcoming: UpcomingScheduledMeetingOrClass,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -177,6 +200,7 @@ pub enum ParamsActionUpdateClassMeeting {
         update_meeting_id: String,
         update_meeting_number: Option<i64>,
         update_meeting_name: Option<String>,
+        update_is_active: Option<bool>,
         update_topic_description: Option<String>,
         update_description: Option<String>,
         update_start_time: Option<DateTime<Utc>>,
@@ -212,6 +236,7 @@ pub enum ActionTypeUpdateClassroom {
 pub struct UpdateClassMeetingParams {
     pub meeting_id: String,
     pub meeting_number: Option<i64>,
+    pub is_active: Option<bool>,
     pub meeting_name: Option<String>,
     pub topic_description: Option<String>,
     pub description: Option<String>,
@@ -253,4 +278,43 @@ pub struct DeleteClassroomParams {
 pub struct UpdateClassSubjectParams {
     pub subject_id: Option<String>,
     pub secondary_subject_id: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum QueryParamsClassMode {
+    AvailableClass,
+    CreatedClass,
+    EnrolledClass,
+    UpcomingScheduledClass,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum QuerySemesterFilterClass {
+    Odd,
+    Even,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct QueryFilter {
+    pub semester_filter: Option<QuerySemesterFilterClass>,
+    pub subject_name_filter: Option<String>,
+    pub subject_id_filter: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct QueryPagination {
+    pub offset: Option<usize>,
+    pub limit: Option<usize>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct QueryParamsClasses {
+    #[serde(flatten)]
+    pub pagination: Option<QueryPagination>,
+    pub mode: Option<QueryParamsClassMode>,
+    pub search: Option<String>,
+    #[serde(flatten)]
+    pub filter: Option<QueryFilter>,
 }
