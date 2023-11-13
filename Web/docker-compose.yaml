@@ -1,0 +1,96 @@
+version: "3"
+services:
+  nginx:
+    depends_on:
+      - minio
+      - webapp_backend
+    build:
+      context: nginx/
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    links:
+      - webapp_backend
+      - minio
+  webapp_backend:
+    depends_on:
+      - db
+      - redis
+      - minio
+    ports:
+      - "127.0.0.1:8888:8888"
+      - "127.0.0.1:8889:8889"
+    environment:
+      - WEB_APP_PORT_SSL=${WEB_APP_PORT_SSL}
+      - WEB_APP_PORT=${WEB_APP_PORT}
+      - WEB_APP_HOST=${WEB_APP_HOST}
+      - WEB_APP_TLS_MODE=${WEB_APP_TLS_MODE}
+      - API_SECRET=${API_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRED_IN=${JWT_EXPIRED_IN}
+      - JWT_MAX_AGE=${JWT_MAX_AGE}
+      - REDIS_IS_TLS=${REDIS_IS_TLS}
+      - REDIS_HOSTNAME=${REDIS_HOSTNAME}
+      - REDIS_PORT=${REDIS_PORT}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - RUST_LOG=${RUST_LOG}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+      - MINIO_HOST_URL=${MINIO_HOST_URL}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET_REGION=${MINIO_BUCKET_REGION}
+    build:
+      context: backend/
+      dockerfile: Dockerfile
+    links:
+      - redis
+      - db
+      - minio
+  minio:
+    image: minio/minio:latest
+    restart: always
+    container_name: metaversitas-cloud-storage
+    volumes:
+      - metaversitas-cloud-storage:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9090:9090"
+    command: server /data --console-address ":9090"
+  db:
+    image: postgres:15
+    restart: always
+    container_name: metaversitas-db-postgres
+    volumes:
+      - metaversitas-volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - PGUSER=${PGUSER}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d metaversitas -u admin"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:5432:5432"
+  redis:
+    image: redis/redis-stack-server:latest
+    restart: always
+    container_name: metaversitas-redis
+    volumes:
+      - metaversitas-redis-volume:/data/
+    ports:
+      - "127.0.0.1:6379:6379"
+volumes:
+  metaversitas-volume:
+    driver: local
+  metaversitas-redis-volume:
+    driver: local
+  metaversitas-cloud-storage:
+    driver: local
