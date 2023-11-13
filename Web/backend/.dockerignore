@@ -1,3 +1,7 @@
 /target
 .git
 .gitignore
+.env*
+.flaskenv*
+!.env.project
+!.env.vault

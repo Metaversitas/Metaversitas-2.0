@@ -23,5 +23,3 @@ COPY --from=builder /backend/certs/ /app/backend/certs
 WORKDIR /app/backend/
 CMD ["chmod", "+x", "/app/backend/server"]
 CMD ["/app/backend/server"]
-EXPOSE 443
-EXPOSE 80
