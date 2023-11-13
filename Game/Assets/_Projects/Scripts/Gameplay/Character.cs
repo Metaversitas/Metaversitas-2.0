@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using Metaversitas.User;
 using TMPro;
 using System;
+using UnityEngine.TextCore.Text;
 
 /// <summary>
 /// Visual representation of a Player - the Character is instantiated by the map once it's loaded.
@@ -43,7 +44,11 @@ public class Character : NetworkBehaviour
     public override void Spawned()
 	{
         app = App.FindInstance();
-		UserData  userData;
+        if (Object.HasInputAuthority)
+        {
+            app.LocalCharacter = this;
+        }
+        UserData  userData;
 		UserGender userGender;
 		UserUniversityRole role;
         try
@@ -107,7 +112,18 @@ public class Character : NetworkBehaviour
 		_interaction.Player = player;
     }
 
-    public void LateUpdate()
+	[Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+	public void RPC_TeleportOurPlayer(Vector3 tpLocation)
+    {
+		TeleportOurPlayer(tpLocation);
+    }
+
+    public void TeleportOurPlayer(Vector3 tpLocation)
+    {
+        transform.position = tpLocation;
+        Debug.Log(tpLocation + "Teleported");
+    }
+        public void LateUpdate()
 	{
 		// This is a little brute-force, but it gets the job done.
 		// Could use an OnChanged listener on the properties instead.

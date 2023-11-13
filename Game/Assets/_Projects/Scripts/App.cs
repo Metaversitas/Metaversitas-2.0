@@ -63,6 +63,7 @@ public class App : MonoBehaviour, INetworkRunnerCallbacks
     private PlayerInputAction _playerInputAction;
     private AuthenticationValues _authenticationValues;
     public FPSCamera FpsCamera;
+    public Character LocalCharacter;
     
     [FormerlySerializedAs("_userManager")]
     [Space(10)]
