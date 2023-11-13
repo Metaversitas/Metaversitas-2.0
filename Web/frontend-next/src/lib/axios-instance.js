@@ -2,7 +2,8 @@ import axios from 'axios'
 import { getRefreshToken } from '@/lib/auth'
 
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BASE_URL
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+  withCredentials: true
 })
 
 axiosInstance.interceptors.request.use(

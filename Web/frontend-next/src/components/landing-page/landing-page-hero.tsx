@@ -1,13 +1,15 @@
 import React from 'react'
-import { Col, Row } from 'antd'
+import { Col, Flex, Row } from 'antd'
+import Image from 'next/image'
+import HeroImage from '../../../public/image/Asset 2_1@4x.png'
 import LandingPageContent from '@/components/landing-page/landing-page-content'
 import Text from '@/components/typography/text'
 
 const LandingPageHero = () => {
   return (
     <LandingPageContent>
-      <Row gutter={24} justify={'space-between'}>
-        <Col md={24} lg={12}>
+      <Row gutter={[24, 24]} justify={'space-between'}>
+        <Col xs={{ order: 2, span: 24 }} md={24} lg={{ order: 1, span: 12 }}>
           <Row align={'middle'} style={{ height: '100%' }}>
             <Col flex={'auto'}>
               <Text style={{ fontSize: 32, fontWeight: 700 }}>
@@ -24,8 +26,18 @@ const LandingPageHero = () => {
             </Col>
           </Row>
         </Col>
-        <Col md={24} lg={12} flex={'auto'}>
-          <div style={{ height: 700, background: '#f0f0f0' }} />
+        <Col xs={{ order: 1, span: 24 }} md={24} lg={{ order: 2, span: 12 }} flex={'auto'}>
+          <Flex justify={'center'}>
+            <Image
+              src={HeroImage}
+              alt={'hero'}
+              style={{
+                maxWidth: 587,
+                width: '100%',
+                height: 'auto'
+              }}
+            />
+          </Flex>
         </Col>
       </Row>
     </LandingPageContent>

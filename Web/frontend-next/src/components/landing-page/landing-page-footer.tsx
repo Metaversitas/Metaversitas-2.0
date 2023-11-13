@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { cloneElement, ReactElement } from 'react'
 import { Col, Row, Space } from 'antd'
 import Image from 'next/image'
 import Text from '@/components/typography/text'
@@ -72,7 +72,9 @@ const LandingPageFooter = () => {
                 <Text strong>Navigation</Text>
                 <Space direction={'vertical'} size={16}>
                   {navLandingPage.map((nav) => (
-                    <div key={nav.key}>{nav.label}</div>
+                    <div key={nav.key}>
+                      {cloneElement(nav.label as ReactElement, { style: { color: '#000' } })}
+                    </div>
                   ))}
                 </Space>
               </Space>
