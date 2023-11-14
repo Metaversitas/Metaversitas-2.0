@@ -49,11 +49,4 @@ public class TeleportMap : NetworkBehaviour
         // Call the RPC_TeleportOurPlayer1 method when button1 is clicked
         character.RPC_TeleportOurPlayer(TP2Location);
     }
-
-
-    void TeleportOurPlayer(Vector3 tpLocation)
-    {
-        character.transform.position = tpLocation;
-        Debug.Log(tpLocation + "Teleported");
-    }
 }
