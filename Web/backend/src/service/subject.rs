@@ -1,7 +1,7 @@
 use crate::helpers::errors::subject::SubjectServiceError;
 use crate::model::subject::{SecondarySubject, Subject, SubjectWithSecondaryList};
-use crate::r#const::PgTransaction;
 use anyhow::anyhow;
+use sqlx::PgConnection;
 use std::collections::HashMap;
 use std::str::FromStr;
 use uuid::Uuid;
@@ -15,7 +15,7 @@ impl SubjectService {
 
     pub async fn get_subject_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         subject_id: &str,
     ) -> Result<Subject, SubjectServiceError> {
         let query = sqlx::query!(
@@ -33,7 +33,7 @@ impl SubjectService {
                 )
             })?
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?
         .ok_or(anyhow!("Subject isn't exists!"))?;
@@ -46,7 +46,7 @@ impl SubjectService {
 
     pub async fn get_all_subject_with_secondary(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
     ) -> Result<Vec<SubjectWithSecondaryList>, SubjectServiceError> {
         let query = sqlx::query!(
             r#"
@@ -59,7 +59,7 @@ impl SubjectService {
             left join subject_secondary on subjects.subject_id = subject_secondary.subject_id;
         "#
         )
-        .fetch_all(&mut **transaction)
+        .fetch_all(&mut *conn)
         .await
         .map_err(|err| {
             SubjectServiceError::UnexpectedError(anyhow!(
@@ -115,7 +115,7 @@ impl SubjectService {
 
     pub async fn delete_subject_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         subject_id: &str,
     ) -> Result<(), SubjectServiceError> {
         sqlx::query!(
@@ -131,7 +131,7 @@ impl SubjectService {
                 )
             })?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
 
@@ -140,15 +140,11 @@ impl SubjectService {
 
     pub async fn create_subject(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         subject_name: &str,
     ) -> Result<Subject, SubjectServiceError> {
         //Check if it is exists
-        if self
-            .get_subject_by_name(&mut *transaction, subject_name)
-            .await
-            .is_ok()
-        {
+        if self.get_subject_by_name(conn, subject_name).await.is_ok() {
             return Err(SubjectServiceError::UnexpectedError(anyhow!(
                 "Subject with name: {} already exists!",
                 subject_name
@@ -164,7 +160,7 @@ impl SubjectService {
         "#,
             subject_name
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|err| {
             tracing::error!("Unable to create a subject with error: {}", err.to_string());
@@ -184,7 +180,7 @@ impl SubjectService {
 
     pub async fn get_subjects_by_name(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         name: &str,
     ) -> Result<Vec<Subject>, SubjectServiceError> {
         let query = sqlx::query!(
@@ -194,7 +190,7 @@ impl SubjectService {
         where name ilike $1",
             format!("{name}%")
         )
-        .fetch_all(&mut **transaction)
+        .fetch_all(&mut *conn)
         .await
         .map_err(|err| SubjectServiceError::UnexpectedError(anyhow!(err.to_string())))?;
         let mut classroom_subjects = Vec::with_capacity(query.len());
@@ -212,7 +208,7 @@ impl SubjectService {
 
     pub async fn get_subject_by_name(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         name: &str,
     ) -> Result<Subject, SubjectServiceError> {
         let query = sqlx::query!(
@@ -223,7 +219,7 @@ impl SubjectService {
         limit 1",
             format!("{name}%")
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| {
             SubjectServiceError::UnexpectedError(anyhow!(
@@ -241,14 +237,12 @@ impl SubjectService {
 
     pub async fn update_subject_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         subject_id: &str,
         subject_name: &str,
     ) -> Result<Subject, SubjectServiceError> {
         // Check if it is exists
-        let _ = &self
-            .get_subject_by_id(&mut *transaction, subject_id)
-            .await?;
+        let _ = &self.get_subject_by_id(conn, subject_id).await?;
 
         let query_update = sqlx::query!(
             "
@@ -260,7 +254,7 @@ impl SubjectService {
             subject_name,
             subject_id
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|err| {
             SubjectServiceError::UnexpectedError(anyhow!(
@@ -278,7 +272,7 @@ impl SubjectService {
 
     pub async fn get_secondary_subject_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         secondary_subject_id: &str,
     ) -> Result<SecondarySubject, SubjectServiceError> {
         let query = sqlx::query!(
@@ -290,7 +284,7 @@ impl SubjectService {
         "#,
             secondary_subject_id
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| {
             SubjectServiceError::UnexpectedError(anyhow!(
@@ -309,7 +303,7 @@ impl SubjectService {
 
     pub async fn get_secondary_subject_by_name(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         secondary_subject_name: &str,
     ) -> Result<SecondarySubject, SubjectServiceError> {
         let query = sqlx::query!(
@@ -322,7 +316,7 @@ impl SubjectService {
         "#,
             format!("{secondary_subject_name}%")
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| {
             SubjectServiceError::UnexpectedError(anyhow!(

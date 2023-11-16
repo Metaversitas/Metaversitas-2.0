@@ -1,4 +1,3 @@
-use crate::backend::AppState;
 use crate::helpers::errors::classroom::ClassroomServiceError;
 use crate::helpers::extractor::AuthenticatedUserWithRole;
 use crate::model::classroom::{
@@ -11,19 +10,17 @@ use crate::model::classroom::{
 };
 use crate::model::subject::{SecondarySubject, Subject, SubjectWithSecondary};
 use crate::model::user::UserUniversityRole;
-use crate::r#const::PgTransaction;
 use crate::service::exam::ExamService;
 use crate::service::subject::SubjectService;
 use crate::service::teacher::TeacherService;
 use anyhow::anyhow;
 use chrono::{DateTime, Datelike, NaiveDate, Utc};
-use sqlx::{Execute, Postgres, QueryBuilder, Row};
+use sqlx::{Execute, PgConnection, Postgres, QueryBuilder, Row};
 use std::str::FromStr;
 use std::sync::Arc;
 use uuid::Uuid;
 
 pub struct ClassroomService {
-    app_state: Arc<AppState>,
     subject_service: Arc<SubjectService>,
     exam_service: Arc<ExamService>,
     teacher_service: Arc<TeacherService>,
@@ -33,13 +30,11 @@ pub struct ClassroomService {
 
 impl ClassroomService {
     pub fn new(
-        app_state: Arc<AppState>,
         subject_service: Arc<SubjectService>,
         exam_service: Arc<ExamService>,
         teacher_service: Arc<TeacherService>,
     ) -> Self {
         Self {
-            app_state,
             subject_service,
             exam_service,
             teacher_service,
@@ -48,7 +43,7 @@ impl ClassroomService {
 
     pub async fn is_student_schedule_conflict(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         student_id: &str,
         class_id: &str,
     ) -> Result<bool, ClassroomServiceError> {
@@ -68,7 +63,7 @@ impl ClassroomService {
             })?,
             Uuid::from_str(class_id).map_err(|err| {
                 ClassroomServiceError::UnexpectedError(anyhow!("Unable to parse class_id with error: {}", err.to_string()))
-            })?).fetch_one(&mut **transaction).await.map_err(|err| {
+            })?).fetch_one(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!("Got an error from database: {}", err.to_string()))
         })?;
 
@@ -80,7 +75,7 @@ impl ClassroomService {
 
     pub async fn is_seat_classroom_available(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
     ) -> Result<bool, ClassroomServiceError> {
         let query = sqlx::query!(
@@ -98,7 +93,7 @@ impl ClassroomService {
                 err.to_string()
             ))?
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
@@ -116,13 +111,11 @@ impl ClassroomService {
 
     pub async fn delete_classroom(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
     ) -> Result<(), ClassroomServiceError> {
         // Check if exists
-        let _ = self
-            .get_classroom_by_id(&mut *transaction, class_id)
-            .await?;
+        let _ = self.get_classroom_by_id(&mut *conn, class_id).await?;
 
         sqlx::query!(
             r#"
@@ -134,7 +127,7 @@ impl ClassroomService {
                 err.to_string()
             ))?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
 
@@ -143,7 +136,7 @@ impl ClassroomService {
 
     pub async fn create_classroom(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         auth_user: &AuthenticatedUserWithRole,
         params: &CreateClassroomParams,
         subject: &Subject,
@@ -222,7 +215,7 @@ impl ClassroomService {
         separated.push_unseparated(r#") returning class_id::text;"#);
 
         let query = query_builder.build();
-        let query = query.fetch_one(&mut **transaction).await.map_err(|err| {
+        let query = query.fetch_one(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to execute create class, with an error: {}",
                 err.to_string()
@@ -239,7 +232,7 @@ impl ClassroomService {
             .map(|secondary_subject| secondary_subject.secondary_subject_id.as_str());
 
         self.create_class_subject(
-            transaction,
+            conn,
             class_id.as_str(),
             subject.subject_id.as_str(),
             secondary_subject_id,
@@ -251,11 +244,11 @@ impl ClassroomService {
             let mut first_class_meeting = true;
             for meeting in meetings {
                 let meeting_id = self
-                    .create_class_meeting(transaction, class_id.as_str(), meeting)
+                    .create_class_meeting(conn, class_id.as_str(), meeting)
                     .await?;
                 if first_class_meeting {
                     self.update_classes(
-                        transaction,
+                        conn,
                         class_id.as_str(),
                         &UpdateClassroomParams {
                             class_name: None,
@@ -281,13 +274,13 @@ impl ClassroomService {
                     first_class_meeting = false;
                 }
                 let class_meeting = self
-                    .get_class_meeting_by_id(transaction, meeting_id.as_str())
+                    .get_class_meeting_by_id(conn, meeting_id.as_str())
                     .await?;
                 if let Some(exams) = &meeting.exams {
                     for exam in exams {
                         self.exam_service
                             .insert_class_on_exam_by_id(
-                                transaction,
+                                conn,
                                 exam.exam_id.as_str(),
                                 class_id.as_str(),
                                 Some(class_meeting.meeting_id.as_str()),
@@ -309,7 +302,7 @@ impl ClassroomService {
                 for exam in exams {
                     self.exam_service
                         .insert_class_on_exam_by_id(
-                            transaction,
+                            conn,
                             exam.exam_id.as_str(),
                             class_id.as_str(),
                             None,
@@ -332,7 +325,7 @@ impl ClassroomService {
         if let Some(students) = &params.students {
             for student in students {
                 self.insert_student_classroom_by_id(
-                    &mut *transaction,
+                    conn,
                     class_id.as_str(),
                     student.student_id.as_str(),
                 )
@@ -351,7 +344,7 @@ impl ClassroomService {
         if let Some(teachers) = &params.teachers {
             let current_teacher = self
                 .teacher_service
-                .get_teacher_by_id(transaction, auth_user.user_id.as_str())
+                .get_teacher_by_id(conn, auth_user.user_id.as_str())
                 .await
                 .map_err(|err| {
                     ClassroomServiceError::UnexpectedError(anyhow!(
@@ -360,7 +353,7 @@ impl ClassroomService {
                     ))
                 })?;
             self.insert_teacher_classroom_by_id(
-                transaction,
+                conn,
                 class_id.as_str(),
                 current_teacher.teacher_id.as_str(),
             )
@@ -377,7 +370,7 @@ impl ClassroomService {
                 }
 
                 self.insert_teacher_classroom_by_id(
-                    &mut *transaction,
+                    conn,
                     class_id.as_str(),
                     teacher.teacher_id.as_str(),
                 )
@@ -394,7 +387,7 @@ impl ClassroomService {
         } else {
             let current_teacher = self
                 .teacher_service
-                .get_teacher_by_id(transaction, auth_user.user_id.as_str())
+                .get_teacher_by_id(conn, auth_user.user_id.as_str())
                 .await
                 .map_err(|err| {
                     ClassroomServiceError::UnexpectedError(anyhow!(
@@ -403,7 +396,7 @@ impl ClassroomService {
                     ))
                 })?;
             self.insert_teacher_classroom_by_id(
-                &mut *transaction,
+                conn,
                 class_id.as_str(),
                 current_teacher.teacher_id.as_str(),
             )
@@ -415,18 +408,16 @@ impl ClassroomService {
 
     pub async fn update_classroom(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         params: &UpdateClassroomParams,
     ) -> Result<(), ClassroomServiceError> {
         //Check if classroom exists
-        let _current_classroom = self
-            .get_classroom_by_id(&mut *transaction, class_id)
-            .await?;
+        let _current_classroom = self.get_classroom_by_id(conn, class_id).await?;
 
         if let Some(subjects) = &params.subjects {
             if let Err(err) = self
-                .update_class_subject_by_id(transaction, class_id, subjects)
+                .update_class_subject_by_id(conn, class_id, subjects)
                 .await
             {
                 let err_msg = err.to_string();
@@ -439,14 +430,13 @@ impl ClassroomService {
         if let Some(students) = &params.students {
             match students {
                 ActionType::All(list_students) => {
-                    self.delete_student_classroom(&mut *transaction, class_id)
-                        .await?;
+                    self.delete_student_classroom(conn, class_id).await?;
 
                     for student in list_students {
                         match student {
                             Action::Add(student_id) => {
                                 self.insert_student_classroom_by_id(
-                                    &mut *transaction,
+                                    conn,
                                     class_id,
                                     student_id.as_str(),
                                 )
@@ -465,7 +455,7 @@ impl ClassroomService {
                         match student_action {
                             Action::Add(student_id) => {
                                 self.insert_student_classroom_by_id(
-                                    &mut *transaction,
+                                    conn,
                                     class_id,
                                     student_id.as_str(),
                                 )
@@ -473,7 +463,7 @@ impl ClassroomService {
                             }
                             Action::Delete(student_id) => {
                                 self.delete_student_classroom_by_id(
-                                    &mut *transaction,
+                                    conn,
                                     class_id,
                                     student_id.as_str(),
                                 )
@@ -488,14 +478,13 @@ impl ClassroomService {
         if let Some(teachers) = &params.teachers {
             match teachers {
                 ActionType::All(teachers) => {
-                    self.delete_teacher_classroom(&mut *transaction, class_id)
-                        .await?;
+                    self.delete_teacher_classroom(conn, class_id).await?;
 
                     for teacher in teachers {
                         match teacher {
                             Action::Add(teacher_id) => {
                                 self.insert_teacher_classroom_by_id(
-                                    &mut *transaction,
+                                    conn,
                                     class_id,
                                     teacher_id.as_str(),
                                 )
@@ -514,7 +503,7 @@ impl ClassroomService {
                         match teacher {
                             Action::Add(teacher_id) => {
                                 self.insert_teacher_classroom_by_id(
-                                    &mut *transaction,
+                                    conn,
                                     class_id,
                                     teacher_id.as_str(),
                                 )
@@ -522,7 +511,7 @@ impl ClassroomService {
                             }
                             Action::Delete(teacher_id) => {
                                 self.delete_teacher_classroom_by_id(
-                                    &mut *transaction,
+                                    conn,
                                     class_id,
                                     teacher_id.as_str(),
                                 )
@@ -534,14 +523,14 @@ impl ClassroomService {
             }
         }
 
-        if let Err(err) = self.update_classes(transaction, class_id, params).await {
+        if let Err(err) = self.update_classes(conn, class_id, params).await {
             let err_msg = err.to_string();
             if !err_msg.contains("No value") {
                 return Err(err);
             }
         };
 
-        let class_meetings = self.get_class_meetings(transaction, class_id).await?;
+        let class_meetings = self.get_class_meetings(conn, class_id).await?;
 
         if let Some(exams) = &params.exams {
             if !class_meetings.is_empty() {
@@ -550,7 +539,7 @@ impl ClassroomService {
                 )));
             }
 
-            self.update_exam_on_class(transaction, class_id, None, exams)
+            self.update_exam_on_class(conn, class_id, None, exams)
                 .await
                 .map_err(|err| {
                     ClassroomServiceError::UnexpectedError(anyhow!(
@@ -563,7 +552,7 @@ impl ClassroomService {
         }
 
         if let Some(meetings) = &params.meetings {
-            self.update_meeting_on_class(transaction, class_id, meetings)
+            self.update_meeting_on_class(conn, class_id, meetings)
                 .await
                 .map_err(|err| {
                     ClassroomServiceError::UnexpectedError(anyhow!(
@@ -579,13 +568,13 @@ impl ClassroomService {
 
     async fn update_meeting_on_class(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         params: &ActionTypeUpdateClassMeeting,
     ) -> Result<(), ClassroomServiceError> {
         match params {
             ActionTypeUpdateClassMeeting::All(action_meetings) => {
-                self.delete_class_meeting_all(transaction, class_id).await?;
+                self.delete_class_meeting_all(conn, class_id).await?;
                 for action_meeting in action_meetings {
                     match action_meeting.action {
                         BaseAction::Add => {
@@ -602,7 +591,7 @@ impl ClassroomService {
                                         end_time: create_end_time.to_owned(),
                                         exams: create_exams.to_owned(),
                                     };
-                                    let class_meeting_id = self.create_class_meeting(transaction, class_id, &create_meeting_params)
+                                    let class_meeting_id = self.create_class_meeting(conn, class_id, &create_meeting_params)
                                     .await
                                     .map_err(|err| {
                                         ClassroomServiceError::UnexpectedError(anyhow!(
@@ -610,7 +599,7 @@ impl ClassroomService {
                                     })?;
 
                                     if let Some(exams) = &create_meeting_params.exams {
-                                        self.exam_service.delete_exam_on_class(transaction, class_id, None)
+                                        self.exam_service.delete_exam_on_class(conn, class_id, None)
                                         .await
                                         .map_err(|err| {
                                             ClassroomServiceError::UnexpectedError(anyhow!(
@@ -618,7 +607,7 @@ impl ClassroomService {
                                         })?;
 
                                         for exam in exams {
-                                            self.exam_service.insert_class_on_exam_by_id(transaction, exam.exam_id.as_str(), class_id, Some(class_meeting_id.as_str()))
+                                            self.exam_service.insert_class_on_exam_by_id(conn, exam.exam_id.as_str(), class_id, Some(class_meeting_id.as_str()))
                                             .await
                                             .map_err(|err| {
                                                 ClassroomServiceError::UnexpectedError(anyhow!(
@@ -663,7 +652,7 @@ impl ClassroomService {
                                     end_time: create_end_time.to_owned(),
                                     exams: create_exams.to_owned(),
                                 };
-                                self.create_class_meeting(transaction, class_id, &create_meeting_params)
+                                self.create_class_meeting(conn, class_id, &create_meeting_params)
                                 .await
                                 .map_err(|err| {
                                     ClassroomServiceError::UnexpectedError(anyhow!(
@@ -682,7 +671,7 @@ impl ClassroomService {
                                     exams: update_exams.to_owned(),
                                     is_active: update_is_active.to_owned(),
                                 };
-                                self.update_class_meeting_by_id(transaction, class_id, &update_meeting_params)
+                                self.update_class_meeting_by_id(conn, class_id, &update_meeting_params)
                                 .await
                                 .map_err(|err| {
                                     ClassroomServiceError::UnexpectedError(anyhow!(
@@ -709,7 +698,7 @@ impl ClassroomService {
                                         exams: update_exams.to_owned(),
                                         is_active: update_is_active.to_owned(),
                                     };
-                                    self.delete_class_meeting_by_id(transaction, update_meeting_params.meeting_id.as_str(), class_id)
+                                    self.delete_class_meeting_by_id(conn, update_meeting_params.meeting_id.as_str(), class_id)
                                     .await
                                     .map_err(|err| {
                                         ClassroomServiceError::UnexpectedError(anyhow!(
@@ -741,7 +730,7 @@ impl ClassroomService {
                                         exams: update_exams.to_owned(),
                                         is_active: update_is_active.to_owned(),
                                     };
-                                    self.update_class_meeting_by_id(transaction, class_id, &update_meeting_params)
+                                    self.update_class_meeting_by_id(conn, class_id, &update_meeting_params)
                                     .await
                                     .map_err(|err| {
                                         ClassroomServiceError::UnexpectedError(anyhow!(
@@ -753,7 +742,7 @@ impl ClassroomService {
                                     })?;
 
                                     if let Some(exams) = &update_meeting_params.exams {
-                                        self.update_exam_on_class(transaction, class_id, Some(update_meeting_params.meeting_id.as_str()), exams)
+                                        self.update_exam_on_class(conn, class_id, Some(update_meeting_params.meeting_id.as_str()), exams)
                                         .await
                                         .map_err(|err| {
                                             ClassroomServiceError::UnexpectedError(anyhow!("Unable to update exam on class={}, meeting_id={}, and error={}", class_id, update_meeting_params.meeting_id, err.to_string()))
@@ -772,7 +761,7 @@ impl ClassroomService {
 
     async fn update_exam_on_class(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         meeting_id: Option<&str>,
         params: &ActionTypeUpdateExam,
@@ -780,7 +769,7 @@ impl ClassroomService {
         match params {
             ActionTypeUpdateExam::All(action_exams) => {
                 self.exam_service
-                    .delete_exam_on_class(transaction, class_id, meeting_id)
+                    .delete_exam_on_class(conn, class_id, meeting_id)
                     .await
                     .map_err(|err| {
                         ClassroomServiceError::UnexpectedError(anyhow!(
@@ -800,7 +789,7 @@ impl ClassroomService {
                             ParamsActionUpdateExam::Update(update_exam_params) => {
                                 self.exam_service
                                     .insert_class_on_exam_by_id(
-                                        transaction,
+                                        conn,
                                         update_exam_params.exam_id.as_str(),
                                         class_id,
                                         meeting_id,
@@ -840,7 +829,7 @@ impl ClassroomService {
                             ParamsActionUpdateExam::Update(update_exam_params) => {
                                 self.exam_service
                                     .insert_class_on_exam_by_id(
-                                        transaction,
+                                        conn,
                                         update_exam_params.exam_id.as_str(),
                                         class_id,
                                         meeting_id,
@@ -862,7 +851,7 @@ impl ClassroomService {
                                         )));
                             }
                             ParamsActionUpdateExam::Update(update_exam_params) => {
-                                self.exam_service.delete_exam_on_class_by_id(transaction, update_exam_params.exam_id.as_str(), class_id, meeting_id).await.map_err(|err| {
+                                self.exam_service.delete_exam_on_class_by_id(conn, update_exam_params.exam_id.as_str(), class_id, meeting_id).await.map_err(|err| {
                                     ClassroomServiceError::UnexpectedError(anyhow!("Unable to delete class={} on exam={}, with an error: {}", class_id, update_exam_params.exam_id, err.to_string()))
                                 })?;
                             }
@@ -876,7 +865,7 @@ impl ClassroomService {
                             ParamsActionUpdateExam::Update(update_exam_params) => {
                                 self.exam_service
                                     .update_exam_on_class_by_id(
-                                        transaction,
+                                        conn,
                                         update_exam_params.exam_id.as_str(),
                                         class_id,
                                         meeting_id,
@@ -900,7 +889,7 @@ impl ClassroomService {
 
     async fn update_classes(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         params: &UpdateClassroomParams,
     ) -> Result<(), ClassroomServiceError> {
@@ -1055,7 +1044,7 @@ impl ClassroomService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Got an error while updating classroom, with an error: {}",
                 err.to_string()
@@ -1067,7 +1056,7 @@ impl ClassroomService {
 
     pub async fn delete_teacher_classroom(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
     ) -> Result<(), ClassroomServiceError> {
         sqlx::query!(
@@ -1080,7 +1069,7 @@ impl ClassroomService {
                 err.to_string()
             ))?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
 
@@ -1089,7 +1078,7 @@ impl ClassroomService {
 
     pub async fn delete_teacher_classroom_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         teacher_id: &str,
     ) -> Result<(), ClassroomServiceError> {
@@ -1107,7 +1096,7 @@ impl ClassroomService {
                 err.to_string()
             ))?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
 
@@ -1116,7 +1105,7 @@ impl ClassroomService {
 
     pub async fn insert_teacher_classroom_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         teacher_id: &str,
     ) -> Result<(), ClassroomServiceError> {
@@ -1134,7 +1123,7 @@ impl ClassroomService {
                 err.to_string()
             ))?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
@@ -1148,7 +1137,7 @@ impl ClassroomService {
 
     pub async fn delete_student_classroom(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
     ) -> Result<(), ClassroomServiceError> {
         sqlx::query!(
@@ -1161,7 +1150,7 @@ impl ClassroomService {
                 err.to_string()
             ))?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
 
@@ -1170,7 +1159,7 @@ impl ClassroomService {
 
     pub async fn insert_student_classroom_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         student_id: &str,
     ) -> Result<StudentClassroom, ClassroomServiceError> {
@@ -1188,7 +1177,7 @@ impl ClassroomService {
                 err.to_string()
             ))?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
 
@@ -1200,7 +1189,7 @@ impl ClassroomService {
 
     pub async fn delete_student_classroom_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         student_id: &str,
     ) -> Result<(), ClassroomServiceError> {
@@ -1218,7 +1207,7 @@ impl ClassroomService {
                 err.to_string()
             ))?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
 
@@ -1227,7 +1216,7 @@ impl ClassroomService {
 
     pub async fn get_list_teacher_by_classroom(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
     ) -> Result<Vec<TeacherClassroom>, ClassroomServiceError> {
         let query = sqlx::query_as!(
@@ -1244,7 +1233,7 @@ impl ClassroomService {
         "#,
             class_id
         )
-        .fetch_all(&mut **transaction)
+        .fetch_all(&mut *conn)
         .await
         .map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
@@ -1258,7 +1247,7 @@ impl ClassroomService {
 
     pub async fn get_teacher_classroom_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         teacher_id: &str,
     ) -> Result<TeacherClassroom, ClassroomServiceError> {
@@ -1276,7 +1265,7 @@ impl ClassroomService {
             class_id,
             teacher_id
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?
         .ok_or(anyhow!(
@@ -1294,7 +1283,7 @@ impl ClassroomService {
 
     pub async fn get_student_classroom_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         student_id: &str,
     ) -> Result<StudentClassroom, ClassroomServiceError> {
@@ -1321,7 +1310,7 @@ impl ClassroomService {
                 )
             })?
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?
         .ok_or(anyhow!(
@@ -1339,7 +1328,7 @@ impl ClassroomService {
 
     pub async fn create_class_subject(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         subject_id: &str,
         secondary_subject_id: Option<&str>,
@@ -1364,7 +1353,7 @@ impl ClassroomService {
         }
         separated.push_unseparated(")");
         let query = query_builder.build();
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to create class_subject; \
             class_id={}; subject_id={}; secondary_subject_id={}, \
@@ -1380,7 +1369,7 @@ impl ClassroomService {
 
     pub async fn delete_class_subject_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         subject_id: &str,
         secondary_subject_id: Option<&str>,
@@ -1400,8 +1389,8 @@ impl ClassroomService {
 
         let query = query_builder.build();
         dbg!(&query.sql());
-        query.execute(&mut **transaction).await.map_err(|err| {
-            ClassroomServiceError::UnexpectedError(anyhow!("Unalbe to delete class_subject with class_id={}, subject_id={}, secondary_subject_id={}, and err={}", class_id, subject_id, secondary_subject_id.unwrap_or("NULL"), err.to_string()))
+        query.execute(&mut *conn).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!("Unable to delete class_subject with class_id={}, subject_id={}, secondary_subject_id={}, and err={}", class_id, subject_id, secondary_subject_id.unwrap_or("NULL"), err.to_string()))
         })?;
 
         Ok(())
@@ -1409,7 +1398,7 @@ impl ClassroomService {
 
     pub async fn update_class_subject_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         params: &UpdateClassSubjectParams,
     ) -> Result<(), ClassroomServiceError> {
@@ -1457,7 +1446,7 @@ impl ClassroomService {
         query_builder.push_bind(class_id);
 
         let query = query_builder.build();
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to update class_subject with class_id={} and error={}",
                 class_id,
@@ -1470,14 +1459,14 @@ impl ClassroomService {
 
     pub async fn delete_class_meeting_all(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
     ) -> Result<(), ClassroomServiceError> {
         sqlx::query!(
             "delete from class_meeting where class_id::text = $1",
             class_id
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
@@ -1492,11 +1481,14 @@ impl ClassroomService {
 
     pub async fn delete_class_meeting_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         meeting_id: &str,
         class_id: &str,
     ) -> Result<(), ClassroomServiceError> {
-        sqlx::query!("delete from class_meeting where meeting_id::text = $1 and class_id::text = $2", meeting_id, class_id).execute(&mut **transaction).await.map_err(|err| {
+        sqlx::query!("delete from class_meeting where meeting_id::text = $1 and class_id::text = $2", meeting_id, class_id)
+        .execute(&mut *conn)
+        .await
+        .map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to delete class_meeting on class={} | meeting={}, with an error from database: {}",
                 class_id,
@@ -1509,7 +1501,7 @@ impl ClassroomService {
 
     pub async fn create_class_meeting(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         params: &CreateClassMeetingParams,
     ) -> Result<String, ClassroomServiceError> {
@@ -1573,7 +1565,7 @@ impl ClassroomService {
         query_builder.push(")");
         query_builder.push(r#" returning meeting_id::text"#);
         let query = query_builder.build();
-        let query = query.fetch_one(&mut **transaction).await.map_err(|err| {
+        let query = query.fetch_one(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to create class_meeting, with an error: {}",
                 err.to_string()
@@ -1589,7 +1581,7 @@ impl ClassroomService {
 
     pub async fn update_class_meeting_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         params: &UpdateClassMeetingParams,
     ) -> Result<(), ClassroomServiceError> {
@@ -1687,7 +1679,7 @@ impl ClassroomService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to update class_meeting id={}, with an error: {}",
                 params.meeting_id,
@@ -1699,7 +1691,7 @@ impl ClassroomService {
 
     pub async fn get_class_meetings(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
     ) -> Result<Vec<ClassMeeting>, ClassroomServiceError> {
         let query = sqlx::query!(
@@ -1721,7 +1713,7 @@ impl ClassroomService {
         "#,
             class_id
         )
-        .fetch_all(&mut **transaction)
+        .fetch_all(&mut *conn)
         .await
         .map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
@@ -1752,7 +1744,7 @@ impl ClassroomService {
 
     pub async fn get_class_meeting_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         meeting_id: &str,
     ) -> Result<ClassMeeting, ClassroomServiceError> {
         let query = sqlx::query!(
@@ -1774,7 +1766,7 @@ impl ClassroomService {
         "#,
             meeting_id
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
@@ -1800,7 +1792,7 @@ impl ClassroomService {
 
     pub async fn get_classroom_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
     ) -> Result<Classroom, ClassroomServiceError> {
         let query = sqlx::query!(
@@ -1828,7 +1820,7 @@ impl ClassroomService {
        "#,
             class_id
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
@@ -1846,7 +1838,7 @@ impl ClassroomService {
                 Some(
                     self.subject_service
                         .get_secondary_subject_by_id(
-                            transaction,
+                            conn,
                             secondary_subject_id.to_string().as_str(),
                         )
                         .await
@@ -1866,11 +1858,9 @@ impl ClassroomService {
             subject_name: query.subject_name,
             secondary_subject,
         };
-        let teachers = self
-            .get_list_teacher_by_classroom(transaction, class_id)
-            .await?;
+        let teachers = self.get_list_teacher_by_classroom(conn, class_id).await?;
         let class_meeting = self
-            .get_class_meetings(transaction, class_id.to_string().as_str())
+            .get_class_meetings(conn, class_id.to_string().as_str())
             .await?;
         let classroom = Classroom {
             is_active: query.is_active,
@@ -1901,7 +1891,7 @@ impl ClassroomService {
 
     pub async fn get_student_enrolled_classes(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
@@ -1960,15 +1950,12 @@ impl ClassroomService {
             .await?;
 
         let query = query_builder.build();
-        let query = query
-            .fetch_all(&self.app_state.database)
-            .await
-            .map_err(|err| {
-                ClassroomServiceError::UnexpectedError(anyhow!(
-                    "Got an error from database: {}",
-                    err.to_string()
-                ))
-            })?;
+        let query = query.fetch_all(&mut *conn).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Got an error from database: {}",
+                err.to_string()
+            ))
+        })?;
 
         let mut list_classroom: Vec<Classroom> = Vec::with_capacity(query.len());
         for tmp_classroom in query {
@@ -1979,7 +1966,7 @@ impl ClassroomService {
                     Some(
                         self.subject_service
                             .get_secondary_subject_by_id(
-                                transaction,
+                                conn,
                                 secondary_subject_id.to_string().as_str(),
                             )
                             .await
@@ -2012,11 +1999,9 @@ impl ClassroomService {
                     ))
                 })?
                 .to_string();
-            let class_meeting = self
-                .get_class_meetings(transaction, tmp_class_id.as_str())
-                .await?;
+            let class_meeting = self.get_class_meetings(conn, tmp_class_id.as_str()).await?;
             let list_teacher = self
-                .get_list_teacher_by_classroom(transaction, tmp_class_id.as_str())
+                .get_list_teacher_by_classroom(conn, tmp_class_id.as_str())
                 .await?;
             let classroom = Classroom {
                 is_active: true,
@@ -2063,7 +2048,7 @@ impl ClassroomService {
 
     pub async fn get_student_available_classes(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
@@ -2138,7 +2123,7 @@ impl ClassroomService {
             .await?;
 
         let query = query_builder.build();
-        let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
+        let query = query.fetch_all(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to fetch into database, with an error: {}",
                 err.to_string()
@@ -2154,7 +2139,7 @@ impl ClassroomService {
                     Some(
                         self.subject_service
                         .get_secondary_subject_by_id(
-                            transaction,
+                            conn,
                             secondary_subject_id.to_string().as_str(),
                         )
                         .await
@@ -2187,11 +2172,9 @@ impl ClassroomService {
                     ))
                 })?
                 .to_string();
-            let class_meeting = self
-                .get_class_meetings(transaction, tmp_class_id.as_str())
-                .await?;
+            let class_meeting = self.get_class_meetings(conn, tmp_class_id.as_str()).await?;
             let list_teacher = self
-                .get_list_teacher_by_classroom(transaction, tmp_class_id.as_str())
+                .get_list_teacher_by_classroom(conn, tmp_class_id.as_str())
                 .await?;
             let classroom = Classroom {
                 is_active: fetched_classroom.try_get::<bool, &str>("is_active").map_err(|err| {
@@ -2242,7 +2225,7 @@ impl ClassroomService {
 
     pub async fn get_student_upcoming_scheduled_classes(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<UpcomingScheduled>, ClassroomServiceError> {
@@ -2339,7 +2322,7 @@ impl ClassroomService {
             .await?;
 
         let query = query_builder.build();
-        let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
+        let query = query.fetch_all(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to fetch upcoming scheduled class for student, with an error: {}",
                 err.to_string()
@@ -2355,7 +2338,7 @@ impl ClassroomService {
                     Some(
                         self.subject_service
                         .get_secondary_subject_by_id(
-                            transaction,
+                            conn,
                             secondary_subject_id.to_string().as_str(),
                         )
                         .await
@@ -2381,7 +2364,7 @@ impl ClassroomService {
                 .to_string();
             let subject = self
                 .subject_service
-                .get_subject_by_id(transaction, subject_id.as_str())
+                .get_subject_by_id(conn, subject_id.as_str())
                 .await
                 .map_err(|err| {
                     ClassroomServiceError::UnexpectedError(anyhow!(
@@ -2415,7 +2398,7 @@ impl ClassroomService {
                     ))
                     })?;
             let list_teacher = self
-                .get_list_teacher_by_classroom(transaction, tmp_class_id.as_str())
+                .get_list_teacher_by_classroom(conn, tmp_class_id.as_str())
                 .await?;
             let tmp_current_meeting_id = fetched_classroom
                 .try_get::<Option<Uuid>, &str>("current_meeting_id")
@@ -2451,7 +2434,7 @@ impl ClassroomService {
                     )));
                 };
                 let meeting = self
-                    .get_class_meeting_by_id(transaction, meeting_id.to_string().as_str())
+                    .get_class_meeting_by_id(conn, meeting_id.to_string().as_str())
                     .await?;
 
                 upcoming_scheduled = UpcomingScheduled {
@@ -2463,7 +2446,7 @@ impl ClassroomService {
                 };
             } else {
                 let classroom = self
-                    .get_classroom_by_id(transaction, tmp_class_id.as_str())
+                    .get_classroom_by_id(conn, tmp_class_id.as_str())
                     .await?;
 
                 upcoming_scheduled = UpcomingScheduled {
@@ -2482,7 +2465,7 @@ impl ClassroomService {
 
     pub async fn get_lecturer_enrolled_classroom(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
@@ -2542,15 +2525,12 @@ impl ClassroomService {
             .await?;
 
         let query = query_builder.build();
-        let query = query
-            .fetch_all(&self.app_state.database)
-            .await
-            .map_err(|err| {
-                ClassroomServiceError::UnexpectedError(anyhow!(
-                    "Got an error from database: {}",
-                    err.to_string()
-                ))
-            })?;
+        let query = query.fetch_all(&mut *conn).await.map_err(|err| {
+            ClassroomServiceError::UnexpectedError(anyhow!(
+                "Got an error from database: {}",
+                err.to_string()
+            ))
+        })?;
 
         let mut classrooms: Vec<Classroom> = Vec::with_capacity(query.len());
         for tmp_classroom in query {
@@ -2561,7 +2541,7 @@ impl ClassroomService {
                     Some(
                         self.subject_service
                         .get_secondary_subject_by_id(
-                            transaction,
+                            conn,
                             secondary_subject_id.to_string().as_str(),
                         )
                         .await
@@ -2594,11 +2574,9 @@ impl ClassroomService {
                     ))
                 })?
                 .to_string();
-            let class_meeting = self
-                .get_class_meetings(transaction, tmp_class_id.as_str())
-                .await?;
+            let class_meeting = self.get_class_meetings(conn, tmp_class_id.as_str()).await?;
             let list_teacher = self
-                .get_list_teacher_by_classroom(transaction, tmp_class_id.as_str())
+                .get_list_teacher_by_classroom(conn, tmp_class_id.as_str())
                 .await?;
             let classroom = Classroom {
                 is_active: tmp_classroom.try_get::<bool, &str>("is_active").map_err(|err| {
@@ -2647,7 +2625,7 @@ impl ClassroomService {
 
     pub async fn get_lecturer_created_classes(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
@@ -2707,7 +2685,7 @@ impl ClassroomService {
             .await?;
 
         let query = query_builder.build();
-        let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
+        let query = query.fetch_all(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to get lecturer created class from database, with an error: {}",
                 err.to_string()
@@ -2722,7 +2700,7 @@ impl ClassroomService {
                     Some(
                         self.subject_service
                         .get_secondary_subject_by_id(
-                            transaction,
+                            conn,
                             secondary_subject_id.to_string().as_str(),
                         )
                         .await
@@ -2755,11 +2733,9 @@ impl ClassroomService {
                     ))
                 })?
                 .to_string();
-            let class_meeting = self
-                .get_class_meetings(transaction, tmp_class_id.as_str())
-                .await?;
+            let class_meeting = self.get_class_meetings(conn, tmp_class_id.as_str()).await?;
             let list_teacher = self
-                .get_list_teacher_by_classroom(transaction, tmp_class_id.as_str())
+                .get_list_teacher_by_classroom(conn, tmp_class_id.as_str())
                 .await?;
             let classroom = Classroom {
                 is_active: tmp_classroom.try_get::<bool, &str>("is_active").map_err(|err| {
@@ -2810,7 +2786,7 @@ impl ClassroomService {
 
     pub async fn get_lecturer_available_classes(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<Classroom>, ClassroomServiceError> {
@@ -2887,7 +2863,7 @@ impl ClassroomService {
             .await?;
 
         let query = query_builder.build();
-        let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
+        let query = query.fetch_all(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to fetch data to database, with an error: {}",
                 err.to_string()
@@ -2903,7 +2879,7 @@ impl ClassroomService {
                     Some(
                         self.subject_service
                         .get_secondary_subject_by_id(
-                            transaction,
+                            conn,
                             secondary_subject_id.to_string().as_str(),
                         )
                         .await
@@ -2936,11 +2912,9 @@ impl ClassroomService {
                     ))
                 })?
                 .to_string();
-            let class_meeting = self
-                .get_class_meetings(transaction, tmp_class_id.as_str())
-                .await?;
+            let class_meeting = self.get_class_meetings(conn, tmp_class_id.as_str()).await?;
             let list_teacher = self
-                .get_list_teacher_by_classroom(transaction, tmp_class_id.as_str())
+                .get_list_teacher_by_classroom(conn, tmp_class_id.as_str())
                 .await?;
             let classroom = Classroom {
                 is_active: tmp_classroom.try_get::<bool, &str>("is_active").map_err(|err| {
@@ -2991,7 +2965,7 @@ impl ClassroomService {
 
     pub async fn get_lecturer_upcoming_scheduled_classes(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &QueryParamsClasses,
     ) -> Result<Vec<UpcomingScheduled>, ClassroomServiceError> {
@@ -3089,7 +3063,7 @@ order by
             .await?;
 
         let query = query_builder.build();
-        let query = query.fetch_all(&mut **transaction).await.map_err(|err| {
+        let query = query.fetch_all(&mut *conn).await.map_err(|err| {
             ClassroomServiceError::UnexpectedError(anyhow!(
                 "Unable to fetch upcoming scheduled class for lecturer, with an error: {}",
                 err.to_string()
@@ -3106,7 +3080,7 @@ order by
                     Some(
                         self.subject_service
                         .get_secondary_subject_by_id(
-                            transaction,
+                            conn,
                             secondary_subject_id.to_string().as_str(),
                         )
                         .await
@@ -3132,7 +3106,7 @@ order by
                 .to_string();
             let subject = self
                 .subject_service
-                .get_subject_by_id(transaction, subject_id.as_str())
+                .get_subject_by_id(conn, subject_id.as_str())
                 .await
                 .map_err(|err| {
                     ClassroomServiceError::UnexpectedError(anyhow!(
@@ -3166,7 +3140,7 @@ order by
                     ))
                     })?;
             let list_teacher = self
-                .get_list_teacher_by_classroom(transaction, tmp_class_id.as_str())
+                .get_list_teacher_by_classroom(conn, tmp_class_id.as_str())
                 .await?;
             let tmp_current_meeting_id = fetched_classroom
                 .try_get::<Option<Uuid>, &str>("current_meeting_id")
@@ -3202,7 +3176,7 @@ order by
                     )));
                 };
                 let meeting = self
-                    .get_class_meeting_by_id(transaction, meeting_id.to_string().as_str())
+                    .get_class_meeting_by_id(conn, meeting_id.to_string().as_str())
                     .await?;
 
                 upcoming_scheduled = UpcomingScheduled {
@@ -3214,7 +3188,7 @@ order by
                 };
             } else {
                 let classroom = self
-                    .get_classroom_by_id(transaction, tmp_class_id.as_str())
+                    .get_classroom_by_id(conn, tmp_class_id.as_str())
                     .await?;
 
                 upcoming_scheduled = UpcomingScheduled {

@@ -6,7 +6,7 @@ use crate::model::user::{
     UserGender, UserRole, UserTypeProfile,
 };
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
-use crate::r#const::{PgTransaction, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
+use crate::r#const::{ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 use crate::service::object_storage::ObjectStorage;
 use anyhow::anyhow;
 use argon2::password_hash::SaltString;
@@ -14,7 +14,7 @@ use argon2::{Argon2, PasswordHash};
 use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
 use redis::{AsyncCommands, JsonAsyncCommands};
-use sqlx::{Postgres, QueryBuilder};
+use sqlx::{PgConnection, Postgres, QueryBuilder};
 use std::sync::Arc;
 
 pub struct UserService {
@@ -358,7 +358,7 @@ impl UserService {
 
     pub async fn update_user_identity(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &UpdateParamsUserIdentity,
     ) -> Result<(), UserServiceError> {
@@ -418,7 +418,7 @@ impl UserService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             UserServiceError::UnexpectedError(anyhow!(
                 "Unable to execute query to database, with an error: {}",
                 err.to_string()
@@ -430,7 +430,7 @@ impl UserService {
 
     pub async fn update_user_data(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &UpdateParamsUserData,
     ) -> Result<(), UserServiceError> {
@@ -515,7 +515,7 @@ impl UserService {
         query_builder.push_bind(user_id);
 
         let query = query_builder.build();
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             UserServiceError::UnexpectedError(anyhow!(
                 "Unable to execute update user, with an error: {}",
                 err.to_string()
