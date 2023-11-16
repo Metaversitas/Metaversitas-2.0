@@ -66,6 +66,7 @@ jobs:
         # if: steps.filter.outputs.Backend == 'true'
         uses: docker/build-push-action@v5
         with:
+          context: Web/backend/
           file: Web/backend/Dockerfile
           push: true
           tags: metadikti/metaversitas:webapp_backend_latest
