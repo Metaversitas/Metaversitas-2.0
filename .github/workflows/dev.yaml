@@ -1,4 +1,4 @@
-name: Build, Test, and Deploy to Docker Hub
+name: Build and Test
 
 on: 
   push:
@@ -29,25 +29,40 @@ jobs:
           filters: |
             Backend:
               - 'Web/backend/**'
-      - name: Setup docker build
+      - name: Build cache dependencies
         if: steps.filter.outputs.Backend == 'true'
-        uses: docker/setup-buildx-action@v3
-      - name: Log In into Docker Hub
-        if: steps.filter.outputs.Backend == 'true'
-        uses: docker/login-action@v2
+        uses: actions/cache@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_SECRET_TOKEN }}
-      - name: Build and push Docker images
+          path: |
+            ~/.cargo
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+      - name: Install latest rust toolchain
         if: steps.filter.outputs.Backend == 'true'
-        uses: docker/build-push-action@v5
+        uses: actions-rs/toolchain@v1
         with:
-          context: Web/backend/
-          file: Web/backend/Dockerfile
-          push: true
-          tags: metadikti/metaversitas:webapp_backend_latest
-
-  # deploy:
-  #   needs: [build_backend_app]
-  #   runs-on: ubuntu-latest
+          toolchain: stable
+      - name: Build and test code
+        if: steps.filter.outputs.Backend == 'true'
+        run: |
+          cargo build --verbose
+          cargo test --verbose
+#      - name: Setup docker build
+#        if: steps.filter.outputs.Backend == 'true'
+#        uses: docker/setup-buildx-action@v3
+#      - name: Log In into Docker Hub
+#        if: steps.filter.outputs.Backend == 'true'
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ secrets.DOCKER_USERNAME }}
+#          password: ${{ secrets.DOCKER_SECRET_TOKEN }}
+#      - name: Build and push Docker images
+#        if: steps.filter.outputs.Backend == 'true'
+#        uses: docker/build-push-action@v5
+#        with:
+#          context: Web/backend/
+#          file: Web/backend/Dockerfile
+#          push: true
+#          tags: metadikti/metaversitas:webapp_backend_latest
     
