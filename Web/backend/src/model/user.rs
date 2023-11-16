@@ -154,6 +154,13 @@ pub enum UserGender {
     Female,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(untagged)]
+pub enum UserTypeProfile {
+    Student { student_id: String },
+    Teacher { teacher_id: String },
+}
+
 #[derive(Debug, Serialize, Deserialize, FromRedisValue, ToRedisArgs, FromRow)]
 pub struct ProfileUserData {
     pub user_id: String,
@@ -169,6 +176,8 @@ pub struct ProfileUserData {
     pub gender: UserGender,
     pub profile_image_url: String,
     pub user_role: UserRole,
+    #[serde(flatten)]
+    pub user_type: UserTypeProfile,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
