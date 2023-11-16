@@ -1514,7 +1514,7 @@ impl ClassroomService {
         params: &CreateClassMeetingParams,
     ) -> Result<String, ClassroomServiceError> {
         let mut query_builder = QueryBuilder::<Postgres>::new(
-            "insert into class_meeting (class_id, name, topic_description, meeting_number",
+            "insert into class_meeting (class_id, is_active, name, topic_description, meeting_number",
         );
 
         let mut count = 0;
@@ -1537,6 +1537,8 @@ impl ClassroomService {
 
         query_builder.push_bind(class_id);
         query_builder.push("::uuid");
+        query_builder.push(", ");
+        query_builder.push_bind(true);
         query_builder.push(", ");
         query_builder.push_bind(&params.meeting_name);
         query_builder.push(", ");

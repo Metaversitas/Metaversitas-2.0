@@ -31,7 +31,7 @@ jobs:
               - 'Web/backend/**'
             
       - name: Build cache dependencies
-        # if: steps.filter.outputs.Backend == 'true'
+        if: steps.filter.outputs.Backend == 'true'
         uses: actions/cache@v3.3.2
         with: 
           path: |
@@ -40,12 +40,12 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
       - name: Install latest rust toolchain
-        # if: steps.filter.outputs.Backend == 'true'
+        if: steps.filter.outputs.Backend == 'true'
         uses: actions-rs/toolchain@v1.0.6
         with:
           toolchain: stable
       - name: Build and test code
-        # if: steps.filter.outputs.Backend == 'true'
+        if: steps.filter.outputs.Backend == 'true'
         run: |
           cargo build --verbose
           cargo test --verbose    
