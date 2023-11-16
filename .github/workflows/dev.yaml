@@ -30,25 +30,25 @@ jobs:
             Backend:
               - 'Web/backend/**'
             
-      - name: Build cache dependencies
-        # if: steps.filter.outputs.Backend == 'true'
-        uses: actions/cache@v3
-        with: 
-          path: |
-            ~/.cargo
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-      - name: Install latest rust toolchain
-        # if: steps.filter.outputs.Backend == 'true'
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - name: Build and test code
-        # if: steps.filter.outputs.Backend == 'true'
-        run: |
-          cargo build --verbose
-          cargo test --verbose
+      # - name: Build cache dependencies
+      #   # if: steps.filter.outputs.Backend == 'true'
+      #   uses: actions/cache@v3
+      #   with: 
+      #     path: |
+      #       ~/.cargo
+      #       target/
+      #     key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      #     restore-keys: ${{ runner.os }}-cargo-
+      # - name: Install latest rust toolchain
+      #   # if: steps.filter.outputs.Backend == 'true'
+      #   uses: actions-rs/toolchain@v1
+      #   with:
+      #     toolchain: stable
+      # - name: Build and test code
+      #   # if: steps.filter.outputs.Backend == 'true'
+      #   run: |
+      #     cargo build --verbose
+      #     cargo test --verbose
       - name: Setup docker build
         # if: steps.filter.outputs.Backend == 'true'
         uses: docker/setup-buildx-action@v3
@@ -62,8 +62,10 @@ jobs:
         # if: steps.filter.outputs.Backend == 'true'
         uses: docker/build-push-action@v5
         with:
+          context: .
+          file: ./Dockerfile
           push: true
-          tags: metadikti/metaversitas:latest
+          tags: metadikti/metaversitas:webapp_backend_latest
 
   # deploy:
   #   needs: [build_backend_app]
