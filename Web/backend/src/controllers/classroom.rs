@@ -384,7 +384,7 @@ pub async fn create_classes(
         )));
     }
 
-    if year_end.year() - year_start.year() == 1 {
+    if year_end.year() - year_start.year() != 1 {
         return Err(ClassroomControllerError::Other(anyhow!(
             "year_start and year_end gap is not equal 1 year"
         )));

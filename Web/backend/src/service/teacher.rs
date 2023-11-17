@@ -1,7 +1,7 @@
 use crate::helpers::errors::teacher::TeacherServiceError;
 use crate::model::teacher::Teacher;
-use crate::r#const::PgTransaction;
 use anyhow::anyhow;
+use sqlx::PgConnection;
 use std::str::FromStr;
 use uuid::Uuid;
 
@@ -14,7 +14,7 @@ impl TeacherService {
 
     pub async fn delete_teacher_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         teacher_id: &str,
     ) -> Result<(), TeacherServiceError> {
         sqlx::query!(
@@ -30,7 +30,7 @@ impl TeacherService {
                 )
             })?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
         Ok(())
@@ -38,7 +38,7 @@ impl TeacherService {
 
     pub async fn insert_teacher_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
     ) -> Result<Teacher, TeacherServiceError> {
         let query = sqlx::query!(
@@ -55,7 +55,7 @@ impl TeacherService {
                 )
             })?
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
 
@@ -67,7 +67,7 @@ impl TeacherService {
 
     pub async fn get_teacher_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
     ) -> Result<Teacher, TeacherServiceError> {
         let query = sqlx::query!(
@@ -79,7 +79,7 @@ impl TeacherService {
         "#,
             Uuid::from_str(user_id).map_err(|err| { TeacherServiceError::UuidParseFailed(err) })?
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| {
             TeacherServiceError::UnexpectedError(anyhow!(

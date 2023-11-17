@@ -1,7 +1,7 @@
 use crate::helpers::errors::student::StudentServiceError;
 use crate::model::student::Student;
-use crate::r#const::PgTransaction;
 use anyhow::anyhow;
+use sqlx::PgConnection;
 use std::str::FromStr;
 use uuid::Uuid;
 
@@ -14,7 +14,7 @@ impl StudentService {
 
     pub async fn delete_student_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         student_id: &str,
     ) -> Result<(), anyhow::Error> {
         sqlx::query!(
@@ -30,7 +30,7 @@ impl StudentService {
                 )
             })?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
 
@@ -39,7 +39,7 @@ impl StudentService {
 
     pub async fn insert_student_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
     ) -> Result<Student, StudentServiceError> {
         let query = sqlx::query!(
@@ -56,7 +56,7 @@ impl StudentService {
                 )
             })?
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?;
         Ok(Student {
@@ -67,7 +67,7 @@ impl StudentService {
 
     pub async fn get_student_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
     ) -> Result<Student, StudentServiceError> {
         let query = sqlx::query!(
@@ -85,7 +85,7 @@ impl StudentService {
                 )
             })?
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| anyhow!("Got an error from database: {}", err.to_string()))?
         .ok_or(anyhow!("Student isn't exists!"))?;

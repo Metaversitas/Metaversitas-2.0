@@ -73,7 +73,6 @@ pub async fn create_router(app_state: Arc<AppState>) -> Router {
     let exam_service = Arc::new(ExamService::new());
     let teacher_service = Arc::new(TeacherService::new());
     let classroom_service = Arc::new(ClassroomService::new(
-        Arc::clone(&app_state),
         Arc::clone(&subject_service),
         Arc::clone(&exam_service),
         Arc::clone(&teacher_service),

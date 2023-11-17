@@ -3,9 +3,8 @@ use crate::model::question::{
     ChoiceAnswerBody, CreateQuestion, KeyAnswerOfQuestion, Question, QuestionType,
     UpdateQuestionParams,
 };
-use crate::r#const::PgTransaction;
 use anyhow::anyhow;
-use sqlx::{Postgres, QueryBuilder, Row};
+use sqlx::{PgConnection, Postgres, QueryBuilder, Row};
 use std::collections::HashMap;
 use std::str::FromStr;
 use uuid::Uuid;
@@ -20,7 +19,7 @@ impl QuestionService {
     #[allow(unused_assignments)]
     pub async fn update_question_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
         params: &UpdateQuestionParams,
     ) -> Result<(), QuestionServiceError> {
@@ -33,7 +32,7 @@ impl QuestionService {
             )));
         }
 
-        let retrieve_question = self.get_question_by_id(transaction, question_id).await?;
+        let retrieve_question = self.get_question_by_id(conn, question_id).await?;
 
         let mut query_builder = QueryBuilder::<Postgres>::new("update questions set");
         let mut separated = query_builder.separated(", ");
@@ -106,7 +105,7 @@ impl QuestionService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             QuestionServiceError::UnexpectedError(anyhow!(
                 "Got an error from database: {}",
                 err.to_string()
@@ -117,7 +116,7 @@ impl QuestionService {
 
     pub async fn get_question_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
     ) -> Result<Question, QuestionServiceError> {
         let query = sqlx::query!(
@@ -137,7 +136,7 @@ impl QuestionService {
                 ))
             })?
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| {
             QuestionServiceError::UnexpectedError(anyhow!(
@@ -162,10 +161,10 @@ impl QuestionService {
 
     pub async fn get_question_full_no_answer(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
     ) -> Result<Question, QuestionServiceError> {
-        let question = self.get_question_by_id(transaction, question_id).await?;
+        let question = self.get_question_by_id(conn, question_id).await?;
 
         if matches!(question.question_type, QuestionType::Choice) {
             let query = sqlx::query!(
@@ -184,7 +183,7 @@ impl QuestionService {
                     ))
                 })?
             )
-            .fetch_all(&mut **transaction)
+            .fetch_all(&mut *conn)
             .await
             .map_err(|err| {
                 QuestionServiceError::UnexpectedError(anyhow!(
@@ -224,7 +223,7 @@ impl QuestionService {
 
     pub async fn delete_question(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
     ) -> Result<(), QuestionServiceError> {
         sqlx::query!(
@@ -239,7 +238,7 @@ impl QuestionService {
                 ))
             })?
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| {
             QuestionServiceError::UnexpectedError(anyhow!(
@@ -253,7 +252,7 @@ impl QuestionService {
 
     pub async fn create_question(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         params: &CreateQuestion,
     ) -> Result<Question, QuestionServiceError> {
         let query = sqlx::query!(
@@ -270,7 +269,7 @@ impl QuestionService {
             params.question_type.clone() as QuestionType,
             params.table_question,
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|err| {
             QuestionServiceError::UnexpectedError(anyhow!(
@@ -291,12 +290,10 @@ impl QuestionService {
 
     pub async fn get_question_full_with_key_answer(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
     ) -> Result<Question, QuestionServiceError> {
-        let question = self
-            .get_question_by_id(&mut *transaction, question_id)
-            .await?;
+        let question = self.get_question_by_id(&mut *conn, question_id).await?;
 
         if matches!(question.question_type, QuestionType::Choice) {
             let query = sqlx::query!(
@@ -316,7 +313,7 @@ impl QuestionService {
                     ))
                 })?
             )
-            .fetch_all(&mut **transaction)
+            .fetch_all(&mut *conn)
             .await
             .map_err(|err| {
                 QuestionServiceError::UnexpectedError(anyhow!(
@@ -360,7 +357,7 @@ impl QuestionService {
                     ))
                 })?
             )
-            .fetch_optional(&mut **transaction)
+            .fetch_optional(&mut *conn)
             .await
             .map_err(|err| {
                 QuestionServiceError::UnexpectedError(anyhow!(
@@ -391,7 +388,7 @@ impl QuestionService {
 
     pub async fn create_choice_answer_from_question(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
         choice_answers: Vec<ChoiceAnswerBody>,
     ) -> Result<Vec<ChoiceAnswerBody>, QuestionServiceError> {
@@ -448,7 +445,7 @@ impl QuestionService {
 
         let query = query_builder.build();
 
-        let res = query.fetch_all(&mut **transaction).await.map_err(|err| {
+        let res = query.fetch_all(&mut *conn).await.map_err(|err| {
             QuestionServiceError::UnexpectedError(anyhow!(
                 "Got a database error, with err: {}",
                 err.to_string()
@@ -470,7 +467,7 @@ impl QuestionService {
 
     pub async fn create_key_choice_answer_from_question(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
         choice_id: &str,
     ) -> Result<KeyAnswerOfQuestion, QuestionServiceError> {
@@ -485,7 +482,7 @@ impl QuestionService {
             question_id,
             choice_id
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|err| {
             tracing::error!("{}", err.to_string());
@@ -505,7 +502,7 @@ impl QuestionService {
 
     pub async fn create_key_text_answer_from_question(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
         text_answer: &str,
     ) -> Result<KeyAnswerOfQuestion, QuestionServiceError> {
@@ -526,7 +523,7 @@ impl QuestionService {
             question_id,
             text_answer
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|err| {
             tracing::error!("{}", err.to_string());
@@ -546,7 +543,7 @@ impl QuestionService {
 
     pub async fn create_key_table_answer_from_question(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
         table_answer: serde_json::Value,
     ) -> Result<KeyAnswerOfQuestion, QuestionServiceError> {
@@ -567,7 +564,7 @@ impl QuestionService {
             question_id,
             table_answer
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut *conn)
         .await
         .map_err(|err| {
             tracing::error!("{}", err.to_string());
@@ -587,7 +584,7 @@ impl QuestionService {
 
     pub async fn get_key_answer_of_question(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
     ) -> Result<KeyAnswerOfQuestion, QuestionServiceError> {
         let query = sqlx::query!(
@@ -599,7 +596,7 @@ impl QuestionService {
         "#,
             question_id
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| {
             tracing::error!("{}", err.to_string());
@@ -624,7 +621,7 @@ impl QuestionService {
     #[allow(unused_assignments)]
     pub async fn update_key_answer_of_question(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
         key_answer: &KeyAnswerOfQuestion,
     ) -> Result<(), QuestionServiceError> {
@@ -637,9 +634,7 @@ impl QuestionService {
             )));
         }
 
-        let retrieve_key_answer = self
-            .get_key_answer_of_question(&mut *transaction, question_id)
-            .await?;
+        let retrieve_key_answer = self.get_key_answer_of_question(conn, question_id).await?;
 
         let mut query_builder = QueryBuilder::<Postgres>::new("update question_key_answers set");
         let mut separated = query_builder.separated(", ");
@@ -714,7 +709,7 @@ impl QuestionService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             tracing::error!("{}", err.to_string());
             QuestionServiceError::UnexpectedError(anyhow!(
                 "Got an error from database, with an error: {}",
@@ -727,7 +722,7 @@ impl QuestionService {
 
     pub async fn get_choice_question(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
     ) -> Result<Vec<ChoiceAnswerBody>, QuestionServiceError> {
         let query = sqlx::query!(
@@ -739,7 +734,7 @@ impl QuestionService {
         "#,
             question_id
         )
-        .fetch_all(&mut **transaction)
+        .fetch_all(&mut *conn)
         .await
         .map_err(|err| {
             tracing::error!("{}", err.to_string());
@@ -771,7 +766,7 @@ impl QuestionService {
     #[allow(unused_assignments)]
     pub async fn update_choice_question(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         question_id: &str,
         choice_id: &str,
         params: &ChoiceAnswerBody,
@@ -783,9 +778,7 @@ impl QuestionService {
         }
 
         let mut choice_question_map = HashMap::new();
-        let retrieve_choices_question = self
-            .get_choice_question(&mut *transaction, question_id)
-            .await?;
+        let retrieve_choices_question = self.get_choice_question(conn, question_id).await?;
 
         for choice_question in retrieve_choices_question {
             let choice_id =
@@ -860,7 +853,7 @@ impl QuestionService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             tracing::error!("{}", err.to_string());
             QuestionServiceError::UnexpectedError(anyhow!(
                 "Got an error from database, with an error: {}",

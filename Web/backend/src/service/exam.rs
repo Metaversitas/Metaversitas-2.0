@@ -1,8 +1,7 @@
 use crate::helpers::errors::exam::ExamServiceError;
 use crate::model::exam::{CreateExamParams, Exam, ExamType, ExamWithQuestion, UpdateExamParams};
-use crate::r#const::PgTransaction;
 use anyhow::anyhow;
-use sqlx::{Execute, Postgres, QueryBuilder};
+use sqlx::{Execute, PgConnection, Postgres, QueryBuilder};
 
 pub struct ExamService;
 
@@ -13,7 +12,7 @@ impl ExamService {
 
     pub async fn get_available_exams(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
     ) -> Result<Vec<Exam>, ExamServiceError> {
         let query = sqlx::query!(
             r#"
@@ -28,7 +27,7 @@ impl ExamService {
         limit 10;
         "#
         )
-        .fetch_all(&mut **transaction)
+        .fetch_all(&mut *conn)
         .await
         .map_err(|err| {
             ExamServiceError::UnexpectedError(anyhow!(
@@ -55,7 +54,7 @@ impl ExamService {
 
     pub async fn get_exam_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         exam_id: &str,
     ) -> Result<Exam, ExamServiceError> {
         let query = sqlx::query!(
@@ -72,7 +71,7 @@ impl ExamService {
         "#,
             exam_id
         )
-        .fetch_optional(&mut **transaction)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(|err| {
             ExamServiceError::UnexpectedError(anyhow!(
@@ -97,7 +96,7 @@ impl ExamService {
 
     pub async fn create_exam(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &CreateExamParams,
     ) -> Result<(), ExamServiceError> {
@@ -119,7 +118,7 @@ impl ExamService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             ExamServiceError::UnexpectedError(anyhow!(
                 "Got an error from database, with an error: {}",
                 err.to_string()
@@ -130,7 +129,7 @@ impl ExamService {
 
     pub async fn delete_exam_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         exam_id: &str,
     ) -> Result<(), ExamServiceError> {
         sqlx::query!(
@@ -140,7 +139,7 @@ impl ExamService {
         "#,
             exam_id
         )
-        .execute(&mut **transaction)
+        .execute(&mut *conn)
         .await
         .map_err(|err| {
             ExamServiceError::UnexpectedError(anyhow!(
@@ -155,7 +154,7 @@ impl ExamService {
     #[allow(unused_assignments)]
     pub async fn update_exam_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         exam_id: &str,
         params: &UpdateExamParams,
     ) -> Result<(), ExamServiceError> {
@@ -213,7 +212,7 @@ impl ExamService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             ExamServiceError::UnexpectedError(anyhow!(
                 "Got an error from database, with an error: {}",
                 err.to_string()
@@ -225,7 +224,7 @@ impl ExamService {
 
     pub async fn insert_class_on_exam_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         exam_id: &str,
         class_id: &str,
         meeting_id: Option<&str>,
@@ -255,7 +254,7 @@ impl ExamService {
         query_builder.push(")");
 
         let query = query_builder.build();
-        query.execute(&mut **transaction)
+        query.execute(&mut *conn)
         .await
         .map_err(|err| {
             ExamServiceError::UnexpectedError(anyhow!("Unable to add exam_id={}; class_id={}; meeting_id={} into databases, with an error: {}", exam_id, class_id, meeting_id.unwrap_or("NULL"),err.to_string()))
@@ -266,7 +265,7 @@ impl ExamService {
 
     pub async fn delete_exam_on_class_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         exam_id: &str,
         class_id: &str,
         meeting_id: Option<&str>,
@@ -286,7 +285,7 @@ impl ExamService {
         let query = query_builder.build();
         dbg!(&query.sql());
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             ExamServiceError::UnexpectedError(anyhow!(
                 "Unable to delete exam={} on class={}, with an error from database: {}",
                 exam_id,
@@ -299,7 +298,7 @@ impl ExamService {
 
     pub async fn delete_exam_on_class(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         class_id: &str,
         meeting_id: Option<&str>,
     ) -> Result<(), ExamServiceError> {
@@ -314,7 +313,7 @@ impl ExamService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             ExamServiceError::UnexpectedError(anyhow!(
                 "Unable to delete exam on class={}, with an error from database: {}",
                 class_id,
@@ -327,7 +326,7 @@ impl ExamService {
 
     pub async fn update_exam_on_class_by_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         exam_id: &str,
         class_id: &str,
         meeting_id: Option<&str>,
@@ -345,7 +344,7 @@ impl ExamService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             ExamServiceError::UnexpectedError(anyhow!(
                 "Unable to update exam on class={}, with an error from database: {}",
                 class_id,
@@ -358,7 +357,7 @@ impl ExamService {
 
     pub async fn get_exam_by_id_with_questions(
         &self,
-        _transaction: &mut PgTransaction,
+        _conn: &mut PgConnection,
         _exam_id: &str,
     ) -> Result<ExamWithQuestion, ExamServiceError> {
         // let query = sqlx::query!(r#"
@@ -373,7 +372,7 @@ impl ExamService {
 
     pub async fn get_exams_by_subject_id(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         subject_id: &str,
     ) -> Result<Vec<Exam>, ExamServiceError> {
         let query = sqlx::query!(r#"
@@ -388,7 +387,7 @@ impl ExamService {
         left join subject_secondary ss on exam_subject.secondary_subject_id = ss.secondary_subject_id
         where exam_subject.subject_id::text = $1
         "#, subject_id)
-        .fetch_all(&mut **transaction)
+        .fetch_all(&mut *conn)
         .await
         .map_err(|err| {
            ExamServiceError::UnexpectedError(anyhow!("Unable to get list of exam by subject_id, with an error: {}", err.to_string()))

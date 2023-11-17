@@ -3,10 +3,10 @@ use crate::helpers::authentication::{new_session, AuthToken, COOKIE_AUTH_NAME};
 use crate::helpers::errors::user::UserServiceError;
 use crate::model::user::{
     ProfileUserData, RegisteredUser, UpdateParamsUserData, UpdateParamsUserIdentity, User,
-    UserGender, UserRole,
+    UserGender, UserRole, UserTypeProfile,
 };
 use crate::model::user::{SessionTokenClaims, UserUniversityRole};
-use crate::r#const::{PgTransaction, ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
+use crate::r#const::{ENV_ENVIRONMENT_DEVELOPMENT, ENV_ENVIRONMENT_PRODUCTION};
 use crate::service::object_storage::ObjectStorage;
 use anyhow::anyhow;
 use argon2::password_hash::SaltString;
@@ -14,7 +14,7 @@ use argon2::{Argon2, PasswordHash};
 use axum_extra::extract::cookie::{Cookie, SameSite};
 use axum_extra::extract::CookieJar;
 use redis::{AsyncCommands, JsonAsyncCommands};
-use sqlx::{Postgres, QueryBuilder};
+use sqlx::{PgConnection, Postgres, QueryBuilder};
 use std::sync::Arc;
 
 pub struct UserService {
@@ -278,13 +278,19 @@ impl UserService {
             university_faculty.faculty_name as faculty_name,
             university_faculty.faculty_id as faculty_id,
             university_identity.users_university_id as user_university_id,
-            university_identity.users_university_role as "user_univ_role!: UserUniversityRole"
+            university_identity.users_university_role as "user_univ_role!: UserUniversityRole",
+            case
+                when university_identity.users_university_role = 'dosen' then teachers.teacher_id
+                when university_identity.users_university_role = 'mahasiswa' then students.student_id
+            end::text as "role_id!"
         from users
         inner join users_identity as identity on users.user_id = identity.users_id
         inner join users_university_identity as university_identity on identity.users_identity_id = university_identity.users_identity_id
         inner join university on university_identity.university_id = university.university_id
         inner join university_faculty on university.university_id = university_faculty.university_id
-        where users.user_id::text = $1"#, &user_id)
+        left join teachers on users.user_id = teachers.user_id and university_identity.users_university_role = 'dosen'
+        left join students on users.user_id = students.user_id and university_identity.users_university_role = 'mahasiswa'
+        where users.user_id::text = $1;"#, &user_id)
             .fetch_one(&self.app_state.database)
             .await
             .map_err(|_| UserServiceError::DatabaseConnectionError)?;
@@ -308,10 +314,20 @@ impl UserService {
                 faculty_name: query.faculty_name.to_owned(),
                 faculty_id: query.faculty_id as u64,
                 user_university_id: query.user_university_id as u64,
-                user_univ_role: query.user_univ_role,
+                user_univ_role: query.user_univ_role.clone(),
                 gender: query.gender,
                 profile_image_url: signed_url,
                 user_role: query.role,
+                user_type: {
+                    match query.user_univ_role {
+                        UserUniversityRole::Dosen => UserTypeProfile::Teacher {
+                            teacher_id: query.role_id,
+                        },
+                        UserUniversityRole::Mahasiswa => UserTypeProfile::Student {
+                            student_id: query.role_id,
+                        },
+                    }
+                },
             };
 
             let profile_user_id = format!("profile:{}", &user_id);
@@ -342,7 +358,7 @@ impl UserService {
 
     pub async fn update_user_identity(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &UpdateParamsUserIdentity,
     ) -> Result<(), UserServiceError> {
@@ -402,7 +418,7 @@ impl UserService {
 
         let query = query_builder.build();
 
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             UserServiceError::UnexpectedError(anyhow!(
                 "Unable to execute query to database, with an error: {}",
                 err.to_string()
@@ -414,7 +430,7 @@ impl UserService {
 
     pub async fn update_user_data(
         &self,
-        transaction: &mut PgTransaction,
+        conn: &mut PgConnection,
         user_id: &str,
         params: &UpdateParamsUserData,
     ) -> Result<(), UserServiceError> {
@@ -499,7 +515,7 @@ impl UserService {
         query_builder.push_bind(user_id);
 
         let query = query_builder.build();
-        query.execute(&mut **transaction).await.map_err(|err| {
+        query.execute(&mut *conn).await.map_err(|err| {
             UserServiceError::UnexpectedError(anyhow!(
                 "Unable to execute update user, with an error: {}",
                 err.to_string()
